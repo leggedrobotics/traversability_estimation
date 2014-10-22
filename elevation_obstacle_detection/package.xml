@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package>
+  <name>elevation_obstacle_detection</name>
+  <version>0.1.0</version>
+  <description>ROS package for interpreting elevation maps as occupancy grids.</description>
+  <maintainer email="ralf.kaestner@gmail.com">Ralf Kaestner</maintainer>
+  <license>MIT</license>
+  <url type="website">http://bitbucket.org/ethz-asl/c_elevation_obstacle_detection</url>
+  <author email="ralf.kaestner@gmail.com">Ralf Kaestner</author>
+  <author email="pfankhauser@ethz.ch">Peter Fankhauser</author>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>cmake_modules</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>tf_conversions</build_depend>
+  <build_depend>grid_map</build_depend>
+  <build_depend>grid_map_lib</build_depend>
+  <build_depend>grid_map_msg</build_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>nav_msgs</run_depend>
+  <run_depend>tf</run_depend>
+  <run_depend>tf_conversions</run_depend>
+  <run_depend>grid_map</run_depend>
+  <run_depend>grid_map_lib</run_depend>
+  <run_depend>grid_map_msg</run_depend>
+</package>
