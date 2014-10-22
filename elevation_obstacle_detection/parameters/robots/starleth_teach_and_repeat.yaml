@@ -1,0 +1,8 @@
+submap_service: "/elevation_mapping_starleth_teach_and_repeat/get_grid_map"
+map_frame_id: "base"
+map_cell_type: "elevation"
+map_center_x: 0.0
+map_center_y: 0.0
+map_length_x: 10.0
+map_length_y: 5.0
+max_update_rate: 2.0

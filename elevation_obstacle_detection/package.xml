@@ -25,4 +25,5 @@
   <run_depend>grid_map</run_depend>
   <run_depend>grid_map_lib</run_depend>
   <run_depend>grid_map_msg</run_depend>
+  <run_depend>elevation_mapping</run_depend>
 </package>
