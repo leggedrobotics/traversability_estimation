@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(elevation_obstacle_detection)
+project(traversability_estimation)
 
 set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
 
@@ -24,8 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
-# find_package(Eigen REQUIRED)
+find_package(Eigen REQUIRED)
 
 ###################################
 ## catkin specific configuration ##
@@ -52,8 +51,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-#   ${Boost_INCLUDE_DIRS}
-#   ${Eigen_INCLUDE_DIRS}
+  ${Eigen_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
@@ -64,8 +62,8 @@ include_directories(
 ## Declare a cpp executable
 add_executable(
   ${PROJECT_NAME}
-  src/elevation_obstacle_detection_node.cpp
-  src/ElevationObstacleDetection.cpp
+  src/traversability_estimation_node.cpp
+  src/TraversabilityEstimation.cpp
 )
 
 ## Specify libraries to link a library or executable target against

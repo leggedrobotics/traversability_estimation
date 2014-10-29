@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <package>
-  <name>elevation_obstacle_detection</name>
+  <name>traversability_estimation</name>
   <version>0.1.0</version>
-  <description>ROS package for interpreting elevation maps as occupancy grids.</description>
-  <maintainer email="ralf.kaestner@gmail.com">Ralf Kaestner</maintainer>
+  <description>ROS package for estimating traversability from elevation maps.</description>
+  <maintainer email="pfankhauser@ethz.ch">Peter Fankhauser</maintainer>
   <license>MIT</license>
   <url type="website">http://bitbucket.org/ethz-asl/c_elevation_obstacle_detection</url>
   <author email="ralf.kaestner@gmail.com">Ralf Kaestner</author>
