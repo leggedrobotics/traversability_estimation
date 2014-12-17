@@ -97,7 +97,7 @@ bool TraversabilityEstimation::getGridMap(grid_map_msg::GridMap& map)
   submapService.request.dataDefinition.resize(requestedMapTypes_.size());
 
   for (unsigned int i = 0; i < requestedMapTypes_.size(); ++i) {
-    submapService.request.dataDefinition[i].data = requestedMapTypes_[i];
+    submapService.request.dataDefinition[i] = requestedMapTypes_[i];
   }
 
   if (!submapClient_.call(submapService)) return false;
@@ -113,6 +113,7 @@ void TraversabilityEstimation::computeTraversability(grid_map::GridMap& elevatio
 
 void TraversabilityEstimation::publishAsOccupancyGrid(const grid_map::GridMap& map) const
 {
+  if (occupancyGridPublisher_.getNumSubscribers () < 1) return;
   OccupancyGrid occupancyGrid;
   // This flips data from traversability to occupancy.
   map.toOccupancyGrid(occupancyGrid, traversabilityType_, 1.0, 0.0);
