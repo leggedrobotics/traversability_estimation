@@ -97,7 +97,7 @@ bool TraversabilityEstimation::getGridMap(grid_map_msg::GridMap& map)
   submapService.request.dataDefinition.resize(requestedMapTypes_.size());
 
   for (unsigned int i = 0; i < requestedMapTypes_.size(); ++i) {
-    submapService.request.dataDefinition[i].data = requestedMapTypes_[i];
+    submapService.request.dataDefinition[i] = requestedMapTypes_[i];
   }
 
   if (!submapClient_.call(submapService)) return false;
