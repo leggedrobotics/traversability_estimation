@@ -8,7 +8,7 @@ The PACKAGE NAME package has been tested under [ROS] Indigo and Ubuntu 14.04. Th
 
 The source code is released under a [BSD 3-Clause license](ros_package_template/LICENSE).
 
-**Authors: Peter Fankhauser, Martin Wermelinger, Ralf Kaestner
+**Authors: Peter Fankhauser, Martin Wermelinger, Ralf Kaestner  
 Contact: Peter Fankhauser, pfankhauser@ethz.ch  
 Affiliation: Autonomous Systems Lab, ETH Zurich**
 
