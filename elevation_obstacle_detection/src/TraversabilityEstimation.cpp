@@ -113,6 +113,7 @@ void TraversabilityEstimation::computeTraversability(grid_map::GridMap& elevatio
 
 void TraversabilityEstimation::publishAsOccupancyGrid(const grid_map::GridMap& map) const
 {
+  if (occupancyGridPublisher_.getNumSubscribers () < 1) return;
   OccupancyGrid occupancyGrid;
   // This flips data from traversability to occupancy.
   map.toOccupancyGrid(occupancyGrid, traversabilityType_, 1.0, 0.0);
