@@ -1,4 +1,4 @@
-submap_service: "/elevation_mapping_starleth_teach_and_repeat/get_grid_map"
+submap_service: "/elevation_mapping_long_range/get_grid_map"
 robot_frame_id: "base"
 map_frame_id: "topocentric"
 update_rate: 4.0
@@ -6,4 +6,3 @@ map_center_x: 1.5
 map_center_y: 0.0
 map_length_x: 5.0
 map_length_y: 5.0
-

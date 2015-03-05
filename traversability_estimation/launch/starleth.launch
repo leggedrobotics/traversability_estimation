@@ -1,6 +1,6 @@
 <launch>
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find traversability_estimation)/launch/custom_rosconsole.conf"/>
   <node pkg="traversability_estimation" type="traversability_estimation" name="traversability_estimation" output="screen">
-    <rosparam command="load" file="$(find traversability_estimation)/parameters/robots/starleth.yaml" />
+    <rosparam command="load" file="$(find traversability_estimation)/config/starleth.yaml" />
   </node>
 </launch>
