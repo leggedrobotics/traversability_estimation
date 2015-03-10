@@ -95,10 +95,6 @@ namespace traversability_estimation {
     //! Requested map length in [m].
     Eigen::Array2d mapLength_;
 
-    //! Filter chain of elevation map
-    filters::FilterChain<grid_map::GridMap> chain_;
-    grid_map::GridMap mapIn_, mapOut_;
-
   
     /*!
     * Reads and verifies the ROS parameters.

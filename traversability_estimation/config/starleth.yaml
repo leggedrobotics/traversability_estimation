@@ -6,9 +6,3 @@ map_center_x: 1.5
 map_center_y: 0.0
 map_length_x: 5.0
 map_length_y: 5.0
-
-elevation_filter_chain:
-  filter_chain:
-  - name: slopeFilter
-    type: SlopeFilter
-    params:

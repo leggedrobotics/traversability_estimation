@@ -1,0 +1,6 @@
+elevation_filter_chain:
+  filter_chain:
+  - name: meanFilter1
+    type: MeanFilterDouble
+    params:
+    	number_of_observations: 5
