@@ -34,6 +34,9 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
 
   requestedMapTypes_.push_back("elevation");
   requestedMapTypes_.push_back("surface_normal_z");
+
+  //Initialization of filterchain
+  chain_.configure("elevation_filter_chain");
 }
 
 TraversabilityEstimation::~TraversabilityEstimation()
@@ -107,6 +110,11 @@ bool TraversabilityEstimation::getGridMap(grid_map_msg::GridMap& map)
 
 void TraversabilityEstimation::computeTraversability(grid_map::GridMap& elevationMap)
 {
+  // Filter chain update
+  ROS_INFO("Before update");
+  chain_.update(mapIn_, mapOut_);
+  ROS_INFO("After update");
+
   // TODO
   elevationMap.add(traversabilityType_, elevationMap.get("surface_normal_z"));
 }

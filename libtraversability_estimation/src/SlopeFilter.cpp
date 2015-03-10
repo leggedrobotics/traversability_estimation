@@ -24,6 +24,7 @@ bool SlopeFilter<T>::configure()
 template <typename T>
 bool SlopeFilter<T>::update(const T & elevation_map, T& slope_map)
 {
+  ROS_INFO("Slope Filter update.");
   slope_map = elevation_map;
   return true;
 };
