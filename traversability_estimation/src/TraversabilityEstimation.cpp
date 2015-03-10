@@ -22,7 +22,8 @@ namespace traversability_estimation {
 
 TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
     : nodeHandle_(nodeHandle),
-      traversabilityType_("traversability")
+      traversabilityType_("traversability"),
+      chain_("grid_map::GridMap")
 {
   ROS_INFO("Traversability estimation node started.");
 

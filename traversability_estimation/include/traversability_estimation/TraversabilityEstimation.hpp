@@ -96,8 +96,8 @@ namespace traversability_estimation {
     Eigen::Array2d mapLength_;
 
     //! Filter chain of elevation map
-    filters::FilterChain<grid_map::GridMap> chain_("grid_map::GridMap");
-    std::vector<grid_map::GridMap> mapIn_, mapOut_;
+    filters::FilterChain<grid_map::GridMap> chain_;
+    grid_map::GridMap mapIn_, mapOut_;
 
   
     /*!
