@@ -6,15 +6,19 @@
 #include <boost/scoped_ptr.hpp>
 #include <filters/filter_base.h>
 
+// Grid Map
+#include <grid_map/GridMap.hpp>
+
 namespace filters {
 
-class SlopeFilter: public FilterBase<grid_map::GridMap>
+template <typename T>
+class SlopeFilter: public FilterBase<T>
 {
 public:
   SlopeFilter();
   virtual ~SlopeFilter();
   virtual bool configure();
-  virtual bool update(const grid_map::GridMap & elevation_map, grid_map::GridMap& slope_map);
+  virtual bool update(const T & elevation_map, T& slope_map);
 };
 
 }

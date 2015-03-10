@@ -14,6 +14,13 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
+  grid_map
+  grid_map_lib
+  grid_map_msg
+  roscpp
+  nav_msgs
+  tf
+  tf_conversions
 )
 
 ## System dependencies are found with CMake's conventions

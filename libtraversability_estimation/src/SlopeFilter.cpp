@@ -3,25 +3,29 @@
 
 using namespace filters;
 
-SlopeFilter::SlopeFilter()
+template <typename T>
+SlopeFilter<T>::SlopeFilter()
 {
 
 }
 
-SlopeFilter::~SlopeFilter()
+template <typename T>
+SlopeFilter<T>::~SlopeFilter()
 {
 
 }
 
-bool SlopeFilter::configure()
+template <typename T>
+bool SlopeFilter<T>::configure()
 {
   return true;
 }
 
-bool SlopeFilter::update(grid_map::GridMap & elevation_map, grid_map::GridMap& slope_map)
+template <typename T>
+bool SlopeFilter<T>::update(const T & elevation_map, T& slope_map)
 {
   slope_map = elevation_map;
   return true;
 };
 
-PLUGINLIB_REGISTER_CLASS(SlopeFilter, traversability_estimation::SlopeFilter<grid_map::GridMap>, filters::FilterBase<grid_map::GridMap>)
+PLUGINLIB_REGISTER_CLASS(SlopeFilter, filters::SlopeFilter<grid_map::GridMap>, filters::FilterBase<grid_map::GridMap>)
