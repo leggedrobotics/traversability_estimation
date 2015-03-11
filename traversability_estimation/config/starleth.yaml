@@ -1,6 +1,6 @@
 submap_service: "/elevation_mapping_long_range/get_grid_map"
 robot_frame_id: "base"
-map_frame_id: "topocentric"
+map_frame_id: "map"
 update_rate: 4.0
 map_center_x: 1.5
 map_center_y: 0.0

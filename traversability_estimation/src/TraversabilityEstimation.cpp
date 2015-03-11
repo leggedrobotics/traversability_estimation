@@ -22,7 +22,8 @@ namespace traversability_estimation {
 
 TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
     : nodeHandle_(nodeHandle),
-      traversabilityType_("traversability")
+      traversabilityType_("traversability"),
+      filter_chain_("double")
 {
   ROS_INFO("Traversability estimation node started.");
 
@@ -63,6 +64,10 @@ bool TraversabilityEstimation::readParameters()
 
   nodeHandle_.param("map_length_x", mapLength_.x(), 5.0);
   nodeHandle_.param("map_length_y", mapLength_.y(), 5.0);
+
+  // Configure filter chain
+  filter_chain_.configure("configuration_filter", nodeHandle_);
+  in_ = 1.0;
   return true;
 }
 
@@ -107,6 +112,13 @@ bool TraversabilityEstimation::getGridMap(grid_map_msg::GridMap& map)
 
 void TraversabilityEstimation::computeTraversability(grid_map::GridMap& elevationMap)
 {
+  // Run the filter chain
+  ROS_INFO("Update Filter.");
+  ROS_INFO("in_ = %f",in_);
+  filter_chain_.update(in_, out_);
+  ROS_INFO("out_ = %f",out_);
+  in_ = in_ + 1.0;
+
   // TODO
   elevationMap.add(traversabilityType_, elevationMap.get("surface_normal_z"));
 }

@@ -21,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   tf
   tf_conversions
+  filters
 )
 
 ## System dependencies are found with CMake's conventions

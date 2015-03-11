@@ -15,7 +15,8 @@
 #include <ros/ros.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <tf/transform_listener.h>
-#include "filters/filter_chain.h"
+#include <filters/filter_chain.h>
+#include <filters/mean.h>
 
 // STD
 #include <vector>
@@ -94,6 +95,10 @@ namespace traversability_estimation {
 
     //! Requested map length in [m].
     Eigen::Array2d mapLength_;
+
+    //! Filter Chain
+    filters::FilterChain<double> filter_chain_;
+    double in_, out_;
 
   
     /*!
