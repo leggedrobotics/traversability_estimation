@@ -2,3 +2,7 @@ configuration_filter:
    - name: meanFilter1
      type: filters/MeanFilterDouble
      params: {number_of_observations: 5}
+     
+slope_filter:
+  - name: slopeFilter
+    type: SlopeFilter
