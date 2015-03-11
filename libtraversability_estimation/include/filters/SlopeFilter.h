@@ -15,12 +15,17 @@ template <typename T>
 class SlopeFilter: public FilterBase<T>
 {
 public:
+
   SlopeFilter();
   virtual ~SlopeFilter();
   virtual bool configure();
   virtual bool update(const T & elevation_map, T& slope_map);
+
+private:
+
+  double weight_;
 };
 
-}
+} /* namespace */
 
 #endif

@@ -1,6 +1,6 @@
 <class_libraries>
   <library path="lib/liblibtraversability_estimation">
-    <class name="SlopeFilter" type="filters::SlopeFilter<grid_map::GridMap>" base_class_type="filters::FilterBase<grid_map::GridMap>" >
+    <class name="filters/SlopeFilter" type="filters::SlopeFilter<grid_map::GridMap>" base_class_type="filters::FilterBase<grid_map::GridMap>" >
       <description>
         This is a slope filter for an elevation map.
       </description>

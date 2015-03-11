@@ -5,4 +5,5 @@ configuration_filter:
      
 slope_filter:
   - name: slopeFilter
-    type: SlopeFilter
+    type: filters/SlopeFilter
+    params: {weight: 0.5}
