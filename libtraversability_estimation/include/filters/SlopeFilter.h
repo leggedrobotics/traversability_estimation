@@ -9,6 +9,9 @@
 // Grid Map
 #include <grid_map/GridMap.hpp>
 
+// Grid Map lib
+#include <grid_map_lib/iterators/GridMapIterator.hpp>
+
 namespace filters {
 
 template <typename T>
@@ -23,7 +26,14 @@ public:
 
 private:
 
+  //! Weight parameter of the slope filter.
   double weight_;
+
+  //! Maximum allowed slope.
+  double slopeCritical_;
+
+  //! Traversability map type.
+  const std::string traversabilityType_;
 };
 
 } /* namespace */

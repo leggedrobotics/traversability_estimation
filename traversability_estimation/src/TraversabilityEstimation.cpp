@@ -120,7 +120,7 @@ void TraversabilityEstimation::computeTraversability(grid_map::GridMap& elevatio
 
 
   // Add to traversability map
-  elevationMap.add(traversabilityType_, slopeMap_.get("surface_normal_z"));
+  elevationMap.add(traversabilityType_, slopeMap_.get("slope_danger_value"));
 }
 
 void TraversabilityEstimation::publishAsOccupancyGrid(const grid_map::GridMap& map) const
