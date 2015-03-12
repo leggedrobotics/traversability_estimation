@@ -15,6 +15,7 @@ template<typename T>
 StepFilter<T>::StepFilter()
     : weight_(0.0),
       stepCritical_(0.3),
+      windowSize_(3),
       traversabilityType_("traversability")
 {
 
@@ -51,7 +52,19 @@ bool StepFilter<T>::configure()
     return false;
   }
 
-  ROS_INFO("critical step height = %f", stepCritical_);
+  ROS_INFO("Critical step height = %f", stepCritical_);
+
+  if (!FilterBase<T>::getParam(std::string("windowSize"), windowSize_)) {
+    ROS_ERROR("StepFilter did not find param windowSize");
+    return false;
+  }
+
+  if (windowSize_ % 2 != 1) {
+    ROS_ERROR("windowSize_ must be an odd integer");
+    return false;
+  }
+
+  ROS_INFO("Window size of step filter = %d", windowSize_);
   return true;
 }
 
@@ -67,29 +80,42 @@ bool StepFilter<T>::update(const T& elevation_map, T& step_map)
   step_map.setClearTypes(clearTypes_);
   step_map.clear();
 
-  Eigen::Array2i submapBufferSize(3, 3);
-  double height, stepHeight, stepHeightMax, subMapHeight;
+  Eigen::Array2i filterWindowSize(windowSize_, windowSize_);
+  Eigen::Array2i submapBufferSize(
+      step_map.getBufferSize()(0) - (windowSize_ - 1),
+      step_map.getBufferSize()(1) - (windowSize_ - 1));
+  Eigen::Array2i mapToWindowCenter((windowSize_ - 1) / 2,
+                                   (windowSize_ - 1) / 2);
+  Eigen::Array2i submapStartIndex(0, 0);
+  double height, stepHeight, stepHeightMax;
 
-  for (grid_map_lib::GridMapIterator mapIterator(step_map);
+  for (grid_map_lib::SubmapIterator mapIterator(step_map, submapStartIndex,
+                                                submapBufferSize);
       !mapIterator.isPassedEnd(); ++mapIterator) {
-    if (step_map.isValid(*mapIterator, validTypes_)) {
-      height = step_map.at("elevation", *mapIterator);
+    if (step_map.isValid(*mapIterator + mapToWindowCenter, validTypes_)) {
+      height = step_map.at("elevation", *mapIterator + mapToWindowCenter);
+//      ROS_INFO("height = %f",height);
       stepHeightMax = 0.0;
 
-      for (grid_map_lib::SubmapIterator subMapIterator(step_map, *mapIterator,
-                                                       submapBufferSize);
-          !subMapIterator.isPassedEnd(); ++subMapIterator) {
-        if (step_map.isValid(*subMapIterator, validTypes_)) {
-          stepHeight = abs(height - step_map.at("elevation", *subMapIterator));
-          if (stepHeight > stepHeightMax) stepHeightMax = stepHeight;
+      for (grid_map_lib::SubmapIterator filterWindowIterator(step_map,
+                                                             *mapIterator,
+                                                             filterWindowSize);
+          !filterWindowIterator.isPassedEnd(); ++filterWindowIterator) {
+        if (step_map.isValid(*filterWindowIterator, validTypes_)) {
+          stepHeight = std::abs(
+              height - step_map.at("elevation", *filterWindowIterator));
+//          ROS_INFO("submap height = %f",step_map.at("elevation", *subMapIterator));
+          if (stepHeight > stepHeightMax)
+            stepHeightMax = stepHeight;
+//          ROS_INFO("step height = %f",stepHeight);
         }
-        subMapHeight = step_map.at("elevation", *subMapIterator);
       }
 
       if (!stepHeightMax == 0.0) {
         step_map.at("step_height", *mapIterator) = stepHeightMax;
       }
     }
+//    ROS_INFO("max step height = %f",step_map.at("step_height", *mapIterator));
   }
   return true;
 }

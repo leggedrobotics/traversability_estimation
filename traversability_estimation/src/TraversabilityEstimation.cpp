@@ -118,7 +118,7 @@ void TraversabilityEstimation::computeTraversability(grid_map::GridMap& elevatio
   slope_filter_chain_.update(elevationMap, slopeMap_);
 
 
-
+  ROS_INFO("Add traversability map.");
   // Add to traversability map
   elevationMap.add(traversabilityType_, slopeMap_.get("slope_danger_value"));
 }

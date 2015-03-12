@@ -65,6 +65,9 @@ class StepFilter : public FilterBase<T>
   //! Maximum allowed step.
   double stepCritical_;
 
+  //! Window size for step filter
+  int windowSize_;
+
   //! Traversability map type.
   const std::string traversabilityType_;
 };

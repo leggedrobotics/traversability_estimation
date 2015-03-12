@@ -9,4 +9,4 @@ slope_filter:
     params: {weight: 0.5, slopeCritical: 0.7854}
   - name: stepFilter
     type: filters/StepFilter
-    params: {weight: 0.5, stepCritical: 0.2}
+    params: {weight: 0.5, stepCritical: 0.2, windowSize: 3}
