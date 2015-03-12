@@ -65,7 +65,8 @@ template <typename T>
 bool StepFilter<T>::update(const T& elevation_map, T& step_map)
 {
   step_map = elevation_map;
-  ROS_INFO("Step filter");
+  step_map.add("step_danger_value", elevation_map.get("elevation"));
+//  ROS_INFO("Step filter");
   return true;
 };
 
