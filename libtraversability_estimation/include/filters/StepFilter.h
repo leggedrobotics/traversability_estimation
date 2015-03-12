@@ -1,13 +1,13 @@
 /*
- * SlopeFilter.h
+ * StepFilter.h
  *
- *  Created on: Mar 11, 2015
+ *  Created on: Mar 12, 2015
  *      Author: Martin Wermelinger
  *   Institute: ETH Zurich, Autonomous Systems Lab
  */
 
-#ifndef SLOPEFILTER_H
-#define SLOPEFILTER_H
+#ifndef STEPFILTER_H
+#define STEPFILTER_H
 #include <stdint.h>
 #include <cstring>
 #include <stdio.h>
@@ -23,22 +23,22 @@
 namespace filters {
 
 /*!
- * Slope Filter class to compute the slope danger value of an elevation map.
+ * Step Filter class to compute the step danger value of an elevation map.
  */
 template <typename T>
-class SlopeFilter: public FilterBase<T>
+class StepFilter: public FilterBase<T>
 {
 
 public:
   /*!
    * Constructor
    */
-  SlopeFilter();
+  StepFilter();
 
   /*!
   * Destructor.
   */
-  virtual ~SlopeFilter();
+  virtual ~StepFilter();
 
   /*!
    * Configures the filter from parameters on the Parameter Server
@@ -46,22 +46,22 @@ public:
   virtual bool configure();
 
   /*!
-   * Computes the slope danger value based on an elevation map
-   * The slope danger value is set between 0.0 and 1.0, where a value of 0.0 means fully
+   * Computes the step danger value based on an elevation map
+   * The step danger value is set between 0.0 and 1.0, where a value of 0.0 means fully
    * traversable and 1.0 means barely traversable. NAN indicates that the terrain
    * is not traversable.
-   * @param elevationMap the map for which the slope danger value is computed.
-   * @param slope_map gridMap with slope danger value.
+   * @param elevationMap the map for which the step danger value is computed.
+   * @param step_map gridMap with step danger value.
    */
-  virtual bool update(const T & elevation_map, T& slope_map);
+  virtual bool update(const T & elevation_map, T& step_map);
 
 private:
 
-  //! Weight parameter of the slope filter.
+  //! Weight parameter of the step filter.
   double weight_;
 
-  //! Maximum allowed slope.
-  double slopeCritical_;
+  //! Maximum allowed step.
+  double stepCritical_;
 
   //! Traversability map type.
   const std::string traversabilityType_;

@@ -7,3 +7,6 @@ slope_filter:
   - name: slopeFilter
     type: filters/SlopeFilter
     params: {weight: 0.5, slopeCritical: 0.7854}
+  - name: stepFilter
+    type: filters/StepFilter
+    params: {weight: 0.5, stepCritical: 0.2}

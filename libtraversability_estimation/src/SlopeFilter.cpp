@@ -1,4 +1,14 @@
+/*
+ * SlopeFilter.cpp
+ *
+ *  Created on: Mar 11, 2015
+ *      Author: Martin Wermelinger
+ *   Institute: ETH Zurich, Autonomous Systems Lab
+ */
+
 #include "filters/SlopeFilter.h"
+
+// Grid Map
 #include <pluginlib/class_list_macros.h>
 #include <grid_map_lib/iterators/GridMapIterator.hpp>
 
@@ -43,7 +53,7 @@ bool SlopeFilter<T>::configure()
   }
 
   if (slopeCritical_ > M_PI_2 || slopeCritical_ < 0.0) {
-    ROS_ERROR("SlopeFilter weight must be in the interval [0, PI/2]");
+    ROS_ERROR("Critical slope must be in the interval [0, PI/2]");
     return false;
   }
 
