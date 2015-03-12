@@ -7,8 +7,9 @@ namespace filters {
 template <typename T>
 SlopeFilter<T>::SlopeFilter()
       : weight_(0.0),
-        traversabilityType_("traversability"),
-        slopeCritical_(M_PI_2)
+        slopeCritical_(M_PI_4),
+        traversabilityType_("traversability")
+
 {
 
 }
@@ -34,6 +35,19 @@ bool SlopeFilter<T>::configure()
   }
 
   ROS_INFO("SlopeFilter weight = %f",weight_);
+
+  if (!FilterBase<T>::getParam(std::string("slopeCritical"), slopeCritical_))
+  {
+    ROS_ERROR("SlopeFilter did not find param slopeCritical");
+    return false;
+  }
+
+  if (slopeCritical_ > M_PI_2 || slopeCritical_ < 0.0) {
+    ROS_ERROR("SlopeFilter weight must be in the interval [0, PI/2]");
+    return false;
+  }
+
+  ROS_INFO("critical Slope = %f",slopeCritical_);
   return true;
 }
 
@@ -41,11 +55,12 @@ template <typename T>
 bool SlopeFilter<T>::update(const T& elevation_map, T& slope_map)
 {
   slope_map = elevation_map;
-  slope_map.add("surface_normal_z", elevation_map.get("surface_normal_z"));
   slope_map.add("slope_danger_value", elevation_map.get("surface_normal_z"));
 
   double slope_;
   for (grid_map_lib::GridMapIterator iterator(slope_map); !iterator.isPassedEnd(); ++iterator) {
+//    ROS_INFO("elevation = %f",slope_map.at("elevation", *iterator));
+//    ROS_INFO("surface normal z = %f",slope_map.at("surface_normal_z", *iterator));
     slope_ = acos(slope_map.at("surface_normal_z", *iterator));
     if (slope_ < slopeCritical_) {
       slope_map.at("slope_danger_value", *iterator) = slope_ / slopeCritical_ * weight_;
@@ -53,13 +68,8 @@ bool SlopeFilter<T>::update(const T& elevation_map, T& slope_map)
     }
     else {
       slope_map.at("slope_danger_value", *iterator) = NAN;
-//      ROS_INFO("NAN");
     }
   }
-//  slope_map = elevation_map;
-//  slope_map = elevation_map.get("surface_normal_z");
-//  slope_map.clear();
-//  slope_map.add(traversabilityType_, elevation_map.get("surface_normal_z"));
   return true;
 };
 
