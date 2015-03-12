@@ -25,19 +25,19 @@ namespace filters {
 /*!
  * Slope Filter class to compute the slope danger value of an elevation map.
  */
-template <typename T>
-class SlopeFilter: public FilterBase<T>
+template<typename T>
+class SlopeFilter : public FilterBase<T>
 {
 
-public:
+ public:
   /*!
    * Constructor
    */
   SlopeFilter();
 
   /*!
-  * Destructor.
-  */
+   * Destructor.
+   */
   virtual ~SlopeFilter();
 
   /*!
@@ -55,7 +55,7 @@ public:
    */
   virtual bool update(const T & elevation_map, T& slope_map);
 
-private:
+ private:
 
   //! Weight parameter of the slope filter.
   double weight_;

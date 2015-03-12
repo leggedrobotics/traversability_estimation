@@ -18,26 +18,28 @@
 #include <grid_map/GridMap.hpp>
 
 // Grid Map lib
+#include <grid_map_lib/GridMap.hpp>
 #include <grid_map_lib/iterators/GridMapIterator.hpp>
+#include <grid_map_lib/iterators/SubmapIterator.hpp>
 
 namespace filters {
 
 /*!
  * Step Filter class to compute the step danger value of an elevation map.
  */
-template <typename T>
-class StepFilter: public FilterBase<T>
+template<typename T>
+class StepFilter : public FilterBase<T>
 {
 
-public:
+ public:
   /*!
    * Constructor
    */
   StepFilter();
 
   /*!
-  * Destructor.
-  */
+   * Destructor.
+   */
   virtual ~StepFilter();
 
   /*!
@@ -55,7 +57,7 @@ public:
    */
   virtual bool update(const T & elevation_map, T& step_map);
 
-private:
+ private:
 
   //! Weight parameter of the step filter.
   double weight_;
