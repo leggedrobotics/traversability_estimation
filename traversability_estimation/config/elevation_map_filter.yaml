@@ -10,3 +10,6 @@ slope_filter:
   - name: stepFilter
     type: filters/StepFilter
     params: {weight: 0.5, stepCritical: 0.2, windowSize: 3}
+  - name: roughnessFilter
+    type: filters/RoughnessFilter
+    params: {weight: 0.5, roughnessCritical: 0.5}
