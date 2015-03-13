@@ -76,6 +76,7 @@ bool StepFilter<T>::update(const T& elevation_map, T& step_map)
   step_map.add("step_danger_value", elevation_map.get("elevation"));
   std::vector<std::string> clearTypes_, validTypes_;
   clearTypes_.push_back("step_height");
+  clearTypes_.push_back("step_danger_value");
   validTypes_.push_back("elevation");
   step_map.setClearTypes(clearTypes_);
   step_map.clear();
@@ -88,6 +89,7 @@ bool StepFilter<T>::update(const T& elevation_map, T& step_map)
                                    (windowSize_ - 1) / 2);
   Eigen::Array2i submapStartIndex(0, 0);
   double height, stepHeight, stepHeightMax;
+  bool stepHeightExists;
 
   for (grid_map_lib::SubmapIterator mapIterator(step_map, submapStartIndex,
                                                 submapBufferSize);
@@ -96,6 +98,7 @@ bool StepFilter<T>::update(const T& elevation_map, T& step_map)
       height = step_map.at("elevation", *mapIterator + mapToWindowCenter);
 //      ROS_INFO("height = %f",height);
       stepHeightMax = 0.0;
+      stepHeightExists = false;
 
       for (grid_map_lib::SubmapIterator filterWindowIterator(step_map,
                                                              *mapIterator,
@@ -105,18 +108,29 @@ bool StepFilter<T>::update(const T& elevation_map, T& step_map)
           stepHeight = std::abs(
               height - step_map.at("elevation", *filterWindowIterator));
 //          ROS_INFO("submap height = %f",step_map.at("elevation", *subMapIterator));
-          if (stepHeight > stepHeightMax)
+          if (stepHeight > stepHeightMax) {
             stepHeightMax = stepHeight;
+            stepHeightExists = true;
+          }
 //          ROS_INFO("step height = %f",stepHeight);
         }
       }
 
-      if (!stepHeightMax == 0.0) {
-        step_map.at("step_height", *mapIterator) = stepHeightMax;
+      if (stepHeightExists) {
+        step_map.at("step_height", *mapIterator + mapToWindowCenter) =
+            stepHeightMax;
+        if (stepHeightMax < stepCritical_) {
+          step_map.at("step_danger_value", *mapIterator + mapToWindowCenter) =
+              weight_ * stepHeightMax / stepCritical_;
+        }
       }
     }
 //    ROS_INFO("max step height = %f",step_map.at("step_height", *mapIterator));
+//    ROS_INFO(
+//        "step danger value = %f",
+//        step_map.at("step_danger_value", *mapIterator + mapToWindowCenter));
   }
+
   return true;
 }
 ;

@@ -23,7 +23,7 @@ namespace traversability_estimation {
 TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
     : nodeHandle_(nodeHandle),
       traversabilityType_("traversability"),
-      slope_filter_chain_("grid_map::GridMap")
+      filter_chain_("grid_map::GridMap")
 {
   ROS_INFO("Traversability estimation node started.");
 
@@ -66,7 +66,7 @@ bool TraversabilityEstimation::readParameters()
   nodeHandle_.param("map_length_y", mapLength_.y(), 5.0);
 
   // Configure filter chain
-  slope_filter_chain_.configure("slope_filter", nodeHandle_);
+  filter_chain_.configure("slope_filter", nodeHandle_);
   return true;
 }
 
@@ -115,12 +115,12 @@ void TraversabilityEstimation::computeTraversability(grid_map::GridMap& elevatio
   ROS_INFO("Update Filter.");
 
 
-  slope_filter_chain_.update(elevationMap, slopeMap_);
+  filter_chain_.update(elevationMap, traversabilityMap_);
 
 
   ROS_INFO("Add traversability map.");
   // Add to traversability map
-  elevationMap.add(traversabilityType_, slopeMap_.get("slope_danger_value"));
+  elevationMap.add(traversabilityType_, traversabilityMap_.get("step_danger_value"));
 }
 
 void TraversabilityEstimation::publishAsOccupancyGrid(const grid_map::GridMap& map) const

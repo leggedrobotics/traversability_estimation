@@ -16,7 +16,6 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <tf/transform_listener.h>
 #include <filters/filter_chain.h>
-#include <filters/SlopeFilter.h>
 
 // STD
 #include <vector>
@@ -97,8 +96,8 @@ namespace traversability_estimation {
     Eigen::Array2d mapLength_;
 
     //! Filter Chain
-    filters::FilterChain<grid_map::GridMap> slope_filter_chain_;
-    grid_map::GridMap slopeMap_;
+    filters::FilterChain<grid_map::GridMap> filter_chain_;
+    grid_map::GridMap traversabilityMap_;
 
   
     /*!
