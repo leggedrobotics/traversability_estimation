@@ -61,6 +61,8 @@ template<typename T>
 bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
 {
   roughness_map = elevation_map;
+  roughness_map.add("roughness_danger_value", elevation_map.get("elevation"));
+
   ROS_INFO("Roughness Filter");
   // Hack! has to be replaced by yaml-file
   double surfaceNormalEstimationRadius_ = 0.3;
@@ -72,6 +74,9 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
 
   for (grid_map_lib::GridMapIterator iterator(roughness_map);
       !iterator.isPassedEnd(); ++iterator) {
+
+    // Clear roughness danger value
+    roughness_map.at("roughness_danger_value", *iterator) = NAN;
 
     // Check if this is an empty cell (hole in the map).
     if (!roughness_map.isValid(*iterator)) continue;
@@ -101,6 +106,21 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
     }
 
     const Vector3d mean = points.leftCols(nPoints).rowwise().sum() / nPoints;
+//    ROS_INFO("mean z = %f",mean.z());
+
+    double normalX_ = roughness_map.at("surface_normal_x", *iterator);
+    double normalY_ = roughness_map.at("surface_normal_y", *iterator);
+    double normalZ_ = roughness_map.at("surface_normal_z", *iterator);
+    double planeParameter = mean.x()*normalX_ + mean.y()*normalY_ + mean.z()*normalZ_;
+    double sum = 0.0;
+    for (int i = 0; i < nPoints; i++) {
+      double dist = normalX_*points(0,i) + normalY_*points(1,i) + normalZ_*points(2,i) - planeParameter;
+      sum += pow(dist,2);
+    }
+    double roughness = sqrt(sum / (nPoints -1));
+    ROS_INFO("roughness = %f", roughness);
+    roughness_map.at("roughness_danger_value", *iterator) = weight_ * roughness / roughnessCritical_;
+    ROS_INFO("roughness danger value = %f",roughness_map.at("roughness_danger_value", *iterator));
 //    std::cout << "mean = " << mean << std::endl;
 
 //    ROS_INFO("surface normal x = %f",roughness_map.at("surface_normal_x", *iterator));
