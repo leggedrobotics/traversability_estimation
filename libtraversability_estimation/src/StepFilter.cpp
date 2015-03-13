@@ -131,6 +131,18 @@ bool StepFilter<T>::update(const T& elevation_map, T& step_map)
 //        step_map.at("step_danger_value", *mapIterator + mapToWindowCenter));
   }
 
+  if (!step_map.exists("traversability")) {
+    step_map.add("traversability", step_map.get("step_danger_value"));
+  }
+  else{
+    Eigen::MatrixXf traversabliltyMap_ = step_map.get("traversability");
+    Eigen::MatrixXf stepMap_ = step_map.get("step_danger_value");
+//    std::cout << "traversability map =\n" << traversabliltyMap_ << std::endl;
+    traversabliltyMap_ += stepMap_;
+//    std::cout << "traversability map =\n" << traversabliltyMap_ << std::endl;
+    step_map.add("traversability", step_map.get("traversability"));
+  }
+
   return true;
 }
 ;

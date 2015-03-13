@@ -75,6 +75,16 @@ bool SlopeFilter<T>::update(const T& elevation_map, T& slope_map)
       slope_map.at("slope_danger_value", *iterator) = NAN;
     }
   }
+
+  if (!slope_map.exists("traversability")) {
+    slope_map.add("traversability", slope_map.get("slope_danger_value"));
+  }
+  else{
+    Eigen::MatrixXf traversabliltyMap_ = slope_map.get("traversability");
+    Eigen::MatrixXf slopeMap_ = slope_map.get("slope_danger_value");
+    traversabliltyMap_ += slopeMap_;
+    slope_map.add("traversability", slope_map.get("traversability"));
+  }
   return true;
 }
 
