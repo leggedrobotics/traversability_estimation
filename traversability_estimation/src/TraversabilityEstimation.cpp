@@ -34,6 +34,8 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
                                          &TraversabilityEstimation::updateTimerCallback, this);
 
   requestedMapTypes_.push_back("elevation");
+  requestedMapTypes_.push_back("surface_normal_x");
+  requestedMapTypes_.push_back("surface_normal_y");
   requestedMapTypes_.push_back("surface_normal_z");
 }
 

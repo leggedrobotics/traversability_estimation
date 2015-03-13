@@ -9,6 +9,8 @@
 #include "filters/RoughnessFilter.h"
 #include <pluginlib/class_list_macros.h>
 
+using namespace Eigen;
+
 namespace filters {
 
 template<typename T>
@@ -60,6 +62,51 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
 {
   roughness_map = elevation_map;
   ROS_INFO("Roughness Filter");
+  // Hack! has to be replaced by yaml-file
+  double surfaceNormalEstimationRadius_ = 0.3;
+
+  std::vector<std::string> clearTypes_;
+  clearTypes_.push_back("surface_normal_x");
+  clearTypes_.push_back("elevation");
+  roughness_map.setClearTypes(clearTypes_);
+
+  for (grid_map_lib::GridMapIterator iterator(roughness_map);
+      !iterator.isPassedEnd(); ++iterator) {
+
+    // Check if this is an empty cell (hole in the map).
+    if (!roughness_map.isValid(*iterator)) continue;
+
+    // Size of submap area for surface normal estimation.
+    Array2d submapLength = Array2d::Ones() * (2.0 * surfaceNormalEstimationRadius_);
+
+    // Requested position (center) of submap in map.
+    Vector2d submapPosition;
+    roughness_map.getPosition(*iterator, submapPosition);
+    Array2i submapTopLeftIndex, submapBufferSize, requestedIndexInSubmap;
+    grid_map_lib::getSubmapInformation(submapTopLeftIndex, submapBufferSize, submapPosition, submapLength, requestedIndexInSubmap, submapPosition, submapLength,
+                                       roughness_map.getLength(), roughness_map.getPosition(), roughness_map.getResolution(), roughness_map.getBufferSize(), roughness_map.getBufferStartIndex());
+
+    // Prepare data computation.
+    const int maxNumberOfCells = submapBufferSize.prod();
+    MatrixXd points(3, maxNumberOfCells);
+
+    // Gather surrounding data.
+    size_t nPoints = 0;
+    for (grid_map_lib::SubmapIterator submapIterator(roughness_map, submapTopLeftIndex, submapBufferSize); !submapIterator.isPassedEnd(); ++submapIterator) {
+      if (!roughness_map.isValid(*submapIterator)) continue;
+      Vector3d point;
+      roughness_map.getPosition3d("elevation", *submapIterator, point);
+      points.col(nPoints) = point;
+      nPoints++;
+    }
+
+    const Vector3d mean = points.leftCols(nPoints).rowwise().sum() / nPoints;
+//    std::cout << "mean = " << mean << std::endl;
+
+//    ROS_INFO("surface normal x = %f",roughness_map.at("surface_normal_x", *iterator));
+//    ROS_INFO("surface normal y = %f",roughness_map.at("surface_normal_y", *iterator));
+//    ROS_INFO("surface normal z = %f",roughness_map.at("surface_normal_z", *iterator));
+  }
 
 //  if (!step_map.exists("traversability")) {
 //    step_map.add("traversability", step_map.get("step_danger_value"));
