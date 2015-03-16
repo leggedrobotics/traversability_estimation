@@ -71,17 +71,20 @@ bool StepFilter<T>::configure()
 template<typename T>
 bool StepFilter<T>::update(const T& elevation_map, T& step_map)
 {
+  // Add new layer to the elevation map.
   step_map = elevation_map;
   step_map.add("step_height", elevation_map.get("elevation"));
-  step_map.add("step_danger_value", elevation_map.get("elevation"));
+  step_map.add("step_traversability_value", elevation_map.get("elevation"));
 
+  // Set clear and valid types.
   std::vector<std::string> clearTypes, validTypes;
   clearTypes.push_back("step_height");
-  clearTypes.push_back("step_danger_value");
+  clearTypes.push_back("step_traversability_value");
   validTypes.push_back("elevation");
   step_map.setClearTypes(clearTypes);
   step_map.clear();
 
+  // Define filter window.
   Eigen::Array2i filterWindowSize(windowSize_, windowSize_);
   Eigen::Array2i submapBufferSize(
       step_map.getBufferSize()(0) - (windowSize_ - 1),
@@ -89,6 +92,7 @@ bool StepFilter<T>::update(const T& elevation_map, T& step_map)
   Eigen::Array2i mapToWindowCenter((windowSize_ - 1) / 2,
                                    (windowSize_ - 1) / 2);
   Eigen::Array2i submapStartIndex(0, 0);
+
   double height, stepHeight, stepHeightMax = 0.0, windowStepHeightMax;
   bool stepHeightExists;
 
@@ -100,10 +104,10 @@ bool StepFilter<T>::update(const T& elevation_map, T& step_map)
     if (!step_map.isValid(*mapIterator + mapToWindowCenter, validTypes)) continue;
 
     height = step_map.at("elevation", *mapIterator + mapToWindowCenter);
-
     windowStepHeightMax = 0.0;
     stepHeightExists = false;
 
+    // Get the highest step in the window
     for (grid_map_lib::SubmapIterator filterWindowIterator(step_map,
                                                            *mapIterator,
                                                            filterWindowSize);
@@ -126,8 +130,7 @@ bool StepFilter<T>::update(const T& elevation_map, T& step_map)
           windowStepHeightMax;
 
       if (windowStepHeightMax < stepCritical_) {
-        step_map.at("step_danger_value", *mapIterator + mapToWindowCenter) =
-            weight_ * windowStepHeightMax / stepCritical_;
+        step_map.at("step_traversability_value", *mapIterator + mapToWindowCenter) = weight_ * (1.0 - windowStepHeightMax / stepCritical_);
       }
 
       if (windowStepHeightMax > stepHeightMax) stepHeightMax = windowStepHeightMax;
@@ -136,13 +139,13 @@ bool StepFilter<T>::update(const T& elevation_map, T& step_map)
   }
   ROS_INFO("step height max = %f", stepHeightMax);
 
-  // Add danger value to traversability map
+  // Add traversability value to traversability map
   if (!step_map.exists(traversabilityType_)) {
-    step_map.add(traversabilityType_, step_map.get("step_danger_value"));
+    step_map.add(traversabilityType_, step_map.get("step_traversability_value"));
   }
   else{
     Eigen::MatrixXf traversabliltyMap = step_map.get(traversabilityType_);
-    Eigen::MatrixXf stepMap = step_map.get("step_danger_value");
+    Eigen::MatrixXf stepMap = step_map.get("step_traversability_value");
     traversabliltyMap += stepMap;
     step_map.add(traversabilityType_, traversabliltyMap);
   }

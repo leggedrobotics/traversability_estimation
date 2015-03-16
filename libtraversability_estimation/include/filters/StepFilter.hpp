@@ -25,7 +25,7 @@
 namespace filters {
 
 /*!
- * Step Filter class to compute the step danger value of an elevation map.
+ * Step Filter class to compute the step traversability value of an elevation map.
  */
 template<typename T>
 class StepFilter : public FilterBase<T>
@@ -48,12 +48,12 @@ class StepFilter : public FilterBase<T>
   virtual bool configure();
 
   /*!
-   * Computes the step danger value based on an elevation map
-   * The step danger value is set between 0.0 and 1.0, where a value of 0.0 means fully
-   * traversable and 1.0 means barely traversable. NAN indicates that the terrain
+   * Computes the step traversability value based on an elevation map
+   * The step traversability value is set between 0.0 and 1.0, where a value of 1.0 means fully
+   * traversable and 0.0 means barely traversable. NAN indicates that the terrain
    * is not traversable.
-   * @param elevationMap the map for which the step danger value is computed.
-   * @param step_map gridMap with step danger value.
+   * @param elevationMap the map for which the step traversability value is computed.
+   * @param step_map gridMap with step traversability value.
    */
   virtual bool update(const T & elevation_map, T& step_map);
 

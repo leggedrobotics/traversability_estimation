@@ -58,11 +58,13 @@ bool SlopeFilter<T>::configure()
 template<typename T>
 bool SlopeFilter<T>::update(const T& elevation_map, T& slope_map)
 {
+  // Add new layer to the elevation map.
   slope_map = elevation_map;
-  slope_map.add("slope_danger_value", elevation_map.get("surface_normal_z"));
+  slope_map.add("slope_traversability_value", elevation_map.get("surface_normal_z"));
 
+  // Set clear and valid types.
   std::vector<std::string> clearTypes, validTypes;
-  clearTypes.push_back("slope_danger_value");
+  clearTypes.push_back("slope_traversability_value");
   validTypes.push_back("surface_normal_z");
   slope_map.setClearTypes(clearTypes);
   slope_map.clear();
@@ -79,7 +81,7 @@ bool SlopeFilter<T>::update(const T& elevation_map, T& slope_map)
     slope = acos(slope_map.at("surface_normal_z", *iterator));
 
     if (slope < slopeCritical_) {
-      slope_map.at("slope_danger_value", *iterator) = weight_ * slope / slopeCritical_;
+      slope_map.at("slope_traversability_value", *iterator) = weight_ * (1.0 - slope / slopeCritical_);
     }
 
     if (slope > slopeMax) slopeMax = slope;
@@ -87,13 +89,13 @@ bool SlopeFilter<T>::update(const T& elevation_map, T& slope_map)
 
   ROS_INFO("slope max = %f", slopeMax);
 
-  // Add danger value to traversability map
+  // Add traversability value to traversability map
   if (!slope_map.exists(traversabilityType_)) {
-    slope_map.add(traversabilityType_, slope_map.get("slope_danger_value"));
+    slope_map.add(traversabilityType_, slope_map.get("slope_traversability_value"));
   }
   else{
     Eigen::MatrixXf traversabliltyMap = slope_map.get(traversabilityType_);
-    Eigen::MatrixXf slopeMap = slope_map.get("slope_danger_value");
+    Eigen::MatrixXf slopeMap = slope_map.get("slope_traversability_value");
     traversabliltyMap += slopeMap;
     slope_map.add(traversabilityType_, traversabliltyMap);
   }

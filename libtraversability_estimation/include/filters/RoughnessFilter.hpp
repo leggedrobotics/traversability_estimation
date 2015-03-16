@@ -30,7 +30,7 @@
 namespace filters {
 
 /*!
- * Roughness Filter class to compute the roughness danger value of an elevation map.
+ * Roughness Filter class to compute the roughness traversability value of an elevation map.
  */
 template<typename T>
 class RoughnessFilter : public FilterBase<T>
@@ -53,12 +53,12 @@ class RoughnessFilter : public FilterBase<T>
   virtual bool configure();
 
   /*!
-   * Computes the roughness danger value based on an elevation map
-   * The roughness danger value is set between 0.0 and 1.0, where a value of 0.0 means fully
-   * traversable and 1.0 means barely traversable. NAN indicates that the terrain
+   * Computes the roughness traversability value based on an elevation map
+   * The roughness traversability value is set between 0.0 and 1.0, where a value of 1.0 means fully
+   * traversable and 0.0 means barely traversable. NAN indicates that the terrain
    * is not traversable.
-   * @param elevationMap the map for which the roughness danger value is computed.
-   * @param roughness_map gridMap with roughness danger value.
+   * @param elevationMap the map for which the roughness traversability value is computed.
+   * @param roughness_map gridMap with roughness traversability value.
    */
   virtual bool update(const T & elevation_map, T& roughness_map);
 
