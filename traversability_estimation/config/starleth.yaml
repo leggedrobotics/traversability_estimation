@@ -6,3 +6,14 @@ map_center_x: 1.5
 map_center_y: 0.0
 map_length_x: 5.0
 map_length_y: 5.0
+
+traversability_map_filters:
+  - name: slopeFilter
+    type: filters/SlopeFilter
+    params: {weight: 0.2, slopeCritical: 0.7854}
+  - name: stepFilter
+    type: filters/StepFilter
+    params: {weight: 0.5, stepCritical: 0.2, windowSize: 3}
+#  - name: roughnessFilter
+#    type: filters/RoughnessFilter
+#    params: {weight: 0.3, roughnessCritical: 0.1, roughnessEstimationRadius: 0.3}

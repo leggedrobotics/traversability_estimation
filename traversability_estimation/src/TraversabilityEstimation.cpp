@@ -68,7 +68,7 @@ bool TraversabilityEstimation::readParameters()
   nodeHandle_.param("map_length_y", mapLength_.y(), 5.0);
 
   // Configure filter chain
-  filter_chain_.configure("slope_filter", nodeHandle_);
+  filter_chain_.configure("traversability_map_filters", nodeHandle_);
   return true;
 }
 
