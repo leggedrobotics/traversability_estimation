@@ -12,4 +12,4 @@ slope_filter:
     params: {weight: 0.5, stepCritical: 0.2, windowSize: 3}
   - name: roughnessFilter
     type: filters/RoughnessFilter
-    params: {weight: 0.5, roughnessCritical: 0.1}
+    params: {weight: 0.5, roughnessCritical: 0.1, roughnessEstimationRadius: 0.3}

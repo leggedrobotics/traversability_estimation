@@ -54,6 +54,19 @@ bool RoughnessFilter<T>::configure()
   }
 
   ROS_INFO("Critical roughness = %f", roughnessCritical_);
+
+  if (!FilterBase<T>::getParam(std::string("roughnessEstimationRadius"), roughnessEstimationRadius_)) {
+    ROS_ERROR("RoughnessFilter did not find param roughnessEstimationRadius");
+    return false;
+  }
+
+  if (roughnessEstimationRadius_ < 0.0) {
+    ROS_ERROR("Roughness estimation radius must be greater than zero");
+    return false;
+  }
+
+  ROS_INFO("Roughness estimation = %f", roughnessEstimationRadius_);
+
   return true;
 }
 
@@ -63,9 +76,6 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
   roughness_map = elevation_map;
   roughness_map.add("roughness_danger_value", elevation_map.get("elevation"));
 
-  ROS_INFO("Roughness Filter");
-  // Hack! has to be replaced by yaml-file
-  double surfaceNormalEstimationRadius = 0.3;
   double roughnessMax = 0.0;
 
   std::vector<std::string> clearTypes;
@@ -83,7 +93,7 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
     if (!roughness_map.isValid(*iterator)) continue;
 
     // Size of submap area for surface normal estimation.
-    Array2d submapLength = Array2d::Ones() * (2.0 * surfaceNormalEstimationRadius);
+    Array2d submapLength = Array2d::Ones() * (2.0 * roughnessEstimationRadius_);
 
     // Requested position (center) of submap in map.
     Vector2d submapPosition;
