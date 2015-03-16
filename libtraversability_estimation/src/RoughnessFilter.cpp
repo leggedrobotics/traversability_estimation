@@ -78,19 +78,18 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
 
   double roughnessMax = 0.0;
 
-  std::vector<std::string> clearTypes;
-  clearTypes.push_back("surface_normal_x");
-  clearTypes.push_back("elevation");
+  std::vector<std::string> clearTypes, validTypes;
+  validTypes.push_back("surface_normal_x");
+  validTypes.push_back("elevation");
+  clearTypes.push_back("roughness_danger_value");
   roughness_map.setClearTypes(clearTypes);
+  roughness_map.clear();
 
   for (grid_map_lib::GridMapIterator iterator(roughness_map);
       !iterator.isPassedEnd(); ++iterator) {
 
-    // Clear roughness danger value
-    roughness_map.at("roughness_danger_value", *iterator) = NAN;
-
     // Check if this is an empty cell (hole in the map).
-    if (!roughness_map.isValid(*iterator)) continue;
+    if (!roughness_map.isValid(*iterator, validTypes)) continue;
 
     // Size of submap area for surface normal estimation.
     Array2d submapLength = Array2d::Ones() * (2.0 * roughnessEstimationRadius_);
@@ -109,7 +108,7 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
     // Gather surrounding data.
     size_t nPoints = 0;
     for (grid_map_lib::SubmapIterator submapIterator(roughness_map, submapTopLeftIndex, submapBufferSize); !submapIterator.isPassedEnd(); ++submapIterator) {
-      if (!roughness_map.isValid(*submapIterator)) continue;
+      if (!roughness_map.isValid(*submapIterator, validTypes)) continue;
       Vector3d point;
       roughness_map.getPosition3d("elevation", *submapIterator, point);
       points.col(nPoints) = point;
@@ -129,8 +128,12 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
       sum += pow(dist,2);
     }
     double roughness = sqrt(sum / (nPoints -1));
+
+    if (roughness < roughnessCritical_) {
+      roughness_map.at("roughness_danger_value", *iterator) = weight_ * roughness / roughnessCritical_;
+    }
+
     if (roughness > roughnessMax) roughnessMax = roughness;
-    roughness_map.at("roughness_danger_value", *iterator) = weight_ * roughness / roughnessCritical_;
   }
 
   ROS_INFO("roughness max = %f",roughnessMax);
