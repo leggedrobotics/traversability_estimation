@@ -65,13 +65,13 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
 
   ROS_INFO("Roughness Filter");
   // Hack! has to be replaced by yaml-file
-  double surfaceNormalEstimationRadius_ = 0.3;
+  double surfaceNormalEstimationRadius = 0.3;
   double roughnessMax = 0.0;
 
-  std::vector<std::string> clearTypes_;
-  clearTypes_.push_back("surface_normal_x");
-  clearTypes_.push_back("elevation");
-  roughness_map.setClearTypes(clearTypes_);
+  std::vector<std::string> clearTypes;
+  clearTypes.push_back("surface_normal_x");
+  clearTypes.push_back("elevation");
+  roughness_map.setClearTypes(clearTypes);
 
   for (grid_map_lib::GridMapIterator iterator(roughness_map);
       !iterator.isPassedEnd(); ++iterator) {
@@ -83,7 +83,7 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
     if (!roughness_map.isValid(*iterator)) continue;
 
     // Size of submap area for surface normal estimation.
-    Array2d submapLength = Array2d::Ones() * (2.0 * surfaceNormalEstimationRadius_);
+    Array2d submapLength = Array2d::Ones() * (2.0 * surfaceNormalEstimationRadius);
 
     // Requested position (center) of submap in map.
     Vector2d submapPosition;
@@ -109,13 +109,13 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
     const Vector3d mean = points.leftCols(nPoints).rowwise().sum() / nPoints;
 //    ROS_INFO("mean z = %f",mean.z());
 
-    double normalX_ = roughness_map.at("surface_normal_x", *iterator);
-    double normalY_ = roughness_map.at("surface_normal_y", *iterator);
-    double normalZ_ = roughness_map.at("surface_normal_z", *iterator);
-    double planeParameter = mean.x()*normalX_ + mean.y()*normalY_ + mean.z()*normalZ_;
+    double normalX = roughness_map.at("surface_normal_x", *iterator);
+    double normalY = roughness_map.at("surface_normal_y", *iterator);
+    double normalZ = roughness_map.at("surface_normal_z", *iterator);
+    double planeParameter = mean.x()*normalX + mean.y()*normalY + mean.z()*normalZ;
     double sum = 0.0;
     for (int i = 0; i < nPoints; i++) {
-      double dist = normalX_*points(0,i) + normalY_*points(1,i) + normalZ_*points(2,i) - planeParameter;
+      double dist = normalX*points(0,i) + normalY*points(1,i) + normalZ*points(2,i) - planeParameter;
       sum += pow(dist,2);
     }
     double roughness = sqrt(sum / (nPoints -1));
@@ -123,19 +123,19 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
     roughness_map.at("roughness_danger_value", *iterator) = weight_ * roughness / roughnessCritical_;
   }
 
-//  if (!step_map.exists("traversability")) {
-//    step_map.add("traversability", step_map.get("step_danger_value"));
-//  }
-//  else{
-//    Eigen::MatrixXf traversabliltyMap_ = step_map.get("traversability");
-//    Eigen::MatrixXf stepMap_ = step_map.get("step_danger_value");
-////    std::cout << "traversability map =\n" << traversabliltyMap_ << std::endl;
-//    traversabliltyMap_ += stepMap_;
-////    std::cout << "traversability map =\n" << traversabliltyMap_ << std::endl;
-//    step_map.add("traversability", step_map.get("traversability"));
-//  }
-
   ROS_INFO("roughness max = %f",roughnessMax);
+
+  // Add danger value to traversability map
+  if (!roughness_map.exists(traversabilityType_)) {
+    roughness_map.add(traversabilityType_, roughness_map.get("roughness_danger_value"));
+  }
+  else{
+    Eigen::MatrixXf traversabliltyMap = roughness_map.get(traversabilityType_);
+    Eigen::MatrixXf roughnessMap = roughness_map.get("roughness_danger_value");
+    traversabliltyMap += roughnessMap;
+    roughness_map.add(traversabilityType_, traversabliltyMap);
+  }
+
   return true;
 }
 ;

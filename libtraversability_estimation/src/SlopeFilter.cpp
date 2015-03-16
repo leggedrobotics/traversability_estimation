@@ -87,14 +87,15 @@ bool SlopeFilter<T>::update(const T& elevation_map, T& slope_map)
 
   ROS_INFO("slope max = %f", slopeMax);
 
+  // Add danger value to traversability map
   if (!slope_map.exists(traversabilityType_)) {
     slope_map.add(traversabilityType_, slope_map.get("slope_danger_value"));
   }
   else{
-    Eigen::MatrixXf traversabliltyMap_ = slope_map.get(traversabilityType_);
-    Eigen::MatrixXf slopeMap_ = slope_map.get("slope_danger_value");
-    traversabliltyMap_ += slopeMap_;
-    slope_map.add(traversabilityType_, slope_map.get(traversabilityType_));
+    Eigen::MatrixXf traversabliltyMap = slope_map.get(traversabilityType_);
+    Eigen::MatrixXf slopeMap = slope_map.get("slope_danger_value");
+    traversabliltyMap += slopeMap;
+    slope_map.add(traversabilityType_, traversabliltyMap);
   }
   return true;
 }
