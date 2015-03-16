@@ -122,7 +122,7 @@ void TraversabilityEstimation::computeTraversability(grid_map::GridMap& elevatio
 
   ROS_INFO("Add traversability map.");
   // Add to traversability map
-  elevationMap.add(traversabilityType_, traversabilityMap_.get("roughness_danger_value"));
+  elevationMap.add(traversabilityType_, traversabilityMap_.get(traversabilityType_));
 }
 
 void TraversabilityEstimation::publishAsOccupancyGrid(const grid_map::GridMap& map) const

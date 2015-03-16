@@ -61,20 +61,31 @@ bool SlopeFilter<T>::update(const T& elevation_map, T& slope_map)
   slope_map = elevation_map;
   slope_map.add("slope_danger_value", elevation_map.get("surface_normal_z"));
 
-  double slope_;
+  std::vector<std::string> clearTypes, validTypes;
+  clearTypes.push_back("slope_danger_value");
+  validTypes.push_back("surface_normal_z");
+  slope_map.setClearTypes(clearTypes);
+  slope_map.clear();
+
+  double slope, slopeMax = 0.0;
+
   for (grid_map_lib::GridMapIterator iterator(slope_map);
       !iterator.isPassedEnd(); ++iterator) {
-//    ROS_INFO("elevation = %f",slope_map.at("elevation", *iterator));
-//    ROS_INFO("surface normal z = %f",slope_map.at("surface_normal_z", *iterator));
-    slope_ = acos(slope_map.at("surface_normal_z", *iterator));
-    if (slope_ < slopeCritical_) {
-      slope_map.at("slope_danger_value", *iterator) = slope_ / slopeCritical_
-          * weight_;
-//      ROS_INFO("slope danger value = %f",slope_ / slopeCritical_ * weight_);
-    } else {
-      slope_map.at("slope_danger_value", *iterator) = NAN;
+
+    // Check if there is a surface normal (empty cell).
+    if (!slope_map.isValid(*iterator, validTypes)) continue;
+
+    // Compute slope from surface normal z
+    slope = acos(slope_map.at("surface_normal_z", *iterator));
+
+    if (slope < slopeCritical_) {
+      slope_map.at("slope_danger_value", *iterator) = weight_ * slope / slopeCritical_;
     }
+
+    if (slope > slopeMax) slopeMax = slope;
   }
+
+  ROS_INFO("slope max = %f", slopeMax);
 
   if (!slope_map.exists(traversabilityType_)) {
     slope_map.add(traversabilityType_, slope_map.get("slope_danger_value"));

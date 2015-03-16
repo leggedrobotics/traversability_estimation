@@ -66,6 +66,7 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
   ROS_INFO("Roughness Filter");
   // Hack! has to be replaced by yaml-file
   double surfaceNormalEstimationRadius_ = 0.3;
+  double roughnessMax = 0.0;
 
   std::vector<std::string> clearTypes_;
   clearTypes_.push_back("surface_normal_x");
@@ -118,14 +119,8 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
       sum += pow(dist,2);
     }
     double roughness = sqrt(sum / (nPoints -1));
-    ROS_INFO("roughness = %f", roughness);
+    if (roughness > roughnessMax) roughnessMax = roughness;
     roughness_map.at("roughness_danger_value", *iterator) = weight_ * roughness / roughnessCritical_;
-    ROS_INFO("roughness danger value = %f",roughness_map.at("roughness_danger_value", *iterator));
-//    std::cout << "mean = " << mean << std::endl;
-
-//    ROS_INFO("surface normal x = %f",roughness_map.at("surface_normal_x", *iterator));
-//    ROS_INFO("surface normal y = %f",roughness_map.at("surface_normal_y", *iterator));
-//    ROS_INFO("surface normal z = %f",roughness_map.at("surface_normal_z", *iterator));
   }
 
 //  if (!step_map.exists("traversability")) {
@@ -140,6 +135,7 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
 //    step_map.add("traversability", step_map.get("traversability"));
 //  }
 
+  ROS_INFO("roughness max = %f",roughnessMax);
   return true;
 }
 ;
