@@ -6,7 +6,7 @@
  *   Institute: ETH Zurich, Autonomous Systems Lab
  */
 
-#include "filters/SlopeFilter.h"
+#include "filters/SlopeFilter.hpp"
 #include <pluginlib/class_list_macros.h>
 
 namespace filters {

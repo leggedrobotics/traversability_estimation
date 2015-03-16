@@ -1,13 +1,13 @@
 /*
- * RoughnessFilter.h
+ * RoughnessFilter.hpp
  *
  *  Created on: Mar 13, 2015
  *      Author: Martin Wermelinger
  *   Institute: ETH Zurich, Autonomous Systems Lab
  */
 
-#ifndef ROUGHNESSFILTER_H
-#define ROUGHNESSFILTER_H
+#ifndef ROUGHNESSFILTER_HPP
+#define ROUGHNESSFILTER_HPP
 #include <stdint.h>
 #include <cstring>
 #include <stdio.h>

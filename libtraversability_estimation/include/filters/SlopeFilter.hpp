@@ -1,13 +1,13 @@
 /*
- * SlopeFilter.h
+ * SlopeFilter.hpp
  *
  *  Created on: Mar 11, 2015
  *      Author: Martin Wermelinger
  *   Institute: ETH Zurich, Autonomous Systems Lab
  */
 
-#ifndef SLOPEFILTER_H
-#define SLOPEFILTER_H
+#ifndef SLOPEFILTER_HPP
+#define SLOPEFILTER_HPP
 #include <stdint.h>
 #include <cstring>
 #include <stdio.h>

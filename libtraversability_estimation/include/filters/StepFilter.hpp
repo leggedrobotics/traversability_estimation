@@ -1,13 +1,13 @@
 /*
- * StepFilter.h
+ * StepFilter.hpp
  *
  *  Created on: Mar 12, 2015
  *      Author: Martin Wermelinger
  *   Institute: ETH Zurich, Autonomous Systems Lab
  */
 
-#ifndef STEPFILTER_H
-#define STEPFILTER_H
+#ifndef STEPFILTER_HPP
+#define STEPFILTER_HPP
 #include <stdint.h>
 #include <cstring>
 #include <stdio.h>

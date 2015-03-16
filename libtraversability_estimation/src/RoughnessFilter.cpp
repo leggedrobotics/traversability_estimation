@@ -6,7 +6,7 @@
  *   Institute: ETH Zurich, Autonomous Systems Lab
  */
 
-#include "filters/RoughnessFilter.h"
+#include "filters/RoughnessFilter.hpp"
 #include <pluginlib/class_list_macros.h>
 
 using namespace Eigen;
@@ -17,6 +17,7 @@ template<typename T>
 RoughnessFilter<T>::RoughnessFilter()
     : weight_(0.0),
       roughnessCritical_(0.3),
+      roughnessEstimationRadius_(0.3),
       traversabilityType_("traversability")
 {
 
