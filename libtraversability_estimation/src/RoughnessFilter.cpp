@@ -9,6 +9,15 @@
 #include "filters/RoughnessFilter.hpp"
 #include <pluginlib/class_list_macros.h>
 
+// Grid Map
+#include <grid_map/GridMap.hpp>
+
+// Grid Map lib
+#include <grid_map_lib/GridMap.hpp>
+#include <grid_map_lib/GridMapMath.hpp>
+#include <grid_map_lib/iterators/GridMapIterator.hpp>
+#include <grid_map_lib/iterators/SubmapIterator.hpp>
+
 using namespace Eigen;
 
 namespace filters {
@@ -146,8 +155,8 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
     roughness_map.add(traversabilityType_, roughness_map.get("roughness_traversability_value"));
   }
   else{
-    Eigen::MatrixXf traversabliltyMap = roughness_map.get(traversabilityType_);
-    Eigen::MatrixXf roughnessMap = roughness_map.get("roughness_traversability_value");
+    MatrixXf traversabliltyMap = roughness_map.get(traversabilityType_);
+    MatrixXf roughnessMap = roughness_map.get("roughness_traversability_value");
     traversabliltyMap += roughnessMap;
     roughness_map.add(traversabilityType_, traversabliltyMap);
   }

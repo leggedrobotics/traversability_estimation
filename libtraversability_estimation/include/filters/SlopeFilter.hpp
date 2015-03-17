@@ -8,17 +8,8 @@
 
 #ifndef SLOPEFILTER_HPP
 #define SLOPEFILTER_HPP
-#include <stdint.h>
-#include <cstring>
-#include <stdio.h>
-#include <boost/scoped_ptr.hpp>
+
 #include <filters/filter_base.h>
-
-// Grid Map
-#include <grid_map/GridMap.hpp>
-
-// Grid Map lib
-#include <grid_map_lib/iterators/GridMapIterator.hpp>
 
 namespace filters {
 
@@ -53,7 +44,7 @@ class SlopeFilter : public FilterBase<T>
    * @param elevationMap the map for which the slope traversability value is computed.
    * @param slope_map gridMap with slope traversability value.
    */
-  virtual bool update(const T & elevation_map, T& slope_map);
+  virtual bool update(const T& elevation_map, T& slope_map);
 
  private:
 

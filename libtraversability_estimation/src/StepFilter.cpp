@@ -9,6 +9,14 @@
 #include "filters/StepFilter.hpp"
 #include <pluginlib/class_list_macros.h>
 
+// Grid Map
+#include <grid_map/GridMap.hpp>
+
+// Grid Map lib
+#include <grid_map_lib/GridMap.hpp>
+#include <grid_map_lib/iterators/GridMapIterator.hpp>
+#include <grid_map_lib/iterators/SubmapIterator.hpp>
+
 namespace filters {
 
 template<typename T>

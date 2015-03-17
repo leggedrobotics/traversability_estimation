@@ -8,19 +8,8 @@
 
 #ifndef STEPFILTER_HPP
 #define STEPFILTER_HPP
-#include <stdint.h>
-#include <cstring>
-#include <stdio.h>
-#include <boost/scoped_ptr.hpp>
+
 #include <filters/filter_base.h>
-
-// Grid Map
-#include <grid_map/GridMap.hpp>
-
-// Grid Map lib
-#include <grid_map_lib/GridMap.hpp>
-#include <grid_map_lib/iterators/GridMapIterator.hpp>
-#include <grid_map_lib/iterators/SubmapIterator.hpp>
 
 namespace filters {
 
@@ -55,7 +44,7 @@ class StepFilter : public FilterBase<T>
    * @param elevationMap the map for which the step traversability value is computed.
    * @param step_map gridMap with step traversability value.
    */
-  virtual bool update(const T & elevation_map, T& step_map);
+  virtual bool update(const T& elevation_map, T& step_map);
 
  private:
 

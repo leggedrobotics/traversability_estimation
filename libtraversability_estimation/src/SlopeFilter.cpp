@@ -9,6 +9,12 @@
 #include "filters/SlopeFilter.hpp"
 #include <pluginlib/class_list_macros.h>
 
+// Grid Map
+#include <grid_map/GridMap.hpp>
+
+// Grid Map lib
+#include <grid_map_lib/iterators/GridMapIterator.hpp>
+
 namespace filters {
 
 template<typename T>

@@ -8,24 +8,8 @@
 
 #ifndef ROUGHNESSFILTER_HPP
 #define ROUGHNESSFILTER_HPP
-#include <stdint.h>
-#include <cstring>
-#include <stdio.h>
-#include <boost/scoped_ptr.hpp>
+
 #include <filters/filter_base.h>
-
-// Grid Map
-#include <grid_map/GridMap.hpp>
-
-// Grid Map lib
-#include <grid_map_lib/GridMap.hpp>
-#include <grid_map_lib/GridMapMath.hpp>
-#include <grid_map_lib/iterators/GridMapIterator.hpp>
-#include <grid_map_lib/iterators/SubmapIterator.hpp>
-
-// Eigen
-#include <Eigen/Core>
-#include <Eigen/Geometry>
 
 namespace filters {
 
@@ -60,7 +44,7 @@ class RoughnessFilter : public FilterBase<T>
    * @param elevationMap the map for which the roughness traversability value is computed.
    * @param roughness_map gridMap with roughness traversability value.
    */
-  virtual bool update(const T & elevation_map, T& roughness_map);
+  virtual bool update(const T& elevation_map, T& roughness_map);
 
  private:
 
