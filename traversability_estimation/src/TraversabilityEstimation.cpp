@@ -119,7 +119,7 @@ void TraversabilityEstimation::computeTraversability(grid_map::GridMap& elevatio
   filter_chain_.update(elevationMap, traversabilityMap_);
 
   // Add to traversability map
-  elevationMap.add(traversabilityType_, traversabilityMap_.get(traversabilityType_));
+  elevationMap.add(traversabilityType_, traversabilityMap_.get("traversability_roughness"));
 }
 
 void TraversabilityEstimation::publishAsOccupancyGrid(const grid_map::GridMap& map) const

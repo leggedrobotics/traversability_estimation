@@ -10,6 +10,7 @@
 #define SLOPEFILTER_HPP
 
 #include <filters/filter_base.h>
+#include <string>
 
 namespace filters {
 
@@ -37,25 +38,22 @@ class SlopeFilter : public FilterBase<T>
   virtual bool configure();
 
   /*!
-   * Computes the slope traversability value based on an elevation map
-   * The slope traversability value is set between 0.0 and 1.0, where a value of 1.0 means fully
-   * traversable and 0.0 means barely traversable. NAN indicates that the terrain
-   * is not traversable.
-   * @param elevationMap the map for which the slope traversability value is computed.
-   * @param slope_map gridMap with slope traversability value.
+   * Computes the slope traversability value based on an elevation map and
+   * saves it as additional grid map layer.
+   * The slope traversability is set between 0.0 and 1.0, where a value of 1.0 means fully
+   * traversable and 0.0 means not traversable. NAN indicates unknown values (terrain).
+   * @param mapIn grid map containing elevation map and surface normals.
+   * @param mapOut grid map containing mapIn and slope traversability values.
    */
-  virtual bool update(const T& elevation_map, T& slope_map);
+  virtual bool update(const T& mapIn, T& mapOut);
 
  private:
-
-  //! Weight parameter of the slope filter.
-  double weight_;
 
   //! Maximum allowed slope.
   double criticalValue_;
 
-  //! Traversability map type.
-  const std::string traversabilityType_;
+  //! slope map type.
+  const std::string type_;
 };
 
 } /* namespace */

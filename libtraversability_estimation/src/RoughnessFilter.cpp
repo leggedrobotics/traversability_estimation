@@ -16,7 +16,7 @@
 #include <grid_map_lib/GridMap.hpp>
 #include <grid_map_lib/GridMapMath.hpp>
 #include <grid_map_lib/iterators/GridMapIterator.hpp>
-#include <grid_map_lib/iterators/SubmapIterator.hpp>
+#include <grid_map_lib/iterators/CircleIterator.hpp>
 
 using namespace Eigen;
 
@@ -24,10 +24,9 @@ namespace filters {
 
 template<typename T>
 RoughnessFilter<T>::RoughnessFilter()
-    : weight_(0.0),
-      criticalValue_(0.3),
+    : criticalValue_(0.3),
       estimationRadius_(0.3),
-      traversabilityType_("traversability")
+      type_("traversability_roughness")
 {
 
 }
@@ -41,18 +40,6 @@ RoughnessFilter<T>::~RoughnessFilter()
 template<typename T>
 bool RoughnessFilter<T>::configure()
 {
-  if (!FilterBase<T>::getParam(std::string("weight"), weight_)) {
-    ROS_ERROR("RoughnessFilter did not find param weight");
-    return false;
-  }
-
-  if (weight_ > 1.0 || weight_ < 0.0) {
-    ROS_ERROR("RoughnessFilter weight must be in the interval [0, 1]");
-    return false;
-  }
-
-  ROS_INFO("RoughnessFilter weight = %f", weight_);
-
   if (!FilterBase<T>::getParam(std::string("criticalValue"), criticalValue_)) {
     ROS_ERROR("RoughnessFilter did not find param criticalValue");
     return false;
@@ -81,48 +68,42 @@ bool RoughnessFilter<T>::configure()
 }
 
 template<typename T>
-bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
+bool RoughnessFilter<T>::update(const T& mapIn, T& mapOut)
 {
   // Add new layer to the elevation map.
-  roughness_map = elevation_map;
-  roughness_map.add("roughness_traversability_value", elevation_map.get("elevation"));
+  mapOut = mapIn;
+  mapOut.add(type_, mapIn.get("elevation"));
 
   double roughnessMax = 0.0;
 
   // Set clear and valid types.
   std::vector<std::string> clearTypes, validTypes;
   validTypes.push_back("surface_normal_x");
-  validTypes.push_back("elevation");
-  clearTypes.push_back("roughness_traversability_value");
-  roughness_map.setClearTypes(clearTypes);
-  roughness_map.clear();
+  clearTypes.push_back(type_);
+  mapOut.setClearTypes(clearTypes);
+  mapOut.clear();
 
-  for (grid_map_lib::GridMapIterator iterator(roughness_map);
+  for (grid_map_lib::GridMapIterator iterator(mapOut);
       !iterator.isPassedEnd(); ++iterator) {
 
     // Check if this is an empty cell (hole in the map).
-    if (!roughness_map.isValid(*iterator, validTypes)) continue;
-
-    // Size of submap area.
-    Array2d submapLength = Array2d::Ones() * (2.0 * estimationRadius_);
-
-    // Requested position (center) of submap in map.
-    Vector2d submapPosition;
-    roughness_map.getPosition(*iterator, submapPosition);
-    Array2i submapTopLeftIndex, submapBufferSize, requestedIndexInSubmap;
-    grid_map_lib::getSubmapInformation(submapTopLeftIndex, submapBufferSize, submapPosition, submapLength, requestedIndexInSubmap, submapPosition, submapLength,
-                                       roughness_map.getLength(), roughness_map.getPosition(), roughness_map.getResolution(), roughness_map.getBufferSize(), roughness_map.getBufferStartIndex());
+    if (!mapOut.isValid(*iterator, validTypes)) continue;
 
     // Prepare data computation.
-    const int maxNumberOfCells = submapBufferSize.prod();
+    const int maxNumberOfCells = ceil(pow(2*estimationRadius_/mapOut.getResolution(),2));
     MatrixXd points(3, maxNumberOfCells);
+
+    // Requested position (center) of circle in map.
+    Vector2d center;
+    mapOut.getPosition(*iterator, center);
 
     // Gather surrounding data.
     size_t nPoints = 0;
-    for (grid_map_lib::SubmapIterator submapIterator(roughness_map, submapTopLeftIndex, submapBufferSize); !submapIterator.isPassedEnd(); ++submapIterator) {
-      if (!roughness_map.isValid(*submapIterator, validTypes)) continue;
+    for (grid_map_lib::CircleIterator submapIterator(mapOut, center, estimationRadius_);
+        !submapIterator.isPassedEnd(); ++submapIterator) {
+      if (!mapOut.isValid(*submapIterator, validTypes)) continue;
       Vector3d point;
-      roughness_map.getPosition3d("elevation", *submapIterator, point);
+      mapOut.getPosition3d("elevation", *submapIterator, point);
       points.col(nPoints) = point;
       nPoints++;
     }
@@ -130,9 +111,9 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
     const Vector3d mean = points.leftCols(nPoints).rowwise().sum() / nPoints;
 
     // Compute standard deviation of submap.
-    double normalX = roughness_map.at("surface_normal_x", *iterator);
-    double normalY = roughness_map.at("surface_normal_y", *iterator);
-    double normalZ = roughness_map.at("surface_normal_z", *iterator);
+    double normalX = mapOut.at("surface_normal_x", *iterator);
+    double normalY = mapOut.at("surface_normal_y", *iterator);
+    double normalZ = mapOut.at("surface_normal_z", *iterator);
     double planeParameter = mean.x()*normalX + mean.y()*normalY + mean.z()*normalZ;
     double sum = 0.0;
     for (int i = 0; i < nPoints; i++) {
@@ -142,24 +123,16 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
     double roughness = sqrt(sum / (nPoints -1));
 
     if (roughness < criticalValue_) {
-      roughness_map.at("roughness_traversability_value", *iterator) = weight_ * (1.0 - roughness / criticalValue_);
+      mapOut.at(type_, *iterator) = 1.0 - roughness / criticalValue_;
+    }
+    else {
+      mapOut.at(type_, *iterator) = 0.0;
     }
 
     if (roughness > roughnessMax) roughnessMax = roughness;
   }
 
-  ROS_INFO("roughness max = %f",roughnessMax);
-
-  // Add traversability value to traversability map
-  if (!roughness_map.exists(traversabilityType_)) {
-    roughness_map.add(traversabilityType_, roughness_map.get("roughness_traversability_value"));
-  }
-  else{
-    MatrixXf traversabliltyMap = roughness_map.get(traversabilityType_);
-    MatrixXf roughnessMap = roughness_map.get("roughness_traversability_value");
-    traversabliltyMap += roughnessMap;
-    roughness_map.add(traversabilityType_, traversabliltyMap);
-  }
+  ROS_INFO("roughness max = %f", roughnessMax);
 
   return true;
 }

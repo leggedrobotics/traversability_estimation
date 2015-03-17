@@ -10,6 +10,7 @@
 #define STEPFILTER_HPP
 
 #include <filters/filter_base.h>
+#include <string>
 
 namespace filters {
 
@@ -37,28 +38,25 @@ class StepFilter : public FilterBase<T>
   virtual bool configure();
 
   /*!
-   * Computes the step traversability value based on an elevation map
-   * The step traversability value is set between 0.0 and 1.0, where a value of 1.0 means fully
-   * traversable and 0.0 means barely traversable. NAN indicates that the terrain
-   * is not traversable.
-   * @param elevationMap the map for which the step traversability value is computed.
-   * @param step_map gridMap with step traversability value.
+   * Computes the step traversability value based on an elevation map and
+   * saves it as additional grid map layer.
+   * The step traversability is set between 0.0 and 1.0, where a value of 1.0 means fully
+   * traversable and 0.0 means not traversable. NAN indicates unknown values (terrain).
+   * @param mapIn grid map containing elevation map and surface normals.
+   * @param mapOut grid map containing mapIn and step traversability values.
    */
-  virtual bool update(const T& elevation_map, T& step_map);
+  virtual bool update(const T& mapIn, T& mapOut);
 
  private:
-
-  //! Weight parameter of the step filter.
-  double weight_;
 
   //! Maximum allowed step.
   double criticalValue_;
 
   //! Window size for step filter
-  int windowSize_;
+  double windowRadius_;
 
-  //! Traversability map type.
-  const std::string traversabilityType_;
+  //! Step map type.
+  const std::string type_;
 };
 
 } /* namespace */

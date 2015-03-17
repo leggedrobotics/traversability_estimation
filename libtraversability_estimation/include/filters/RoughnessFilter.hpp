@@ -10,6 +10,7 @@
 #define ROUGHNESSFILTER_HPP
 
 #include <filters/filter_base.h>
+#include <string>
 
 namespace filters {
 
@@ -37,19 +38,16 @@ class RoughnessFilter : public FilterBase<T>
   virtual bool configure();
 
   /*!
-   * Computes the roughness traversability value based on an elevation map
-   * The roughness traversability value is set between 0.0 and 1.0, where a value of 1.0 means fully
-   * traversable and 0.0 means barely traversable. NAN indicates that the terrain
-   * is not traversable.
-   * @param elevationMap the map for which the roughness traversability value is computed.
-   * @param roughness_map gridMap with roughness traversability value.
+   * Computes the roughness traversability value based on an elevation map and
+   * saves it as additional grid map layer.
+   * The roughness traversability is set between 0.0 and 1.0, where a value of 1.0 means fully
+   * traversable and 0.0 means not traversable. NAN indicates unknown values (terrain).
+   * @param mapIn grid map containing elevation map and surface normals.
+   * @param mapOut grid map containing mapIn and roughness traversability values.
    */
-  virtual bool update(const T& elevation_map, T& roughness_map);
+  virtual bool update(const T& mapIn, T& mapOut);
 
  private:
-
-  //! Weight parameter of the roughness filter.
-  double weight_;
 
   //! Maximum allowed roughness.
   double criticalValue_;
@@ -57,8 +55,8 @@ class RoughnessFilter : public FilterBase<T>
   //! Radius of submap for roughness estimation.
   double estimationRadius_;
 
-  //! Traversability map type.
-  const std::string traversabilityType_;
+  //! Roughness map type.
+  const std::string type_;
 };
 
 } /* namespace */
