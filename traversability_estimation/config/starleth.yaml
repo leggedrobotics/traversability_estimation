@@ -17,3 +17,6 @@ traversability_map_filters:
   - name: roughnessFilter
     type: filters/RoughnessFilter
     params: {weight: 0.3, roughnessCritical: 0.1, roughnessEstimationRadius: 0.3}
+  - name: weightedSumFilter
+    type: filters/WeightedSumFilter
+    params: {filterTypes: [slope_traversability_value, step_traversability_value, roughness_traversability_value], filterWeights: [1, 1, 1]}

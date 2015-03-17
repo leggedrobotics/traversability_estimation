@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   grid_map
   grid_map_lib
   grid_map_msg
+  grid_map_filters
   roscpp
   nav_msgs
   tf
