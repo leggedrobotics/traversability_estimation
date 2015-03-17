@@ -52,7 +52,7 @@ class StepFilter : public FilterBase<T>
   double weight_;
 
   //! Maximum allowed step.
-  double stepCritical_;
+  double criticalValue_;
 
   //! Window size for step filter
   int windowSize_;

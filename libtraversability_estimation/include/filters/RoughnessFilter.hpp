@@ -52,10 +52,10 @@ class RoughnessFilter : public FilterBase<T>
   double weight_;
 
   //! Maximum allowed roughness.
-  double roughnessCritical_;
+  double criticalValue_;
 
   //! Radius of submap for roughness estimation.
-  double roughnessEstimationRadius_;
+  double estimationRadius_;
 
   //! Traversability map type.
   const std::string traversabilityType_;

@@ -22,7 +22,7 @@ namespace filters {
 template<typename T>
 StepFilter<T>::StepFilter()
     : weight_(0.0),
-      stepCritical_(0.3),
+      criticalValue_(0.3),
       windowSize_(3),
       traversabilityType_("traversability")
 {
@@ -50,17 +50,17 @@ bool StepFilter<T>::configure()
 
   ROS_INFO("StepFilter weight = %f", weight_);
 
-  if (!FilterBase<T>::getParam(std::string("stepCritical"), stepCritical_)) {
-    ROS_ERROR("StepFilter did not find param stepCritical");
+  if (!FilterBase<T>::getParam(std::string("criticalValue"), criticalValue_)) {
+    ROS_ERROR("StepFilter did not find param criticalValue");
     return false;
   }
 
-  if (stepCritical_ < 0.0) {
+  if (criticalValue_ < 0.0) {
     ROS_ERROR("Critical step height must be greater than zero");
     return false;
   }
 
-  ROS_INFO("Critical step height = %f", stepCritical_);
+  ROS_INFO("Critical step height = %f", criticalValue_);
 
   if (!FilterBase<T>::getParam(std::string("windowSize"), windowSize_)) {
     ROS_ERROR("StepFilter did not find param windowSize");
@@ -137,8 +137,8 @@ bool StepFilter<T>::update(const T& elevation_map, T& step_map)
       step_map.at("step_height", *mapIterator + mapToWindowCenter) =
           windowStepHeightMax;
 
-      if (windowStepHeightMax < stepCritical_) {
-        step_map.at("step_traversability_value", *mapIterator + mapToWindowCenter) = weight_ * (1.0 - windowStepHeightMax / stepCritical_);
+      if (windowStepHeightMax < criticalValue_) {
+        step_map.at("step_traversability_value", *mapIterator + mapToWindowCenter) = weight_ * (1.0 - windowStepHeightMax / criticalValue_);
       }
 
       if (windowStepHeightMax > stepHeightMax) stepHeightMax = windowStepHeightMax;

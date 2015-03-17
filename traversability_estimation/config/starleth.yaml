@@ -10,13 +10,13 @@ map_length_y: 5.0
 traversability_map_filters:
   - name: slopeFilter
     type: filters/SlopeFilter
-    params: {weight: 0.2, slopeCritical: 0.7854}
+    params: {weight: 0.2, criticalValue: 0.7854}
   - name: stepFilter
     type: filters/StepFilter
-    params: {weight: 0.5, stepCritical: 0.2, windowSize: 3}
+    params: {weight: 0.5, criticalValue: 0.2, windowSize: 3}
   - name: roughnessFilter
     type: filters/RoughnessFilter
-    params: {weight: 0.3, roughnessCritical: 0.1, roughnessEstimationRadius: 0.3}
+    params: {weight: 0.3, criticalValue: 0.1, estimationRadius: 0.3}
   - name: weightedSumFilter
     type: filters/WeightedSumFilter
     params: {filterTypes: [slope_traversability_value, step_traversability_value, roughness_traversability_value], filterWeights: [1, 1, 1]}

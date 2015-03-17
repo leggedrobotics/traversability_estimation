@@ -25,8 +25,8 @@ namespace filters {
 template<typename T>
 RoughnessFilter<T>::RoughnessFilter()
     : weight_(0.0),
-      roughnessCritical_(0.3),
-      roughnessEstimationRadius_(0.3),
+      criticalValue_(0.3),
+      estimationRadius_(0.3),
       traversabilityType_("traversability")
 {
 
@@ -53,29 +53,29 @@ bool RoughnessFilter<T>::configure()
 
   ROS_INFO("RoughnessFilter weight = %f", weight_);
 
-  if (!FilterBase<T>::getParam(std::string("roughnessCritical"), roughnessCritical_)) {
-    ROS_ERROR("RoughnessFilter did not find param roughnessCritical");
+  if (!FilterBase<T>::getParam(std::string("criticalValue"), criticalValue_)) {
+    ROS_ERROR("RoughnessFilter did not find param criticalValue");
     return false;
   }
 
-  if (roughnessCritical_ < 0.0) {
+  if (criticalValue_ < 0.0) {
     ROS_ERROR("Critical roughness must be greater than zero");
     return false;
   }
 
-  ROS_INFO("Critical roughness = %f", roughnessCritical_);
+  ROS_INFO("Critical roughness = %f", criticalValue_);
 
-  if (!FilterBase<T>::getParam(std::string("roughnessEstimationRadius"), roughnessEstimationRadius_)) {
-    ROS_ERROR("RoughnessFilter did not find param roughnessEstimationRadius");
+  if (!FilterBase<T>::getParam(std::string("estimationRadius"), estimationRadius_)) {
+    ROS_ERROR("RoughnessFilter did not find param estimationRadius");
     return false;
   }
 
-  if (roughnessEstimationRadius_ < 0.0) {
+  if (estimationRadius_ < 0.0) {
     ROS_ERROR("Roughness estimation radius must be greater than zero");
     return false;
   }
 
-  ROS_INFO("Roughness estimation = %f", roughnessEstimationRadius_);
+  ROS_INFO("Roughness estimation radius = %f", estimationRadius_);
 
   return true;
 }
@@ -104,7 +104,7 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
     if (!roughness_map.isValid(*iterator, validTypes)) continue;
 
     // Size of submap area.
-    Array2d submapLength = Array2d::Ones() * (2.0 * roughnessEstimationRadius_);
+    Array2d submapLength = Array2d::Ones() * (2.0 * estimationRadius_);
 
     // Requested position (center) of submap in map.
     Vector2d submapPosition;
@@ -141,8 +141,8 @@ bool RoughnessFilter<T>::update(const T& elevation_map, T& roughness_map)
     }
     double roughness = sqrt(sum / (nPoints -1));
 
-    if (roughness < roughnessCritical_) {
-      roughness_map.at("roughness_traversability_value", *iterator) = weight_ * (1.0 - roughness / roughnessCritical_);
+    if (roughness < criticalValue_) {
+      roughness_map.at("roughness_traversability_value", *iterator) = weight_ * (1.0 - roughness / criticalValue_);
     }
 
     if (roughness > roughnessMax) roughnessMax = roughness;

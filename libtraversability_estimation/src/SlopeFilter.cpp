@@ -20,7 +20,7 @@ namespace filters {
 template<typename T>
 SlopeFilter<T>::SlopeFilter()
     : weight_(0.0),
-      slopeCritical_(M_PI_4),
+      criticalValue_(M_PI_4),
       traversabilityType_("traversability")
 {
 
@@ -47,17 +47,17 @@ bool SlopeFilter<T>::configure()
 
   ROS_INFO("SlopeFilter weight = %f", weight_);
 
-  if (!FilterBase<T>::getParam(std::string("slopeCritical"), slopeCritical_)) {
-    ROS_ERROR("SlopeFilter did not find param slopeCritical");
+  if (!FilterBase<T>::getParam(std::string("criticalValue"), criticalValue_)) {
+    ROS_ERROR("SlopeFilter did not find param criticalValue");
     return false;
   }
 
-  if (slopeCritical_ > M_PI_2 || slopeCritical_ < 0.0) {
+  if (criticalValue_ > M_PI_2 || criticalValue_ < 0.0) {
     ROS_ERROR("Critical slope must be in the interval [0, PI/2]");
     return false;
   }
 
-  ROS_INFO("critical Slope = %f", slopeCritical_);
+  ROS_INFO("critical Slope = %f", criticalValue_);
   return true;
 }
 
@@ -86,8 +86,8 @@ bool SlopeFilter<T>::update(const T& elevation_map, T& slope_map)
     // Compute slope from surface normal z
     slope = acos(slope_map.at("surface_normal_z", *iterator));
 
-    if (slope < slopeCritical_) {
-      slope_map.at("slope_traversability_value", *iterator) = weight_ * (1.0 - slope / slopeCritical_);
+    if (slope < criticalValue_) {
+      slope_map.at("slope_traversability_value", *iterator) = weight_ * (1.0 - slope / criticalValue_);
     }
 
     if (slope > slopeMax) slopeMax = slope;

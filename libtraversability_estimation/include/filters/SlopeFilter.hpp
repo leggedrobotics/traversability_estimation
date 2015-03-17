@@ -52,7 +52,7 @@ class SlopeFilter : public FilterBase<T>
   double weight_;
 
   //! Maximum allowed slope.
-  double slopeCritical_;
+  double criticalValue_;
 
   //! Traversability map type.
   const std::string traversabilityType_;
