@@ -56,7 +56,7 @@ class RoughnessFilter : public FilterBase<T>
   double estimationRadius_;
 
   //! Roughness map type.
-  const std::string type_;
+  std::string type_;
 };
 
 } /* namespace */

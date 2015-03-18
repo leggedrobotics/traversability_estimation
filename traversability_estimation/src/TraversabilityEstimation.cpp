@@ -68,7 +68,10 @@ bool TraversabilityEstimation::readParameters()
   nodeHandle_.param("map_length_y", mapLength_.y(), 5.0);
 
   // Configure filter chain
-  filter_chain_.configure("traversability_map_filters", nodeHandle_);
+  if (!filter_chain_.configure("traversability_map_filters", nodeHandle_)) {
+    ROS_ERROR("Could not configure the filter chain!");
+  }
+
   return true;
 }
 
@@ -116,10 +119,13 @@ void TraversabilityEstimation::computeTraversability(grid_map::GridMap& elevatio
   // Run the filter chain
   ROS_INFO("Update Filter.");
 
-  filter_chain_.update(elevationMap, traversabilityMap_);
-
-  // Add to traversability map
-  elevationMap.add(traversabilityType_, traversabilityMap_.get("traversability_roughness"));
+  if (filter_chain_.update(elevationMap, traversabilityMap_)) {
+    // Add to traversability map
+    elevationMap.add(traversabilityType_, traversabilityMap_.get(traversabilityType_));
+  }
+  else {
+    ROS_ERROR("Could not update the filter chain! No traversability computed!");
+  }
 }
 
 void TraversabilityEstimation::publishAsOccupancyGrid(const grid_map::GridMap& map) const

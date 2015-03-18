@@ -56,7 +56,7 @@ class StepFilter : public FilterBase<T>
   double windowRadius_;
 
   //! Step map type.
-  const std::string type_;
+  std::string type_;
 };
 
 } /* namespace */

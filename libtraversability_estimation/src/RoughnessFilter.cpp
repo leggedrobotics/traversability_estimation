@@ -64,6 +64,13 @@ bool RoughnessFilter<T>::configure()
 
   ROS_INFO("Roughness estimation radius = %f", estimationRadius_);
 
+  if (!FilterBase<T>::getParam(std::string("mapType"), type_)) {
+    ROS_ERROR("RoughnessFilter did not find param mapType");
+    return false;
+  }
+
+  ROS_INFO("Roughness map type = %s", type_.c_str());
+
   return true;
 }
 

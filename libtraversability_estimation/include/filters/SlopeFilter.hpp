@@ -53,7 +53,7 @@ class SlopeFilter : public FilterBase<T>
   double criticalValue_;
 
   //! slope map type.
-  const std::string type_;
+  std::string type_;
 };
 
 } /* namespace */
