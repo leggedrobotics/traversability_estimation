@@ -25,18 +25,18 @@ traversability_map_filters:
      mapType: traversability_roughness
      criticalValue: 0.1
      estimationRadius: 0.3
-  - name: weightedSumFilter
-    type: filters/WeightedSumFilter
-    params:
-     filterTypes: [traversability_slope, traversability_step, traversability_roughness]
-     filterWeights: [1, 1, 1]
-     typeOut: traversability
-     normalize: 1
-#  - name: minFilter
-#    type: filters/MinFilter
+#  - name: weightedSumFilter
+#    type: filters/WeightedSumFilter
 #    params:
 #     filterTypes: [traversability_slope, traversability_step, traversability_roughness]
+#     filterWeights: [1, 1, 1]
 #     typeOut: traversability
+#     normalize: 1
+  - name: minFilter
+    type: filters/MinFilter
+    params:
+     filterTypes: [traversability_slope, traversability_step, traversability_roughness]
+     typeOut: traversability
   - name: thresholdFilter
     type: filters/ThresholdFilter
     params:

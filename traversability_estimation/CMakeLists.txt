@@ -23,7 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   tf_conversions
   filters
-  libtraversability_estimation
+  traversability_estimation_filters
 )
 
 ## System dependencies are found with CMake's conventions
