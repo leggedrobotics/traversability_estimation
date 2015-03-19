@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>libtraversability_estimation</name>
+  <name>traversability_estimation_filters</name>
   <version>0.1.0</version>
   <description>library for filtering elevation maps.</description>
   <maintainer email="pfankhauser@ethz.ch">Peter Fankhauser</maintainer>
