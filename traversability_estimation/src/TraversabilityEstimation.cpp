@@ -117,8 +117,6 @@ bool TraversabilityEstimation::getGridMap(grid_map_msg::GridMap& map)
 void TraversabilityEstimation::computeTraversability(grid_map::GridMap& elevationMap)
 {
   // Run the filter chain
-  ROS_INFO("Update Filter.");
-
   if (filter_chain_.update(elevationMap, traversabilityMap_)) {
     // Add to traversability map
     elevationMap.add(traversabilityType_, traversabilityMap_.get(traversabilityType_));

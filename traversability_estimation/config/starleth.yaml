@@ -32,3 +32,18 @@ traversability_map_filters:
      filterWeights: [1, 1, 1]
      typeOut: traversability
      normalize: 1
+#  - name: minFilter
+#    type: filters/MinFilter
+#    params:
+#     filterTypes: [traversability_slope, traversability_step, traversability_roughness]
+#     typeOut: traversability
+  - name: thresholdFilter
+    type: filters/ThresholdFilter
+    params:
+     lowerThreshold: 0.1
+     upperThreshold: 0.9
+     thresholdTypes: [traversability]
+  - name: deletionFilter
+    type: filters/DeletionFilter
+    params:
+     deletionTypes: [traversability_slope, traversability_step, traversability_roughness]
