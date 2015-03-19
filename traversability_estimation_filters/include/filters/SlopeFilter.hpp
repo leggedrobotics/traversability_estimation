@@ -10,6 +10,9 @@
 #define SLOPEFILTER_HPP
 
 #include <filters/filter_base.h>
+#include <ros/ros.h>
+#include <nav_msgs/OccupancyGrid.h>
+
 #include <string>
 
 namespace filters {

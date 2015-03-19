@@ -10,6 +10,7 @@
 #define STEPFILTER_HPP
 
 #include <filters/filter_base.h>
+
 #include <string>
 
 namespace filters {

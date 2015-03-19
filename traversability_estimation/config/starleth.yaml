@@ -43,7 +43,7 @@ traversability_map_filters:
      lowerThreshold: 0.1
      upperThreshold: 0.9
      thresholdTypes: [traversability]
-  - name: deletionFilter
-    type: filters/DeletionFilter
-    params:
-     deletionTypes: [traversability_slope, traversability_step, traversability_roughness]
+#  - name: deletionFilter
+#    type: filters/DeletionFilter
+#    params:
+#     deletionTypes: [traversability_slope, traversability_step, traversability_roughness]
