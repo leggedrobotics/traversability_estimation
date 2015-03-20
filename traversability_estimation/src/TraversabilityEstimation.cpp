@@ -32,10 +32,10 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
 
   readParameters();
   submapClient_ = nodeHandle_.serviceClient<GetGridMap>(submapServiceName_);
-  traversabilityGridPublisher_ = nodeHandle.advertise<OccupancyGrid>("traversability_map", 1, true);
-  slopeFilterGridPublisher_ = nodeHandle.advertise<OccupancyGrid>("slope_map", 1, true);
-  stepFilterGridPublisher_ = nodeHandle.advertise<OccupancyGrid>("step_map", 1, true);
-  roughnessFilterGridPublisher_ = nodeHandle.advertise<OccupancyGrid>("roughness_map", 1, true);
+  traversabilityGridPublisher_ = nodeHandle_.advertise<OccupancyGrid>("traversability_map", 1, true);
+  slopeFilterGridPublisher_ = nodeHandle_.advertise<OccupancyGrid>("slope_map", 1, true);
+  stepFilterGridPublisher_ = nodeHandle_.advertise<OccupancyGrid>("step_map", 1, true);
+  roughnessFilterGridPublisher_ = nodeHandle_.advertise<OccupancyGrid>("roughness_map", 1, true);
   updateTimer_ = nodeHandle_.createTimer(updateDuration_,
                                          &TraversabilityEstimation::updateTimerCallback, this);
 
