@@ -9,41 +9,42 @@ map_length_y: 5.0
 
 traversability_map_filters:
   - name: slopeFilter
-    type: filters/SlopeFilter
+    type: traversabilityFilters/SlopeFilter
     params:
-     mapType: traversability_slope
-     criticalValue: 0.7854
+     map_type: traversability_slope
+     critical_value: 0.7854
   - name: stepFilter
-    type: filters/StepFilter
+    type: traversabilityFilters/StepFilter
     params:
-     mapType: traversability_step
-     criticalValue: 0.2
-     windowRadius: 0.2
+     map_type: traversability_step
+     critical_value: 0.25
+     window_radius: 0.15
   - name: roughnessFilter
-    type: filters/RoughnessFilter
+    type: traversabilityFilters/RoughnessFilter
     params:
-     mapType: traversability_roughness
-     criticalValue: 0.1
-     estimationRadius: 0.3
-#  - name: weightedSumFilter
-#    type: filters/WeightedSumFilter
+     map_type: traversability_roughness
+     critical_value: 0.075
+     estimation_radius: 0.2
+  - name: weightedSumFilter
+    type: gridMapFilters/WeightedSumFilter
+    params:
+     filter_types: [traversability_slope, traversability_step, traversability_roughness]
+     filter_weights: [1, 1, 1]
+     type_out: traversability
+     normalize: 1
+#  - name: minFilter
+#    type: gridMapFilters/MinFilter
 #    params:
-#     filterTypes: [traversability_slope, traversability_step, traversability_roughness]
-#     filterWeights: [1, 1, 1]
-#     typeOut: traversability
-#     normalize: 1
-  - name: minFilter
-    type: filters/MinFilter
-    params:
-     filterTypes: [traversability_slope, traversability_step, traversability_roughness]
-     typeOut: traversability
+#     filter_types: [traversability_slope, traversability_step, traversability_roughness]
+#     type_out: traversability
   - name: thresholdFilter
-    type: filters/ThresholdFilter
+    type: gridMapFilters/ThresholdFilter
     params:
-     lowerThreshold: 0.1
-     upperThreshold: 0.9
-     thresholdTypes: [traversability]
+     lower_threshold: 0.2
+#     upper_threshold: 0.9
+     set_to: 0.0
+     threshold_types: [traversability]
 #  - name: deletionFilter
-#    type: filters/DeletionFilter
+#    type: gridMapFilters/DeletionFilter
 #    params:
-#     deletionTypes: [traversability_slope, traversability_step, traversability_roughness]
+#     deletion_types: [traversability_slope, traversability_step, traversability_roughness]

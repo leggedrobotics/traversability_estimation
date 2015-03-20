@@ -40,8 +40,8 @@ RoughnessFilter<T>::~RoughnessFilter()
 template<typename T>
 bool RoughnessFilter<T>::configure()
 {
-  if (!FilterBase<T>::getParam(std::string("criticalValue"), criticalValue_)) {
-    ROS_ERROR("RoughnessFilter did not find param criticalValue");
+  if (!FilterBase<T>::getParam(std::string("critical_value"), criticalValue_)) {
+    ROS_ERROR("RoughnessFilter did not find param critical_value");
     return false;
   }
 
@@ -52,8 +52,8 @@ bool RoughnessFilter<T>::configure()
 
   ROS_INFO("Critical roughness = %f", criticalValue_);
 
-  if (!FilterBase<T>::getParam(std::string("estimationRadius"), estimationRadius_)) {
-    ROS_ERROR("RoughnessFilter did not find param estimationRadius");
+  if (!FilterBase<T>::getParam(std::string("estimation_radius"), estimationRadius_)) {
+    ROS_ERROR("RoughnessFilter did not find param estimation_radius");
     return false;
   }
 
@@ -64,8 +64,8 @@ bool RoughnessFilter<T>::configure()
 
   ROS_INFO("Roughness estimation radius = %f", estimationRadius_);
 
-  if (!FilterBase<T>::getParam(std::string("mapType"), type_)) {
-    ROS_ERROR("RoughnessFilter did not find param mapType");
+  if (!FilterBase<T>::getParam(std::string("map_type"), type_)) {
+    ROS_ERROR("RoughnessFilter did not find param map_type");
     return false;
   }
 

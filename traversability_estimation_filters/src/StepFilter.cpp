@@ -38,8 +38,8 @@ StepFilter<T>::~StepFilter()
 template<typename T>
 bool StepFilter<T>::configure()
 {
-  if (!FilterBase<T>::getParam(std::string("criticalValue"), criticalValue_)) {
-    ROS_ERROR("StepFilter did not find param criticalValue");
+  if (!FilterBase<T>::getParam(std::string("critical_value"), criticalValue_)) {
+    ROS_ERROR("StepFilter did not find param critical_value");
     return false;
   }
 
@@ -50,8 +50,8 @@ bool StepFilter<T>::configure()
 
   ROS_INFO("Critical step height = %f", criticalValue_);
 
-  if (!FilterBase<T>::getParam(std::string("windowRadius"), windowRadius_)) {
-    ROS_ERROR("StepFilter did not find param windowRadius");
+  if (!FilterBase<T>::getParam(std::string("window_radius"), windowRadius_)) {
+    ROS_ERROR("StepFilter did not find param window_radius");
     return false;
   }
 
@@ -62,8 +62,8 @@ bool StepFilter<T>::configure()
 
   ROS_INFO("Window radius of step filter = %f", windowRadius_);
 
-  if (!FilterBase<T>::getParam(std::string("mapType"), type_)) {
-    ROS_ERROR("StepFilter did not find param mapType");
+  if (!FilterBase<T>::getParam(std::string("map_type"), type_)) {
+    ROS_ERROR("StepFilter did not find param map_type");
     return false;
   }
 

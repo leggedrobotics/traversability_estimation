@@ -34,8 +34,8 @@ SlopeFilter<T>::~SlopeFilter()
 template<typename T>
 bool SlopeFilter<T>::configure()
 {
-  if (!FilterBase<T>::getParam(std::string("criticalValue"), criticalValue_)) {
-    ROS_ERROR("SlopeFilter did not find param criticalValue");
+  if (!FilterBase<T>::getParam(std::string("critical_value"), criticalValue_)) {
+    ROS_ERROR("SlopeFilter did not find param critical_value");
     return false;
   }
 
@@ -46,8 +46,8 @@ bool SlopeFilter<T>::configure()
 
   ROS_INFO("critical Slope = %f", criticalValue_);
 
-  if (!FilterBase<T>::getParam(std::string("mapType"), type_)) {
-    ROS_ERROR("SlopeFilter did not find param mapType");
+  if (!FilterBase<T>::getParam(std::string("map_type"), type_)) {
+    ROS_ERROR("SlopeFilter did not find param map_type");
     return false;
   }
 
