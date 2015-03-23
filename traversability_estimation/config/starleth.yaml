@@ -44,6 +44,13 @@ traversability_map_filters:
 ##     upper_threshold: 0.9
 #     set_to: 0.0
 #     threshold_types: [traversability]
+#  - name: thresholdFilter
+#    type: gridMapFilters/ThresholdFilter
+#    params:
+##     lower_threshold: 0.2
+#     upper_threshold: 0.9
+#     set_to: 1.0
+#     threshold_types: [traversability]
 #  - name: deletionFilter
 #    type: gridMapFilters/DeletionFilter
 #    params:
