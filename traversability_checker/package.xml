@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package>
+  <name>traversability_checker</name>
+  <version>0.1.0</version>
+  <description>Checking navigation safety with the traversability map.</description>
+  <maintainer email="pfankhauser@ethz.ch">Peter Fankhauser</maintainer>
+  <author email="pfankhauser@ethz.ch">Peter Fankhauser</author>
+  <license>MIT</license>
+  <url type="website">https://github.com/ethz-asl/traversability_estimation</url>
+  <url type="bugtracker">https://github.com/ethz-asl/traversability_estimation/issues</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  
+  <build_depend>roscpp</build_depend>
+  
+  <run_depend>roscpp</run_depend>
+
+  <export>
+  </export>
+</package>
