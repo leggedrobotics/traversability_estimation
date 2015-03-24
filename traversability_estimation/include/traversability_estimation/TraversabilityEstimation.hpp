@@ -15,6 +15,7 @@
 #include <ros/ros.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <tf/transform_listener.h>
+#include <filters/filter_chain.h>
 
 // STD
 #include <vector>
@@ -67,8 +68,17 @@ namespace traversability_estimation {
     //! Name of the elevation submap service.
     std::string submapServiceName_;
   
-    //! Publisher of the occupancy grid.
-    ros::Publisher occupancyGridPublisher_;
+    //! Publisher of the traversability occupancy grid.
+    ros::Publisher traversabilityGridPublisher_;
+
+    //! Publisher of the slope filter occupancy grid.
+    ros::Publisher slopeFilterGridPublisher_;
+
+    //! Publisher of the step filter occupancy grid.
+    ros::Publisher stepFilterGridPublisher_;
+
+    //! Publisher of the roughness filter occupancy grid.
+    ros::Publisher roughnessFilterGridPublisher_;
   
     //! TF listener.
     tf::TransformListener transformListener_;
@@ -90,9 +100,17 @@ namespace traversability_estimation {
 
     //! Traversability map type.
     const std::string traversabilityType_;
+    const std::string slopeType_;
+    const std::string stepType_;
+    const std::string roughnessType_;
 
     //! Requested map length in [m].
     Eigen::Array2d mapLength_;
+
+    //! Filter Chain
+    filters::FilterChain<grid_map::GridMap> filter_chain_;
+    grid_map::GridMap traversabilityMap_;
+
   
     /*!
     * Reads and verifies the ROS parameters.

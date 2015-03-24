@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(traversability_estimation)
+project(traversability_estimation_filters)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
@@ -17,11 +17,6 @@ find_package(catkin REQUIRED COMPONENTS
   grid_map
   grid_map_lib
   grid_map_msg
-  roscpp
-  nav_msgs
-  tf
-  tf_conversions
-  filters
 )
 
 ## System dependencies are found with CMake's conventions
@@ -38,9 +33,9 @@ find_package(Eigen REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
     INCLUDE_DIRS include
-#  LIBRARIES elevation_mapping
-    CATKIN_DEPENDS nav_msgs grid_map_msg
-#  DEPENDS system_lib
+    LIBRARIES ${PROJECT_NAME}
+#   CATKIN_DEPENDS
+    DEPENDS Eigen
 )
 
 ###########
@@ -48,27 +43,19 @@ catkin_package(
 ###########
 
 ## Specify additional locations of header files
-## Your package locations should be listed before other locations
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${Eigen_INCLUDE_DIRS}
+  ${EIGEN_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
-# add_library(elevation_mapping
-#   src/${PROJECT_NAME}/elevation_mapping.cpp
-# )
-
-## Declare a cpp executable
-add_executable(
-  ${PROJECT_NAME}
-  src/traversability_estimation_node.cpp
-  src/TraversabilityEstimation.cpp
+add_library(${PROJECT_NAME}
+   src/SlopeFilter.cpp
+   src/StepFilter.cpp
+   src/RoughnessFilter.cpp
 )
 
-## Specify libraries to link a library or executable target against
-target_link_libraries(
-  ${PROJECT_NAME}
+target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )
