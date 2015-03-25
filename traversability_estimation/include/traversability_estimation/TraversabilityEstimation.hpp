@@ -111,6 +111,12 @@ namespace traversability_estimation {
     filters::FilterChain<grid_map::GridMap> filter_chain_;
     grid_map::GridMap traversabilityMap_;
 
+    //! Hack!!! Compute difference in traversability
+    //! Publisher of the roughness filter occupancy grid.
+    ros::Publisher diffPublisher_;
+    ros::Publisher groundTruthPublisher_;
+    grid_map::GridMap groundTruthMap_;
+
   
     /*!
     * Reads and verifies the ROS parameters.
