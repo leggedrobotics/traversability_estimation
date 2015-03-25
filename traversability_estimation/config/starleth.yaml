@@ -1,30 +1,31 @@
 submap_service: "/elevation_mapping_long_range/get_grid_map"
-robot_frame_id: "base"
+# robot_frame_id: "base"
+robot_frame_id: "map"
 map_frame_id: "map"
-update_rate: 4.0
-map_center_x: 1.5
-map_center_y: 0.0
-map_length_x: 5.0
-map_length_y: 5.0
+update_rate: 2.0
+map_center_x: 2.5
+map_center_y: 5.75
+map_length_x: 6.0
+map_length_y: 10.5
 
 traversability_map_filters:
   - name: slopeFilter
     type: traversabilityFilters/SlopeFilter
     params:
      map_type: traversability_slope
-     critical_value: 0.7854
+     critical_value: 0.5236
   - name: stepFilter
     type: traversabilityFilters/StepFilter
     params:
      map_type: traversability_step
-     critical_value: 0.25
-     window_radius: 0.15
+     critical_value: 0.20
+     window_radius: 0.08
   - name: roughnessFilter
     type: traversabilityFilters/RoughnessFilter
     params:
      map_type: traversability_roughness
-     critical_value: 0.075
-     estimation_radius: 0.2
+     critical_value: 0.04
+     estimation_radius: 0.08
   - name: weightedSumFilter
     type: gridMapFilters/WeightedSumFilter
     params:
