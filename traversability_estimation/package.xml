@@ -4,10 +4,12 @@
   <version>0.1.0</version>
   <description>ROS package for estimating traversability from elevation maps.</description>
   <maintainer email="pfankhauser@ethz.ch">Peter Fankhauser</maintainer>
-  <license>MIT</license>
-  <url type="website">http://bitbucket.org/ethz-asl/c_elevation_obstacle_detection</url>
   <author email="ralf.kaestner@gmail.com">Ralf Kaestner</author>
   <author email="pfankhauser@ethz.ch">Peter Fankhauser</author>
+  <license>MIT</license>
+  <url type="website">https://github.com/ethz-asl/traversability_estimation</url>
+  <url type="bugtracker">https://github.com/ethz-asl/traversability_estimation/issues</url>
+
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>cmake_modules</build_depend>
   <build_depend>roscpp</build_depend>
