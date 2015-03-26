@@ -1,12 +1,25 @@
+# Minimum cmake version
 cmake_minimum_required(VERSION 2.8.3)
+
+# Create project
 project(traversability_checker)
 
+# Set compiler flags
+set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+
+# Set the build type. Options are:
+#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
+#  Debug          : w/ debug symbols, w/o optimization
+#  Release        : w/o debug symbols, w/ optimization
+#  RelWithDebInfo : w/ debug symbols, w/ optimization
+#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
+
 ## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  traversability_msgs
+find_package(catkin REQUIRED
+  COMPONENTS
+    roscpp
+    traversability_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -27,7 +40,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
+  INCLUDE_DIRS
+    include
 #  LIBRARIES traversability_checker
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
@@ -47,17 +61,22 @@ include_directories(include)
 # )
 
 ## Declare a cpp executable
-add_executable(traversability_checker_node
+add_executable(
+  ${PROJECT_NAME}
   src/traversability_checker_node.cpp
   src/TraversabilityChecker.cpp
 )
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-add_dependencies(traversability_checker_node traversability_msgs_generate_messages_cpp)
+add_dependencies(
+  ${PROJECT_NAME}
+  traversability_msgs_generate_messages_cpp
+)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(traversability_checker_node
+target_link_libraries(
+  ${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )
 

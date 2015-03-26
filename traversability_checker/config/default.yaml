@@ -1,0 +1,2 @@
+rate: 2.0
+service_to_call: /traversability_estimation/check_footprint_path
