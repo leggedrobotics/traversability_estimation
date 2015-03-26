@@ -68,6 +68,15 @@ namespace traversability_estimation {
     //! Name of the elevation submap service.
     std::string submapServiceName_;
   
+    //! TF listener.
+    tf::TransformListener transformListener_;
+
+    //! Center point of the requested map.
+    geometry_msgs::PointStamped submapPoint_;
+
+    //! Id of the frame of the elevation map.
+    std::string mapFrameId_;
+
     //! Publisher of the traversability occupancy grid.
     ros::Publisher traversabilityGridPublisher_;
 
@@ -79,15 +88,6 @@ namespace traversability_estimation {
 
     //! Publisher of the roughness filter occupancy grid.
     ros::Publisher roughnessFilterGridPublisher_;
-  
-    //! TF listener.
-    tf::TransformListener transformListener_;
-
-    //! Center point of the requested map.
-    geometry_msgs::PointStamped submapPoint_;
-
-    //! Id of the frame of the elevation map.
-    std::string mapFrameId_;
   
     //! Timer for the map update.
     ros::Timer updateTimer_;
@@ -109,14 +109,9 @@ namespace traversability_estimation {
 
     //! Filter Chain
     filters::FilterChain<grid_map::GridMap> filter_chain_;
+
+    //! Traversability map.
     grid_map::GridMap traversabilityMap_;
-
-    //! Hack!!! Compute difference in traversability
-    //! Publisher of the roughness filter occupancy grid.
-    ros::Publisher diffPublisher_;
-    ros::Publisher groundTruthPublisher_;
-    grid_map::GridMap groundTruthMap_;
-
   
     /*!
     * Reads and verifies the ROS parameters.

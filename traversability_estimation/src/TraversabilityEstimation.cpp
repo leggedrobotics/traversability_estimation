@@ -37,10 +37,6 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
   stepFilterGridPublisher_ = nodeHandle_.advertise<OccupancyGrid>("step_map", 1, true);
   roughnessFilterGridPublisher_ = nodeHandle_.advertise<OccupancyGrid>("roughness_map", 1, true);
 
-  // Hack!!!
-  diffPublisher_ = nodeHandle_.advertise<OccupancyGrid>("diff", 1, true);
-  groundTruthPublisher_ = nodeHandle_.advertise<OccupancyGrid>("ground_truth", 1, true);
-
   updateTimer_ = nodeHandle_.createTimer(updateDuration_,
                                          &TraversabilityEstimation::updateTimerCallback, this);
 
@@ -82,11 +78,6 @@ bool TraversabilityEstimation::readParameters()
   if (!filter_chain_.configure("traversability_map_filters", nodeHandle_)) {
     ROS_ERROR("Could not configure the filter chain!");
   }
-
-  string bagName = "/home/martiwer/catkin_ws/lee_ground_truth";
-  string topicName = "grid_map";
-  groundTruthMap_.fromRosbag(bagName, topicName);
-
   return true;
 }
 
@@ -96,12 +87,6 @@ void TraversabilityEstimation::updateTimerCallback(const ros::TimerEvent& timerE
   if (getGridMap(mapMessage)) {
     grid_map::GridMap map(mapMessage);
     computeTraversability(map);
-
-//    // Save GridMap in Rosbag
-//    string bagName = "/home/martiwer/catkin_ws/lee_ground_truth";
-//    string topicName = "grid_map";
-//    map.toRosbag(bagName, topicName);
-
     publishAsOccupancyGrid(map);
   } else {
     ROS_WARN("Failed to retrieve elevation grid map.");
@@ -142,12 +127,6 @@ void TraversabilityEstimation::computeTraversability(grid_map::GridMap& elevatio
     // Add to traversability map
     elevationMap.add(traversabilityType_, traversabilityMap_.get(traversabilityType_));
 
-    //Hack!!!
-    Eigen::MatrixXf traversabilityMap, groundTruth;
-    traversabilityMap = elevationMap.get(traversabilityType_);
-    groundTruth = groundTruthMap_.get(traversabilityType_);
-    elevationMap.add("diff", (groundTruth - traversabilityMap).cwiseAbs());
-
     if (traversabilityMap_.exists(slopeType_)) {
       elevationMap.add(slopeType_, traversabilityMap_.get(slopeType_));
     }
@@ -170,21 +149,6 @@ void TraversabilityEstimation::publishAsOccupancyGrid(const grid_map::GridMap& m
     // This flips data from traversability to occupancy.
     map.toOccupancyGrid(traversabilityGrid, traversabilityType_, 1.0, 0.0);
     traversabilityGridPublisher_.publish(traversabilityGrid);
-  }
-
-  // Hack!!!
-  if (diffPublisher_.getNumSubscribers () >= 1) {
-    OccupancyGrid diffGrid;
-    // This flips data from traversability to occupancy.
-    map.toOccupancyGrid(diffGrid, "diff", 1.0, 0.0);
-    diffPublisher_.publish(diffGrid);
-  }
-
-  if (groundTruthPublisher_.getNumSubscribers () >= 1) {
-    OccupancyGrid groundTruthGrid;
-    // This flips data from traversability to occupancy.
-    groundTruthMap_.toOccupancyGrid(groundTruthGrid, traversabilityType_, 1.0, 0.0);
-    groundTruthPublisher_.publish(groundTruthGrid);
   }
 
   if (map.exists(slopeType_)) {
