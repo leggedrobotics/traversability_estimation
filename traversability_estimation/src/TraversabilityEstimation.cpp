@@ -9,7 +9,9 @@
 #include "traversability_estimation/TraversabilityEstimation.hpp"
 
 // Grid Map
+#include <grid_map_lib/GridMap.hpp>
 #include <grid_map_msg/GetGridMap.h>
+#include <grid_map_lib/iterators/CircleIterator.hpp>
 
 // Traversability estimation
 #include "traversability_msgs/CheckFootprintPath.h"
@@ -35,17 +37,27 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
 
   readParameters();
   submapClient_ = nodeHandle_.serviceClient<GetGridMap>(submapServiceName_);
-  traversabilityGridPublisher_ = nodeHandle_.advertise<OccupancyGrid>("traversability_map", 1, true);
-  slopeFilterGridPublisher_ = nodeHandle_.advertise<OccupancyGrid>("slope_map", 1, true);
-  stepFilterGridPublisher_ = nodeHandle_.advertise<OccupancyGrid>("step_map", 1, true);
-  roughnessFilterGridPublisher_ = nodeHandle_.advertise<OccupancyGrid>("roughness_map", 1, true);
+  traversabilityGridPublisher_ = nodeHandle_.advertise<OccupancyGrid>(
+      "traversability_map", 1, true);
+  slopeFilterGridPublisher_ = nodeHandle_.advertise<OccupancyGrid>("slope_map",
+                                                                   1, true);
+  stepFilterGridPublisher_ = nodeHandle_.advertise<OccupancyGrid>("step_map", 1,
+                                                                  true);
+  roughnessFilterGridPublisher_ = nodeHandle_.advertise<OccupancyGrid>(
+      "roughness_map", 1, true);
 
-  updateTimer_ = nodeHandle_.createTimer(updateDuration_,
-                                         &TraversabilityEstimation::updateTimerCallback, this);
+  updateTimer_ = nodeHandle_.createTimer(
+      updateDuration_, &TraversabilityEstimation::updateTimerCallback, this);
 
-  ros::AdvertiseServiceOptions advertiseServiceOptionsForCheckFootprintPath = ros::AdvertiseServiceOptions::create<traversability_msgs::CheckFootprintPath>(
-      "check_footprint_path", boost::bind(&TraversabilityEstimation::checkFootprintPath, this, _1, _2), ros::VoidConstPtr(), &fusionServiceQueue_);
-  footprintPathService_ = nodeHandle_.advertiseService(advertiseServiceOptionsForCheckFootprintPath);
+  ros::AdvertiseServiceOptions advertiseServiceOptionsForCheckFootprintPath =
+      ros::AdvertiseServiceOptions::create<
+          traversability_msgs::CheckFootprintPath>(
+          "check_footprint_path",
+          boost::bind(&TraversabilityEstimation::checkFootprintPath, this, _1,
+                      _2),
+          ros::VoidConstPtr(), &fusionServiceQueue_);
+  footprintPathService_ = nodeHandle_.advertiseService(
+      advertiseServiceOptionsForCheckFootprintPath);
 
   requestedMapTypes_.push_back("elevation");
   requestedMapTypes_.push_back("surface_normal_x");
@@ -61,7 +73,8 @@ TraversabilityEstimation::~TraversabilityEstimation()
 
 bool TraversabilityEstimation::readParameters()
 {
-  nodeHandle_.param("submap_service", submapServiceName_, string("/get_grid_map"));
+  nodeHandle_.param("submap_service", submapServiceName_,
+                    string("/get_grid_map"));
 
   double updateRate;
   nodeHandle_.param("update_rate", updateRate, 1.0);
@@ -88,7 +101,8 @@ bool TraversabilityEstimation::readParameters()
   return true;
 }
 
-void TraversabilityEstimation::updateTimerCallback(const ros::TimerEvent& timerEvent)
+void TraversabilityEstimation::updateTimerCallback(
+    const ros::TimerEvent& timerEvent)
 {
   grid_map_msg::GridMap mapMessage;
   if (getGridMap(mapMessage)) {
@@ -106,7 +120,8 @@ bool TraversabilityEstimation::getGridMap(grid_map_msg::GridMap& map)
   geometry_msgs::PointStamped submapPointTransformed;
 
   try {
-    transformListener_.transformPoint(mapFrameId_, submapPoint_, submapPointTransformed);
+    transformListener_.transformPoint(mapFrameId_, submapPoint_,
+                                      submapPointTransformed);
   } catch (tf::TransformException &ex) {
     ROS_ERROR("%s", ex.what());
   }
@@ -122,17 +137,20 @@ bool TraversabilityEstimation::getGridMap(grid_map_msg::GridMap& map)
     submapService.request.dataDefinition[i] = requestedMapTypes_[i];
   }
 
-  if (!submapClient_.call(submapService)) return false;
+  if (!submapClient_.call(submapService))
+    return false;
   map = submapService.response.gridMap;
   return true;
 }
 
-void TraversabilityEstimation::computeTraversability(grid_map::GridMap& elevationMap)
+void TraversabilityEstimation::computeTraversability(
+    grid_map::GridMap& elevationMap)
 {
   // Run the filter chain
   if (filter_chain_.update(elevationMap, traversabilityMap_)) {
     // Add to traversability map
-    elevationMap.add(traversabilityType_, traversabilityMap_.get(traversabilityType_));
+    elevationMap.add(traversabilityType_,
+                     traversabilityMap_.get(traversabilityType_));
 
     if (traversabilityMap_.exists(slopeType_)) {
       elevationMap.add(slopeType_, traversabilityMap_.get(slopeType_));
@@ -143,15 +161,15 @@ void TraversabilityEstimation::computeTraversability(grid_map::GridMap& elevatio
     if (traversabilityMap_.exists(roughnessType_)) {
       elevationMap.add(roughnessType_, traversabilityMap_.get(roughnessType_));
     }
-  }
-  else {
+  } else {
     ROS_ERROR("Could not update the filter chain! No traversability computed!");
   }
 }
 
-void TraversabilityEstimation::publishAsOccupancyGrid(const grid_map::GridMap& map) const
+void TraversabilityEstimation::publishAsOccupancyGrid(
+    const grid_map::GridMap& map) const
 {
-  if (traversabilityGridPublisher_.getNumSubscribers () >= 1) {
+  if (traversabilityGridPublisher_.getNumSubscribers() >= 1) {
     OccupancyGrid traversabilityGrid;
     // This flips data from traversability to occupancy.
     map.toOccupancyGrid(traversabilityGrid, traversabilityType_, 1.0, 0.0);
@@ -159,7 +177,7 @@ void TraversabilityEstimation::publishAsOccupancyGrid(const grid_map::GridMap& m
   }
 
   if (map.exists(slopeType_)) {
-    if (slopeFilterGridPublisher_.getNumSubscribers () >= 1) {
+    if (slopeFilterGridPublisher_.getNumSubscribers() >= 1) {
       OccupancyGrid slopeGrid;
       map.toOccupancyGrid(slopeGrid, slopeType_, 1.0, 0.0);
       slopeFilterGridPublisher_.publish(slopeGrid);
@@ -167,7 +185,7 @@ void TraversabilityEstimation::publishAsOccupancyGrid(const grid_map::GridMap& m
   }
 
   if (map.exists(stepType_)) {
-    if (stepFilterGridPublisher_.getNumSubscribers () >= 1) {
+    if (stepFilterGridPublisher_.getNumSubscribers() >= 1) {
       OccupancyGrid stepGrid;
       map.toOccupancyGrid(stepGrid, stepType_, 1.0, 0.0);
       stepFilterGridPublisher_.publish(stepGrid);
@@ -175,7 +193,7 @@ void TraversabilityEstimation::publishAsOccupancyGrid(const grid_map::GridMap& m
   }
 
   if (map.exists(roughnessType_)) {
-    if (roughnessFilterGridPublisher_.getNumSubscribers () >= 1) {
+    if (roughnessFilterGridPublisher_.getNumSubscribers() >= 1) {
       OccupancyGrid roughnessGrid;
       map.toOccupancyGrid(roughnessGrid, roughnessType_, 1.0, 0.0);
       roughnessFilterGridPublisher_.publish(roughnessGrid);
@@ -183,9 +201,56 @@ void TraversabilityEstimation::publishAsOccupancyGrid(const grid_map::GridMap& m
   }
 }
 
-bool TraversabilityEstimation::checkFootprintPath(traversability_msgs::CheckFootprintPath::Request& request, traversability_msgs::CheckFootprintPath::Response& response)
+bool TraversabilityEstimation::checkFootprintPath(
+    traversability_msgs::CheckFootprintPath::Request& request,
+    traversability_msgs::CheckFootprintPath::Response& response)
 {
+  if (!traversabilityMap_.exists(traversabilityType_)) {
+    ROS_WARN("Failed to retrieve traversability map.");
+    return false;
+  }
+
+  int arraySize = request.path.poses.poses.size();
+
+  if (arraySize == 0) {
+    ROS_WARN("No footprint path available to check!");
+    return false;
+  }
+
+  double radius = request.path.radius;
   response.is_safe = true;
+  response.traversability = 0.0;
+  Eigen::Vector2d position;
+
+
+  double traversability = 0.0;
+  std::vector<std::string> validTypes;
+  validTypes.push_back(traversabilityType_);
+  for (int i = 0; i < arraySize; i++) {
+
+    int nCells = 0;
+    position.x() = request.path.poses.poses[i].position.x;
+    position.y() = request.path.poses.poses[i].position.y;
+
+    for (grid_map_lib::CircleIterator submapIterator(traversabilityMap_,
+                                                     position, radius);
+        !submapIterator.isPassedEnd(); ++submapIterator) {
+      if (!traversabilityMap_.isValid(*submapIterator, validTypes))
+        continue;
+
+      if (traversabilityMap_.at(traversabilityType_, *submapIterator) == 0.0) {
+        response.is_safe = false;
+        traversability = 0.0;
+        break;
+      }
+      traversability += traversabilityMap_.at(traversabilityType_,
+                                              *submapIterator);
+      nCells++;
+    }
+    response.traversability += traversability / (nCells * arraySize);
+
+  }
+
   return true;
 }
 
