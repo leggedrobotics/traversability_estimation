@@ -77,7 +77,7 @@ namespace traversability_estimation {
     ros::ServiceServer footprintPathService_;
 
     //! Callback queue for fusion service thread.
-    ros::CallbackQueue fusionServiceQueue_;
+    ros::CallbackQueue ServiceQueue_;
 
     //! Elevation map service client.
     ros::ServiceClient submapClient_;

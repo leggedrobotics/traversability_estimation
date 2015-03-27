@@ -55,7 +55,7 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
           "check_footprint_path",
           boost::bind(&TraversabilityEstimation::checkFootprintPath, this, _1,
                       _2),
-          ros::VoidConstPtr(), &fusionServiceQueue_);
+          ros::VoidConstPtr(), &ServiceQueue_);
   footprintPathService_ = nodeHandle_.advertiseService(
       advertiseServiceOptionsForCheckFootprintPath);
 
@@ -101,8 +101,7 @@ bool TraversabilityEstimation::readParameters()
   return true;
 }
 
-void TraversabilityEstimation::updateTimerCallback(
-    const ros::TimerEvent& timerEvent)
+void TraversabilityEstimation::updateTimerCallback(const ros::TimerEvent& timerEvent)
 {
   grid_map_msg::GridMap mapMessage;
   if (getGridMap(mapMessage)) {
@@ -143,8 +142,7 @@ bool TraversabilityEstimation::getGridMap(grid_map_msg::GridMap& map)
   return true;
 }
 
-void TraversabilityEstimation::computeTraversability(
-    grid_map::GridMap& elevationMap)
+void TraversabilityEstimation::computeTraversability(grid_map::GridMap& elevationMap)
 {
   // Run the filter chain
   if (filter_chain_.update(elevationMap, traversabilityMap_)) {
