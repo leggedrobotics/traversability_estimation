@@ -12,7 +12,7 @@
 int main(int argc, char** argv) {
   ros::init(argc, argv, "traversability_checker");
   ros::NodeHandle nodeHandle("~");
-//  traversability_checker::TraversabilityChecker traversabilityChecker(nodeHandle);
+  traversability_checker::TraversabilityChecker traversabilityChecker(nodeHandle);
   ros::spin();
   return 0;
 }
