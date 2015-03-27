@@ -62,8 +62,8 @@ namespace traversability_estimation {
 
     /*!
      * ROS service callback function to return a boolean to indicate if a path is traversable.
-     * @param request the ROS service request defining the location and size of the submap.
-     * @param response the ROS service response containing the requested submap.
+     * @param request the ROS service request defining footprint path.
+     * @param response the ROS service response containing the traversability of the footprint path.
      * @return true if successful.
      */
     bool checkFootprintPath(traversability_msgs::CheckFootprintPath::Request& request, traversability_msgs::CheckFootprintPath::Response& response);
