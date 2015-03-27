@@ -1,2 +1,5 @@
 rate: 2.0
+extrapolation_duration: 1.0
 service_to_call: /traversability_estimation/check_footprint_path
+robot_pose_topic: /state_estimator/pose
+robot_twist_topic: /state_estimator/twist
