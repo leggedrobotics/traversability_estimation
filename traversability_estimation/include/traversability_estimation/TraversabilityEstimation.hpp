@@ -11,6 +11,9 @@
 // Grid Map
 #include <grid_map/GridMap.hpp>
 
+// Traversability estimation
+#include "traversability_msgs/CheckFootprintPath.h"
+
 // ROS
 #include <ros/ros.h>
 #include <nav_msgs/OccupancyGrid.h>
@@ -57,10 +60,24 @@ namespace traversability_estimation {
      */
     void publishAsOccupancyGrid(const grid_map::GridMap& map) const;
 
+    /*!
+     * ROS service callback function to return a boolean to indicate if a path is traversable.
+     * @param request the ROS service request defining the location and size of the submap.
+     * @param response the ROS service response containing the requested submap.
+     * @return true if successful.
+     */
+    bool checkFootprintPath(traversability_msgs::CheckFootprintPath::Request& request, traversability_msgs::CheckFootprintPath::Response& response);
+
   private:
 
     //! ROS node handle.
     ros::NodeHandle& nodeHandle_;
+
+    //! ROS service server.
+    ros::ServiceServer footprintPathService_;
+
+    //! Callback queue for fusion service thread.
+    ros::CallbackQueue fusionServiceQueue_;
 
     //! Elevation map service client.
     ros::ServiceClient submapClient_;

@@ -11,6 +11,9 @@
 // Grid Map
 #include <grid_map_msg/GetGridMap.h>
 
+// Traversability estimation
+#include "traversability_msgs/CheckFootprintPath.h"
+
 //STL
 #include <deque>
 
@@ -39,6 +42,10 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
 
   updateTimer_ = nodeHandle_.createTimer(updateDuration_,
                                          &TraversabilityEstimation::updateTimerCallback, this);
+
+  ros::AdvertiseServiceOptions advertiseServiceOptionsForCheckFootprintPath = ros::AdvertiseServiceOptions::create<traversability_msgs::CheckFootprintPath>(
+      "check_footprint_path", boost::bind(&TraversabilityEstimation::checkFootprintPath, this, _1, _2), ros::VoidConstPtr(), &fusionServiceQueue_);
+  footprintPathService_ = nodeHandle_.advertiseService(advertiseServiceOptionsForCheckFootprintPath);
 
   requestedMapTypes_.push_back("elevation");
   requestedMapTypes_.push_back("surface_normal_x");
@@ -174,6 +181,12 @@ void TraversabilityEstimation::publishAsOccupancyGrid(const grid_map::GridMap& m
       roughnessFilterGridPublisher_.publish(roughnessGrid);
     }
   }
+}
+
+bool TraversabilityEstimation::checkFootprintPath(traversability_msgs::CheckFootprintPath::Request& request, traversability_msgs::CheckFootprintPath::Response& response)
+{
+  response.is_safe = true;
+  return true;
 }
 
 } /* namespace */
