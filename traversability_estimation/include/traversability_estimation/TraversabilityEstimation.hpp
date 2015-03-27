@@ -11,6 +11,9 @@
 // Grid Map
 #include <grid_map/GridMap.hpp>
 
+// Traversability estimation
+#include "traversability_msgs/CheckFootprintPath.h"
+
 // ROS
 #include <ros/ros.h>
 #include <nav_msgs/OccupancyGrid.h>
@@ -57,10 +60,21 @@ namespace traversability_estimation {
      */
     void publishAsOccupancyGrid(const grid_map::GridMap& map) const;
 
+    /*!
+     * ROS service callback function to return a boolean to indicate if a path is traversable.
+     * @param request the ROS service request defining footprint path.
+     * @param response the ROS service response containing the traversability of the footprint path.
+     * @return true if successful.
+     */
+    bool checkFootprintPath(traversability_msgs::CheckFootprintPath::Request& request, traversability_msgs::CheckFootprintPath::Response& response);
+
   private:
 
     //! ROS node handle.
     ros::NodeHandle& nodeHandle_;
+
+    //! ROS service server.
+    ros::ServiceServer footprintPathService_;
 
     //! Elevation map service client.
     ros::ServiceClient submapClient_;
@@ -68,6 +82,15 @@ namespace traversability_estimation {
     //! Name of the elevation submap service.
     std::string submapServiceName_;
   
+    //! TF listener.
+    tf::TransformListener transformListener_;
+
+    //! Center point of the requested map.
+    geometry_msgs::PointStamped submapPoint_;
+
+    //! Id of the frame of the elevation map.
+    std::string mapFrameId_;
+
     //! Publisher of the traversability occupancy grid.
     ros::Publisher traversabilityGridPublisher_;
 
@@ -79,15 +102,6 @@ namespace traversability_estimation {
 
     //! Publisher of the roughness filter occupancy grid.
     ros::Publisher roughnessFilterGridPublisher_;
-  
-    //! TF listener.
-    tf::TransformListener transformListener_;
-
-    //! Center point of the requested map.
-    geometry_msgs::PointStamped submapPoint_;
-
-    //! Id of the frame of the elevation map.
-    std::string mapFrameId_;
   
     //! Timer for the map update.
     ros::Timer updateTimer_;
@@ -109,8 +123,9 @@ namespace traversability_estimation {
 
     //! Filter Chain
     filters::FilterChain<grid_map::GridMap> filter_chain_;
-    grid_map::GridMap traversabilityMap_;
 
+    //! Traversability map.
+    grid_map::GridMap traversabilityMap_;
   
     /*!
     * Reads and verifies the ROS parameters.

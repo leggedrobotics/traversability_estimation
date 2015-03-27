@@ -1,4 +1,5 @@
-# Piece-wise linear path of the footprint poses.
+# Path of the footprint defined as array of connected poses.
+# Poses are connected piece-wise linear in the order of the array.
 geometry_msgs/PoseArray poses
 
 # Either: Define footprint radius.
