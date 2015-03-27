@@ -64,6 +64,7 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   endPose.position.x = startPose.position.x + extrapolationDuration_ * linearVelocityInBaseFrame.vector.x;
   endPose.position.y = startPose.position.y + extrapolationDuration_ * linearVelocityInBaseFrame.vector.y;
   endPose.position.z = startPose.position.z + extrapolationDuration_ * linearVelocityInBaseFrame.vector.z;
+  endPose.orientation = startPose.orientation;
   traversability_msgs::CheckFootprintPath check;
   auto& path = check.request.path;
   path.poses.header = robotPose_.header;
