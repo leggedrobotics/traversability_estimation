@@ -11,7 +11,10 @@
 // ROS
 #include <ros/ros.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistWithCovarianceStamped.h>
+#include <geometry_msgs/TwistStamped.h>
+#include <tf/transform_listener.h>
 
 // STD
 #include <string>
@@ -30,6 +33,7 @@ class TraversabilityChecker
 
  private:
   ros::NodeHandle nodeHandle_;
+  tf::TransformListener tfListener_;
   ros::Publisher safetyPublisher_;
   ros::Timer timer_;
   ros::Duration timerDuration_;
@@ -40,8 +44,9 @@ class TraversabilityChecker
   ros::Subscriber robotTwistSubscriber_;
   std::string robotTwistTopic_;
   double extrapolationDuration_;
-  geometry_msgs::Pose robotPose_;
-  geometry_msgs::Twist robotTwist_;
+  double footprintRadius_;
+  geometry_msgs::PoseStamped robotPose_;
+  geometry_msgs::TwistStamped robotTwist_;
 };
 
 } /* namespace traversability_checker */
