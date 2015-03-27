@@ -1,12 +1,16 @@
 submap_service: "/elevation_mapping_long_range/get_grid_map"
-# robot_frame_id: "base"
-robot_frame_id: "map"
+robot_frame_id: "base"
+# robot_frame_id: "map"
 map_frame_id: "map"
 update_rate: 2.0
-map_center_x: 2.5
-map_center_y: 5.75
-map_length_x: 6.0
-map_length_y: 10.5
+#map_center_x: 2.5
+#map_center_y: 5.75
+map_center_x: 0.0
+map_center_y: 0.0
+#map_length_x: 6.0
+#map_length_y: 10.5
+map_length_x: 5
+map_length_y: 5
 
 traversability_map_filters:
   - name: slopeFilter

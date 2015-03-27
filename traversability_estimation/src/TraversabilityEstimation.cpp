@@ -49,15 +49,7 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
   updateTimer_ = nodeHandle_.createTimer(
       updateDuration_, &TraversabilityEstimation::updateTimerCallback, this);
 
-  ros::AdvertiseServiceOptions advertiseServiceOptionsForCheckFootprintPath =
-      ros::AdvertiseServiceOptions::create<
-          traversability_msgs::CheckFootprintPath>(
-          "check_footprint_path",
-          boost::bind(&TraversabilityEstimation::checkFootprintPath, this, _1,
-                      _2),
-          ros::VoidConstPtr(), &ServiceQueue_);
-  footprintPathService_ = nodeHandle_.advertiseService(
-      advertiseServiceOptionsForCheckFootprintPath);
+  footprintPathService_ = nodeHandle_.advertiseService("check_footprint_path", &TraversabilityEstimation::checkFootprintPath, this);
 
   requestedMapTypes_.push_back("elevation");
   requestedMapTypes_.push_back("surface_normal_x");
