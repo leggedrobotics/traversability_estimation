@@ -18,11 +18,13 @@ find_package(catkin REQUIRED COMPONENTS
   grid_map
   grid_map_lib
   grid_map_msg
+  grid_map_filters
   roscpp
   nav_msgs
   tf
   tf_conversions
-  filters
+  traversability_estimation_filters
+  traversability_msgs
 )
 
 ## System dependencies are found with CMake's conventions
