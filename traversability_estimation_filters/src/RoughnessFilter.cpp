@@ -139,7 +139,7 @@ bool RoughnessFilter<T>::update(const T& mapIn, T& mapOut)
     if (roughness > roughnessMax) roughnessMax = roughness;
   }
 
-  ROS_INFO("roughness max = %f", roughnessMax);
+  ROS_DEBUG("roughness max = %f", roughnessMax);
 
   return true;
 }

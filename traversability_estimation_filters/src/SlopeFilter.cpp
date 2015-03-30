@@ -91,7 +91,7 @@ bool SlopeFilter<T>::update(const T& mapIn, T& mapOut)
     if (slope > slopeMax) slopeMax = slope;
   }
 
-  ROS_INFO("slope max = %f", slopeMax);
+  ROS_DEBUG("slope max = %f", slopeMax);
 
   return true;
 }

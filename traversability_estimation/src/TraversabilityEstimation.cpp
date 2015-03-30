@@ -96,6 +96,9 @@ bool TraversabilityEstimation::readParameters()
 void TraversabilityEstimation::updateTimerCallback(const ros::TimerEvent& timerEvent)
 {
   grid_map_msg::GridMap mapMessage;
+  ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
+  submapClient_.waitForExistence();
+  ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
   if (getGridMap(mapMessage)) {
     grid_map::GridMap map(mapMessage);
     computeTraversability(map);

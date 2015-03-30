@@ -127,7 +127,7 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
     }
   }
 
-  ROS_INFO("step height max = %f", stepHeightMax);
+  ROS_DEBUG("step height max = %f", stepHeightMax);
 
   return true;
 }
