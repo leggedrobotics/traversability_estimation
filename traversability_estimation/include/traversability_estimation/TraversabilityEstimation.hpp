@@ -102,6 +102,9 @@ namespace traversability_estimation {
 
     //! Publisher of the roughness filter occupancy grid.
     ros::Publisher roughnessFilterGridPublisher_;
+
+    //! Publisher of the roughness filter occupancy grid.
+    ros::Publisher footprintPolygonPublisher_;
   
     //! Timer for the map update.
     ros::Timer updateTimer_;
@@ -112,14 +115,14 @@ namespace traversability_estimation {
     //! Requested map cell types.
     std::vector<std::string> requestedMapTypes_;
 
-    //! Traversability map type.
+    //! Requested map length in [m].
+    Eigen::Array2d mapLength_;
+
+    //! Traversability map types.
     const std::string traversabilityType_;
     const std::string slopeType_;
     const std::string stepType_;
     const std::string roughnessType_;
-
-    //! Requested map length in [m].
-    Eigen::Array2d mapLength_;
 
     //! Filter Chain
     filters::FilterChain<grid_map::GridMap> filter_chain_;
