@@ -1,0 +1,33 @@
+grid_map_topic: /traversability_estimation/traversability_map
+
+grid_map_visualizations:
+
+  - name: traversability_map
+    type: occupancy_grid
+    params:
+     layer: traversability
+     data_min: 1.0
+     data_max: 0.0
+
+  - name: slope_map
+    type: occupancy_grid
+    params:
+     layer: traversability_slope
+     data_min: 1.0
+     data_max: 0.0
+
+  - name: step_map
+    type: occupancy_grid
+    params:
+     layer: traversability_step
+     data_min: 1.0
+     data_max: 0.0
+
+  - name: roughness_map
+    type: occupancy_grid
+    params:
+     layer: traversability_roughness
+     data_min: 1.0
+     data_max: 0.0
+
+

@@ -60,14 +60,7 @@ bool SlopeFilter<T>::update(const T& mapIn, T& mapOut)
 {
   // Add new layer to the elevation map.
   mapOut = mapIn;
-  mapOut.add(type_, mapIn.get("elevation"));
-
-  // Set clear and valid types.
-  std::vector<std::string> basicLayers, validTypes;
-  basicLayers.push_back(type_);
-  validTypes.push_back("surface_normal_z");
-  mapOut.setBasicLayers(basicLayers);
-  mapOut.clear();
+  mapOut.add(type_);
 
   double slope, slopeMax = 0.0;
 
@@ -75,7 +68,7 @@ bool SlopeFilter<T>::update(const T& mapIn, T& mapOut)
       !iterator.isPassedEnd(); ++iterator) {
 
     // Check if there is a surface normal (empty cell).
-    if (!mapOut.isValid(*iterator, validTypes)) continue;
+    if (!mapOut.isValid(*iterator, "surface_normal_z")) continue;
 
     // Compute slope from surface normal z
     slope = acos(mapOut.at("surface_normal_z", *iterator));

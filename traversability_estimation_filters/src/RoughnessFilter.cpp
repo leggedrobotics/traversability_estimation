@@ -74,22 +74,14 @@ bool RoughnessFilter<T>::update(const T& mapIn, T& mapOut)
 {
   // Add new layer to the elevation map.
   mapOut = mapIn;
-  mapOut.add(type_, mapIn.get("elevation"));
-
+  mapOut.add(type_);
   double roughnessMax = 0.0;
-
-  // Set clear and valid types.
-  std::vector<std::string> basicLayers, validTypes;
-  validTypes.push_back("surface_normal_x");
-  basicLayers.push_back(type_);
-  mapOut.setBasicLayers(basicLayers);
-  mapOut.clear();
 
   for (GridMapIterator iterator(mapOut);
       !iterator.isPassedEnd(); ++iterator) {
 
     // Check if this is an empty cell (hole in the map).
-    if (!mapOut.isValid(*iterator, validTypes)) continue;
+    if (!mapOut.isValid(*iterator, "surface_normal_x")) continue;
 
     // Prepare data computation.
     const int maxNumberOfCells = ceil(pow(2*estimationRadius_/mapOut.getResolution(),2));
@@ -103,7 +95,7 @@ bool RoughnessFilter<T>::update(const T& mapIn, T& mapOut)
     size_t nPoints = 0;
     for (CircleIterator submapIterator(mapOut, center, estimationRadius_);
         !submapIterator.isPassedEnd(); ++submapIterator) {
-      if (!mapOut.isValid(*submapIterator, validTypes)) continue;
+      if (!mapOut.isValid(*submapIterator, "elevation")) continue;
       Vector3d point;
       mapOut.getPosition3("elevation", *submapIterator, point);
       points.col(nPoints) = point;

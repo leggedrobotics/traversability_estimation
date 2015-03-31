@@ -73,14 +73,7 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
 {
   // Add new layer to the elevation map.
   mapOut = mapIn;
-  mapOut.add(type_, mapIn.get("elevation"));
-
-  // Set clear and valid types.
-  std::vector<std::string> basicLayers, validTypes;
-  basicLayers.push_back(type_);
-  validTypes.push_back("elevation");
-  mapOut.setBasicLayers(basicLayers);
-  mapOut.clear();
+  mapOut.add(type_);
 
   double height, stepHeight, stepHeightMax = 0.0, windowStepHeightMax;
   bool stepHeightExists;
@@ -88,7 +81,7 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
   for (GridMapIterator iterator(mapOut);
       !iterator.isPassedEnd(); ++iterator) {
     // Check if this is an empty cell (hole in the map).
-    if (!mapOut.isValid(*iterator, validTypes)) continue;
+    if (!mapOut.isValid(*iterator, "elevation")) continue;
 
     height = mapOut.at("elevation", *iterator);
     windowStepHeightMax = 0.0;
@@ -101,7 +94,7 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
     // Get the highest step in the circular window.
     for (CircleIterator submapIterator(mapOut, center, windowRadius_);
         !submapIterator.isPassedEnd(); ++submapIterator) {
-      if (mapOut.isValid(*submapIterator, validTypes)) {
+      if (mapOut.isValid(*submapIterator, "elevation")) {
         stepHeight = std::abs(height - mapOut.at("elevation", *submapIterator));
         if (stepHeight > windowStepHeightMax) {
           windowStepHeightMax = stepHeight;

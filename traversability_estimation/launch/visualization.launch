@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="grid_map_visualization" type="grid_map_visualization" name="traversability_map_visualization" output="screen">
+	<rosparam command="load" file="$(find traversability_estimation)/config/visualization/traversability.yaml"/>
+  </node>
+</launch>

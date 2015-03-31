@@ -52,13 +52,7 @@ namespace traversability_estimation {
      * traversable and 1.0 means fully traversable.
      * @param[in/out] elevationMap the map for which the traversability is computed.
      */
-    void computeTraversability(grid_map::GridMap& elevationMap);
-
-    /*!
-     * Publishes the traversability grid map as occupancy grid.
-     * @param map the traversability map to publish.
-     */
-    void publishAsOccupancyGrid(const grid_map::GridMap& map) const;
+    bool computeTraversability(const grid_map::GridMap& elevationMap, grid_map::GridMap& traversabilityMap);
 
     /*!
      * ROS service callback function to return a boolean to indicate if a path is traversable.
@@ -92,16 +86,17 @@ namespace traversability_estimation {
     std::string mapFrameId_;
 
     //! Publisher of the traversability occupancy grid.
-    ros::Publisher traversabilityGridPublisher_;
+//    ros::Publisher traversabilityGridPublisher_;
+    ros::Publisher traversabilityMapPublisher_;
 
     //! Publisher of the slope filter occupancy grid.
-    ros::Publisher slopeFilterGridPublisher_;
+//    ros::Publisher slopeFilterGridPublisher_;
 
     //! Publisher of the step filter occupancy grid.
-    ros::Publisher stepFilterGridPublisher_;
+//    ros::Publisher stepFilterGridPublisher_;
 
     //! Publisher of the roughness filter occupancy grid.
-    ros::Publisher roughnessFilterGridPublisher_;
+//    ros::Publisher roughnessFilterGridPublisher_;
 
     //! Publisher of the roughness filter occupancy grid.
     ros::Publisher footprintPolygonPublisher_;
