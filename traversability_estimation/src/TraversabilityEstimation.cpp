@@ -291,17 +291,16 @@ bool TraversabilityEstimation::checkFootprintPath(
           traversability = 0.0;
           break;
         }
-        traversability += traversabilityMap_.at(traversabilityType_,
-                                                *polygonIterator);
+        traversability += traversabilityMap_.at(traversabilityType_, *polygonIterator);
         nCells++;
       }
       response.traversability += traversability / (nCells * (arraySize-1));
 
       // Publish footprint polygon
+      polygon.setFrameId(mapFrameId_);
       geometry_msgs::PolygonStamped polygonMsg;
       polygon.toMessage(polygonMsg);
       footprintPolygonPublisher_.publish(polygonMsg);
-
     }
   }
   return true;
