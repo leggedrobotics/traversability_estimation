@@ -17,7 +17,7 @@
   <build_depend>tf</build_depend>
   <build_depend>tf_conversions</build_depend>
   <build_depend>grid_map</build_depend>
-  <build_depend>grid_map_lib</build_depend>
+  <build_depend>grid_map_core</build_depend>
   <build_depend>grid_map_msg</build_depend>
   <build_depend>grid_map_filters</build_depend>
   <build_depend>traversability_msgs</build_depend>
@@ -28,7 +28,7 @@
   <run_depend>tf</run_depend>
   <run_depend>tf_conversions</run_depend>
   <run_depend>grid_map</run_depend>
-  <run_depend>grid_map_lib</run_depend>
+  <run_depend>grid_map_core</run_depend>
   <run_depend>grid_map_msg</run_depend>
   <run_depend>grid_map_filters</run_depend>
   <run_depend>traversability_msgs</run_depend>

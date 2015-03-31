@@ -28,9 +28,9 @@ traversability_map_filters:
   - name: weightedSumFilter
     type: gridMapFilters/WeightedSumFilter
     params:
-     filter_types: [traversability_slope, traversability_step, traversability_roughness]
-     filter_weights: [1, 1, 1]
-     type_out: traversability
+     layers: [traversability_slope, traversability_step, traversability_roughness]
+     weights: [1, 1, 1]
+     layer_out: traversability
      normalize: 1
 #  - name: minFilter
 #    type: gridMapFilters/MinFilter

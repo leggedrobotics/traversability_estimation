@@ -16,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   traversability_msgs
   grid_map
-  grid_map_lib
+  grid_map_core
   grid_map_msg
   grid_map_filters
   roscpp

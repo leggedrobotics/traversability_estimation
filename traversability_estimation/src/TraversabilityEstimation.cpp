@@ -9,11 +9,7 @@
 #include "traversability_estimation/TraversabilityEstimation.hpp"
 
 // Grid Map
-#include <grid_map/Polygon.hpp>
-#include <grid_map_lib/GridMap.hpp>
-#include <grid_map_lib/iterators/CircleIterator.hpp>
-#include <grid_map_lib/iterators/PolygonIterator.hpp>
-#include <grid_map_msg/GetGridMap.h>
+#include <grid_map_msgs/GetGridMap.h>
 
 // Traversability estimation
 #include "traversability_msgs/CheckFootprintPath.h"
@@ -25,7 +21,7 @@
 
 using namespace std;
 using namespace nav_msgs;
-using namespace grid_map_msg;
+using namespace grid_map_msgs;
 
 namespace traversability_estimation {
 
@@ -100,12 +96,13 @@ bool TraversabilityEstimation::readParameters()
 
 void TraversabilityEstimation::updateTimerCallback(const ros::TimerEvent& timerEvent)
 {
-  grid_map_msg::GridMap mapMessage;
+  grid_map_msgs::GridMap mapMessage;
   ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
   submapClient_.waitForExistence();
   ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
   if (getGridMap(mapMessage)) {
-    grid_map::GridMap map(mapMessage);
+    grid_map::GridMap map;
+    grid_map::GridMapRosConverter::fromMessage(mapMessage, map);
     computeTraversability(map);
     publishAsOccupancyGrid(map);
   } else {
@@ -113,7 +110,7 @@ void TraversabilityEstimation::updateTimerCallback(const ros::TimerEvent& timerE
   }
 }
 
-bool TraversabilityEstimation::getGridMap(grid_map_msg::GridMap& map)
+bool TraversabilityEstimation::getGridMap(grid_map_msgs::GridMap& map)
 {
   submapPoint_.header.stamp = ros::Time(0);
   geometry_msgs::PointStamped submapPointTransformed;
@@ -126,19 +123,24 @@ bool TraversabilityEstimation::getGridMap(grid_map_msg::GridMap& map)
   }
 
   GetGridMap submapService;
-  submapService.request.positionX = submapPointTransformed.point.x;
-  submapService.request.positionY = submapPointTransformed.point.y;
-  submapService.request.lengthX = mapLength_.x();
-  submapService.request.lengthY = mapLength_.y();
-  submapService.request.dataDefinition.resize(requestedMapTypes_.size());
+  submapService.request.position_x = submapPointTransformed.point.x;
+  submapService.request.position_y = submapPointTransformed.point.y;
+  submapService.request.length_x = mapLength_.x();
+  submapService.request.length_y = mapLength_.y();
+  submapService.request.layers.resize(requestedMapTypes_.size());
 
+  std::cout << "requested map types size = " << requestedMapTypes_.size() << std::endl;
   for (unsigned int i = 0; i < requestedMapTypes_.size(); ++i) {
-    submapService.request.dataDefinition[i] = requestedMapTypes_[i];
+    submapService.request.layers[i] = requestedMapTypes_[i];
   }
+  std::cout << "requested layers size = " << submapService.request.layers.size() << std::endl;
 
   if (!submapClient_.call(submapService))
     return false;
-  map = submapService.response.gridMap;
+  map = submapService.response.map;
+
+  std::cout << "response data size = " << submapService.response.map.data.size() << std::endl;
+  std::cout << "response layers size = " << submapService.response.map.layers.size() << std::endl;
   return true;
 }
 
@@ -170,14 +172,14 @@ void TraversabilityEstimation::publishAsOccupancyGrid(
   if (traversabilityGridPublisher_.getNumSubscribers() >= 1) {
     OccupancyGrid traversabilityGrid;
     // This flips data from traversability to occupancy.
-    map.toOccupancyGrid(traversabilityGrid, traversabilityType_, 1.0, 0.0);
+    grid_map::GridMapRosConverter::toOccupancyGrid(map, traversabilityType_, 1.0, 0.0, traversabilityGrid);
     traversabilityGridPublisher_.publish(traversabilityGrid);
   }
 
   if (map.exists(slopeType_)) {
     if (slopeFilterGridPublisher_.getNumSubscribers() >= 1) {
       OccupancyGrid slopeGrid;
-      map.toOccupancyGrid(slopeGrid, slopeType_, 1.0, 0.0);
+      grid_map::GridMapRosConverter::toOccupancyGrid(map, slopeType_, 1.0, 0.0, slopeGrid);
       slopeFilterGridPublisher_.publish(slopeGrid);
     }
   }
@@ -185,7 +187,7 @@ void TraversabilityEstimation::publishAsOccupancyGrid(
   if (map.exists(stepType_)) {
     if (stepFilterGridPublisher_.getNumSubscribers() >= 1) {
       OccupancyGrid stepGrid;
-      map.toOccupancyGrid(stepGrid, stepType_, 1.0, 0.0);
+      grid_map::GridMapRosConverter::toOccupancyGrid(map, stepType_, 1.0, 0.0, stepGrid);
       stepFilterGridPublisher_.publish(stepGrid);
     }
   }
@@ -193,7 +195,7 @@ void TraversabilityEstimation::publishAsOccupancyGrid(
   if (map.exists(roughnessType_)) {
     if (roughnessFilterGridPublisher_.getNumSubscribers() >= 1) {
       OccupancyGrid roughnessGrid;
-      map.toOccupancyGrid(roughnessGrid, roughnessType_, 1.0, 0.0);
+      grid_map::GridMapRosConverter::toOccupancyGrid(map, roughnessType_, 1.0, 0.0, roughnessGrid);
       roughnessFilterGridPublisher_.publish(roughnessGrid);
     }
   }
@@ -230,7 +232,7 @@ bool TraversabilityEstimation::checkFootprintPath(
     position.x() = request.path.poses.poses[0].position.x;
     position.y() = request.path.poses.poses[0].position.y;
 
-    for (grid_map_lib::CircleIterator submapIterator(traversabilityMap_,
+    for (grid_map::CircleIterator submapIterator(traversabilityMap_,
                                                      position, radius);
         !submapIterator.isPassedEnd(); ++submapIterator) {
       if (!traversabilityMap_.isValid(*submapIterator, validTypes))
@@ -282,7 +284,7 @@ bool TraversabilityEstimation::checkFootprintPath(
 
       int nCells = 0;
       traversability = 0.0;
-      for (grid_map_lib::PolygonIterator polygonIterator(traversabilityMap_, polygon); !polygonIterator.isPassedEnd(); ++polygonIterator) {
+      for (grid_map::PolygonIterator polygonIterator(traversabilityMap_, polygon); !polygonIterator.isPassedEnd(); ++polygonIterator) {
         if (!traversabilityMap_.isValid(*polygonIterator, validTypes))
           continue;
 
@@ -299,7 +301,7 @@ bool TraversabilityEstimation::checkFootprintPath(
       // Publish footprint polygon
       polygon.setFrameId(mapFrameId_);
       geometry_msgs::PolygonStamped polygonMsg;
-      polygon.toMessage(polygonMsg);
+      grid_map::PolygonRosConverter::toMessage(polygon, polygonMsg);
       footprintPolygonPublisher_.publish(polygonMsg);
     }
   }

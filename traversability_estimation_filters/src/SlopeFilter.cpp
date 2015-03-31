@@ -10,10 +10,9 @@
 #include <pluginlib/class_list_macros.h>
 
 // Grid Map
-#include <grid_map/GridMap.hpp>
+#include <grid_map/grid_map.hpp>
 
-// Grid Map lib
-#include <grid_map_lib/iterators/GridMapIterator.hpp>
+using namespace grid_map;
 
 namespace filters {
 
@@ -64,15 +63,15 @@ bool SlopeFilter<T>::update(const T& mapIn, T& mapOut)
   mapOut.add(type_, mapIn.get("elevation"));
 
   // Set clear and valid types.
-  std::vector<std::string> clearTypes, validTypes;
-  clearTypes.push_back(type_);
+  std::vector<std::string> basicLayers, validTypes;
+  basicLayers.push_back(type_);
   validTypes.push_back("surface_normal_z");
-  mapOut.setClearTypes(clearTypes);
+  mapOut.setBasicLayers(basicLayers);
   mapOut.clear();
 
   double slope, slopeMax = 0.0;
 
-  for (grid_map_lib::GridMapIterator iterator(mapOut);
+  for (GridMapIterator iterator(mapOut);
       !iterator.isPassedEnd(); ++iterator) {
 
     // Check if there is a surface normal (empty cell).

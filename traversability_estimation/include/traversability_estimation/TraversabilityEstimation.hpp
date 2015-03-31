@@ -9,7 +9,7 @@
 #pragma once
 
 // Grid Map
-#include <grid_map/GridMap.hpp>
+#include <grid_map/grid_map.hpp>
 
 // Traversability estimation
 #include "traversability_msgs/CheckFootprintPath.h"
@@ -148,7 +148,7 @@ namespace traversability_estimation {
      * @param[out] map the map that is received.
      * @return true if successful, false if ROS service call failed.
      */
-    bool getGridMap(grid_map_msg::GridMap& map);
+    bool getGridMap(grid_map_msgs::GridMap& map);
   };
 
 } /* namespace */
