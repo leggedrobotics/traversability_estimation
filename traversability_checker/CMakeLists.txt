@@ -13,7 +13,7 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 #  Release        : w/o debug symbols, w/ optimization
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-set(CMAKE_BUILD_TYPE RelWithDebInfo)
+#set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED
@@ -46,7 +46,12 @@ catkin_package(
   INCLUDE_DIRS
     include
 #  LIBRARIES traversability_checker
-#  CATKIN_DEPENDS other_catkin_pkg
+  CATKIN_DEPENDS
+    roscpp
+    tf
+    traversability_msgs
+    geometry_msgs
+    any_msgs
 #  DEPENDS system_lib
 )
 
