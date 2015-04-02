@@ -54,6 +54,8 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   linearVelocityInTwistFrame.header = robotTwist_.header;
   linearVelocityInTwistFrame.vector = robotTwist_.twist.linear;
   try {
+    ros::Time now = ros::Time::now();
+    tfListener_.waitForTransform(robotTwist_.header.frame_id, robotPose_.header.frame_id, now, ros::Duration(0.05));
     tfListener_.transformVector(robotPose_.header.frame_id, linearVelocityInTwistFrame, linearVelocityInBaseFrame);
   } catch (tf::TransformException ex) {
     ROS_ERROR("%s", ex.what());
@@ -93,7 +95,6 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   path.footprint.polygon.points.push_back(bl);
   path.footprint.header = robotPose_.header;
   path.footprint.header.frame_id = "base";
-  ROS_INFO("robot pose frame id = %s", path.poses.header.frame_id.c_str());
 
   ROS_DEBUG("Sending request to %s.", serviceName_.c_str());
   serviceClient_.waitForExistence();
