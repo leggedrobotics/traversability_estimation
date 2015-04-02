@@ -85,18 +85,11 @@ namespace traversability_estimation {
     //! Id of the frame of the elevation map.
     std::string mapFrameId_;
 
+    //! Id of the frame of the robot.
+    std::string robotFrameId_;
+
     //! Publisher of the traversability occupancy grid.
-//    ros::Publisher traversabilityGridPublisher_;
     ros::Publisher traversabilityMapPublisher_;
-
-    //! Publisher of the slope filter occupancy grid.
-//    ros::Publisher slopeFilterGridPublisher_;
-
-    //! Publisher of the step filter occupancy grid.
-//    ros::Publisher stepFilterGridPublisher_;
-
-    //! Publisher of the roughness filter occupancy grid.
-//    ros::Publisher roughnessFilterGridPublisher_;
 
     //! Publisher of the roughness filter occupancy grid.
     ros::Publisher footprintPolygonPublisher_;

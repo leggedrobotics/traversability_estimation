@@ -60,6 +60,22 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
     return;
   }
 
+  // Add footprint // TODO: Move polygon points to yaml file
+  geometry_msgs::Point32 fl, fr, bl, br;
+  fl.x = 0.355;
+  fl.y = 0.32;
+  fl.z = 0.0;
+  fr.x = 0.355;
+  fr.y = -0.32;
+  fr.z = 0.0;
+  bl.x = -0.355;
+  bl.y = 0.32;
+  bl.z = 0.0;
+  br.x = -0.355;
+  br.y = -0.32;
+  br.z = 0.0;
+
+
   // TODO Include rotation.
   endPose.position.x = startPose.position.x + extrapolationDuration_ * linearVelocityInBaseFrame.vector.x;
   endPose.position.y = startPose.position.y + extrapolationDuration_ * linearVelocityInBaseFrame.vector.y;
@@ -71,6 +87,13 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   path.poses.poses.push_back(startPose);
   path.poses.poses.push_back(endPose);
   path.radius = footprintRadius_;
+  path.footprint.polygon.points.push_back(fl);
+  path.footprint.polygon.points.push_back(fr);
+  path.footprint.polygon.points.push_back(br);
+  path.footprint.polygon.points.push_back(bl);
+  path.footprint.header = robotPose_.header;
+  path.footprint.header.frame_id = "base";
+  ROS_INFO("robot pose frame id = %s", path.poses.header.frame_id.c_str());
 
   ROS_DEBUG("Sending request to %s.", serviceName_.c_str());
   serviceClient_.waitForExistence();
