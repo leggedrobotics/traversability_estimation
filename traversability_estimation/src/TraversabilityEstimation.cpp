@@ -162,7 +162,6 @@ bool TraversabilityEstimation::checkFootprintPath(
   bool isSafe = true;
   response.traversability = 0.0;
   grid_map::Polygon polygon;
-  polygon.setFrameId(mapFrameId_);
   Eigen::Vector2d position;
 
   double traversability = 0.0;
@@ -234,6 +233,8 @@ bool TraversabilityEstimation::checkFootprintPath(
       }
     }
   }
+  polygon.setFrameId(mapFrameId_);
+  polygon.setTimestamp(request.path.footprint.header.stamp.toNSec());
   geometry_msgs::PolygonStamped polygonMsg;
   grid_map::PolygonRosConverter::toMessage(polygon, polygonMsg);
   footprintPolygonPublisher_.publish(polygonMsg);
