@@ -64,6 +64,36 @@ namespace traversability_estimation {
 
   private:
 
+    /*!
+    * Reads and verifies the ROS parameters.
+    * @return true if successful.
+    */
+    bool readParameters();
+
+    /*!
+    * Callback function for the update timer. Forces an update of the traversability
+    * map from a new elevation map requested from the grid map service.
+    * @param timerEvent the timer event.
+    */
+    void updateTimerCallback(const ros::TimerEvent& timerEvent);
+
+    /*!
+     * Gets the grid map for the desired submap center point.
+     * @param[out] map the map that is received.
+     * @return true if successful, false if ROS service call failed.
+     */
+    bool getGridMap(grid_map_msgs::GridMap& map);
+
+    /*!
+     * Gets the traversability value of the submap defined by the polygon. Is true if the
+     * whole polygon is traversable.
+     * @param[in] polygon polygon that defines submap of the traversability map.
+     * @param[out] traversability traversability value of submap defined by the polygon, the traversability
+     * is the mean of each cell within the polygon.
+     * @return true if the whole polygon is traversable, false otherwise.
+     */
+    bool isTraversable(const grid_map::Polygon& polygon, double& traversability);
+
     //! ROS node handle.
     ros::NodeHandle& nodeHandle_;
 
@@ -117,26 +147,6 @@ namespace traversability_estimation {
 
     //! Traversability map.
     grid_map::GridMap traversabilityMap_;
-  
-    /*!
-    * Reads and verifies the ROS parameters.
-    * @return true if successful.
-    */
-    bool readParameters();  
-    
-    /*!
-    * Callback function for the update timer. Forces an update of the traversability
-    * map from a new elevation map requested from the grid map service.
-    * @param timerEvent the timer event.
-    */
-    void updateTimerCallback(const ros::TimerEvent& timerEvent);
-
-    /*!
-     * Gets the grid map for the desired submap center point.
-     * @param[out] map the map that is received.
-     * @return true if successful, false if ROS service call failed.
-     */
-    bool getGridMap(grid_map_msgs::GridMap& map);
   };
 
 } /* namespace */

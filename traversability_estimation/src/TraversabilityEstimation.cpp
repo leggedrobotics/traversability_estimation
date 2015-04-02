@@ -159,105 +159,112 @@ bool TraversabilityEstimation::checkFootprintPath(
   }
 
   double radius = request.path.radius;
-  response.is_safe = true;
+  bool isSafe = true;
   response.traversability = 0.0;
+  grid_map::Polygon polygon;
+  polygon.setFrameId(mapFrameId_);
   Eigen::Vector2d position;
 
   double traversability = 0.0;
 
-  if (request.path.footprint.polygon.points.size() == 0)
-  {
-    if (arraySize == 1) {
-      int nCells = 0;
-      position.x() = request.path.poses.poses[0].position.x;
-      position.y() = request.path.poses.poses[0].position.y;
+  if (request.path.footprint.polygon.points.size() == 0) {
+    Eigen::Vector2d centerStart, centerEnd;
+    for (int i = 0; i < arraySize; i++) {
+      centerEnd = centerStart;
+      centerStart.x() = request.path.poses.poses[i].position.x;
+      centerStart.y() = request.path.poses.poses[i].position.y;
 
-      for (grid_map::CircleIterator submapIterator(traversabilityMap_,
-                                                       position, radius);
-          !submapIterator.isPassedEnd(); ++submapIterator) {
-        if (!traversabilityMap_.isValid(*submapIterator, traversabilityType_))
-          continue;
-
-        if (traversabilityMap_.at(traversabilityType_, *submapIterator) == 0.0) {
-          response.is_safe = false;
-          traversability = 0.0;
-          break;
-        }
-        traversability += traversabilityMap_.at(traversabilityType_,
-                                                *submapIterator);
-        nCells++;
+      if (arraySize == 1) {
+        polygon = polygon.convexHullCircle(centerStart, radius);
+        if (!isTraversable(polygon, traversability))
+          isSafe = false;
+        response.traversability = traversability;
       }
-      response.traversability += traversability / nCells;
-    }
-    else {
-      for (int i=0; i<(arraySize-1); i++) {
-        Eigen::Vector2d centerStart, centerEnd;
 
-        centerStart.x() = request.path.poses.poses[i].position.x;
-        centerStart.y() = request.path.poses.poses[i].position.y;
-        centerEnd.x() = request.path.poses.poses[i+1].position.x;
-        centerEnd.y() = request.path.poses.poses[i+1].position.y;
-
-        grid_map::Polygon polygon;
+      if (arraySize > 1 && i > 0) {
         polygon = polygon.convexHullCircles(centerStart, centerEnd, radius);
-
-        int nCells = 0;
-        traversability = 0.0;
-        for (grid_map::PolygonIterator polygonIterator(traversabilityMap_, polygon); !polygonIterator.isPassedEnd(); ++polygonIterator) {
-          if (!traversabilityMap_.isValid(*polygonIterator, traversabilityType_))
-            continue;
-
-          if (traversabilityMap_.at(traversabilityType_, *polygonIterator) == 0.0) {
-            response.is_safe = false;
-            traversability = 0.0;
-            break;
-          }
-          traversability += traversabilityMap_.at(traversabilityType_, *polygonIterator);
-          nCells++;
-        }
-        response.traversability += traversability / (nCells * (arraySize-1));
-
-        // Publish footprint polygon
-        polygon.setFrameId(mapFrameId_);
-        geometry_msgs::PolygonStamped polygonMsg;
-        grid_map::PolygonRosConverter::toMessage(polygon, polygonMsg);
-        footprintPolygonPublisher_.publish(polygonMsg);
+        if (!isTraversable(polygon, traversability))
+          isSafe = false;
+        response.traversability += traversability / (arraySize - 1);
       }
     }
-  }
-  else
-  {
-    const int polygonSize = request.path.footprint.polygon.points.size();
-    ROS_DEBUG("Polygon size = %d", polygonSize);
-
-    geometry_msgs::Quaternion orientation;
-    grid_map::Polygon polygon1;
+  } else {
+    grid_map::Polygon polygon1, polygon2;
     polygon1.setFrameId(mapFrameId_);
-    for (const auto& point : request.path.footprint.polygon.points) {
-      geometry_msgs::PointStamped polygonPoint;
-      polygonPoint.point.x = point.x;
-      polygonPoint.point.y = point.y;
-      polygonPoint.point.z = point.z;
-      polygonPoint.header = request.path.footprint.header;
-      geometry_msgs::PointStamped polygonPointTransformed;
-      ROS_INFO("Transform to frame id = %s", polygon1.getFrameId().c_str());
-      try {
-        transformListener_.transformPoint(polygon1.getFrameId(), polygonPoint, polygonPointTransformed);
-      } catch (tf::TransformException ex) {
-        ROS_ERROR("%s", ex.what());
+    polygon2.setFrameId(mapFrameId_);
+    for (int i = 0; i < arraySize; i++) {
+      polygon2 = polygon1;
+      Eigen::Vector3f footprintVertex, footprintVertexTransformed;
+      Eigen::Translation<float, 3> toPosition;
+      Eigen::Quaternionf orientation;
+
+      toPosition.x() = request.path.poses.poses[i].position.x;
+      toPosition.y() = request.path.poses.poses[i].position.y;
+      toPosition.z() = request.path.poses.poses[i].position.z;
+      orientation.x() = request.path.poses.poses[i].orientation.x;
+      orientation.y() = request.path.poses.poses[i].orientation.y;
+      orientation.z() = request.path.poses.poses[i].orientation.z;
+      orientation.w() = request.path.poses.poses[i].orientation.w;
+
+      for (const auto& point : request.path.footprint.polygon.points) {
+        footprintVertex.x() = point.x;
+        footprintVertex.y() = point.y;
+        footprintVertex.z() = point.z;
+        footprintVertexTransformed = toPosition * orientation * footprintVertex;
+
+        Eigen::Vector2d vertex;
+        vertex.x() = footprintVertexTransformed.x();
+        vertex.y() = footprintVertexTransformed.y();
+        polygon1.addVertex(vertex);
       }
-      Eigen::Vector2d vertex;
-      vertex.x() = polygonPointTransformed.point.x;
-      vertex.y() = polygonPointTransformed.point.y;
-      polygon1.addVertex(vertex);
+
+      if (arraySize == 1) {
+        polygon = polygon1;
+        if (!isTraversable(polygon, traversability))
+          isSafe = false;
+        response.traversability = traversability;
+      }
+
+      if (arraySize > 1 && i > 0) {
+        polygon = polygon.convexHull(polygon1, polygon2);
+
+        if (!isTraversable(polygon, traversability))
+          isSafe = false;
+        response.traversability += traversability / (arraySize - 1);
+      }
     }
-    geometry_msgs::PolygonStamped polygonMsg;
-    grid_map::PolygonRosConverter::toMessage(polygon1, polygonMsg);
-    footprintPolygonPublisher_.publish(polygonMsg);
   }
+  geometry_msgs::PolygonStamped polygonMsg;
+  grid_map::PolygonRosConverter::toMessage(polygon, polygonMsg);
+  footprintPolygonPublisher_.publish(polygonMsg);
 
-
+  response.is_safe = isSafe;
   return true;
+}
+
+bool TraversabilityEstimation::isTraversable(const grid_map::Polygon& polygon, double& traversability)
+{
+  int nCells = 0;
+  bool isSafe = true;
+  traversability = 0.0;
+  for (grid_map::PolygonIterator polygonIterator(traversabilityMap_,
+                                                 polygon);
+      !polygonIterator.isPassedEnd(); ++polygonIterator) {
+    if (!traversabilityMap_.isValid(*polygonIterator,
+                                    traversabilityType_))
+      continue;
+
+    nCells++;
+    if (traversabilityMap_.at(traversabilityType_, *polygonIterator)
+        == 0.0) {
+      isSafe = false;
+      traversability = 0.0;
+      break;
+    }
+    traversability += traversabilityMap_.at(traversabilityType_, *polygonIterator);
+  }
+  traversability /= nCells;
+  return isSafe;
 }
 
 } /* namespace */
