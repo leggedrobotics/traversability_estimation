@@ -30,6 +30,10 @@ class TraversabilityChecker
   void check(const ros::TimerEvent& timerEvent);
   void updateRobotPose(const geometry_msgs::PoseWithCovarianceStamped& pose);
   void updateRobotTwist(const geometry_msgs::TwistWithCovarianceStamped& twist);
+  bool readFootprintFromString(const std::string& footprint_string);
+  void readFootprintFromXMLRPC(XmlRpc::XmlRpcValue& footprint_xmlrpc, const std::string& full_param_name);
+  std::vector<std::vector<float>> parseVVF(const std::string& input, std::string& error_return);
+  double getNumberFromXMLRPC(XmlRpc::XmlRpcValue& value, const std::string& full_param_name);
 
  private:
   ros::NodeHandle nodeHandle_;
@@ -47,6 +51,7 @@ class TraversabilityChecker
   double footprintRadius_;
   geometry_msgs::PoseStamped robotPose_;
   geometry_msgs::TwistStamped robotTwist_;
+  std::vector<geometry_msgs::Point32> footprintPoints_;
 };
 
 } /* namespace traversability_checker */
