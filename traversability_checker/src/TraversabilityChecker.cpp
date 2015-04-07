@@ -35,71 +35,73 @@ bool TraversabilityChecker::readParameters()
   nodeHandle_.param("robot_pose_topic", robotPoseTopic_, std::string("/state_estimator/pose"));
   nodeHandle_.param("robot_twist_topic", robotTwistTopic_, std::string("/state_estimator/twist"));
   nodeHandle_.param("extrapolation_duration", extrapolationDuration_, 1.0);
-  nodeHandle_.param("footprint_radius", footprintRadius_, 0.25);
+//  nodeHandle_.param("footprint_radius", footprintRadius_, 0.25);
   double rate;
   nodeHandle_.param("rate", rate, 2.0);
   timerDuration_.fromSec(1.0 / rate);
   ROS_ASSERT(!timerDuration_.isZero());
 
   // Read footprint
-  std::string full_param_name;
-  std::string full_radius_param_name;
+  std::string fullParamName;
+  std::string fullRadiusParamName;
 
-  if (nodeHandle_.searchParam("footprint_polygon", full_param_name)) {
-    XmlRpc::XmlRpcValue footprint_xmlrpc;
-    nodeHandle_.getParam(full_param_name, footprint_xmlrpc);
-    if (footprint_xmlrpc.getType() == XmlRpc::XmlRpcValue::TypeString) {
-      readFootprintFromString(std::string(footprint_xmlrpc));
-    } else if (footprint_xmlrpc.getType() == XmlRpc::XmlRpcValue::TypeArray) {
-      readFootprintFromXMLRPC(footprint_xmlrpc, full_param_name);
+  if (nodeHandle_.searchParam("footprint_polygon", fullParamName)) {
+    XmlRpc::XmlRpcValue footprintXmlrpc;
+    nodeHandle_.getParam(fullParamName, footprintXmlrpc);
+    if (footprintXmlrpc.getType() == XmlRpc::XmlRpcValue::TypeString) {
+      readFootprintFromString(std::string(footprintXmlrpc));
+      ROS_INFO("Footprint as string.");
+    } else if (footprintXmlrpc.getType() == XmlRpc::XmlRpcValue::TypeArray) {
+      readFootprintFromXMLRPC(footprintXmlrpc, fullParamName);
+      ROS_INFO("Footprint as XMLRPC.");
     }
-  } else if (nodeHandle_.searchParam("footprint_radius", full_radius_param_name)) {
-//    nodeHandle_.param("footprint_radius", footprintRadius_, 0.25);
+  } else if (nodeHandle_.searchParam("footprint_radius", fullRadiusParamName)) {
+    nodeHandle_.param(fullRadiusParamName, footprintRadius_, 0.25);
   }
   return true;
 }
 
-void TraversabilityChecker::readFootprintFromXMLRPC(XmlRpc::XmlRpcValue& footprint_xmlrpc, const std::string& full_param_name)
+void TraversabilityChecker::readFootprintFromXMLRPC(XmlRpc::XmlRpcValue& footprintXmlrpc, const std::string& fullParamName)
 {
   // Make sure we have an array of at least 3 elements.
-  if (footprint_xmlrpc.getType() != XmlRpc::XmlRpcValue::TypeArray
-      || footprint_xmlrpc.size() < 3) {
+  if (footprintXmlrpc.getType() != XmlRpc::XmlRpcValue::TypeArray
+      || footprintXmlrpc.size() < 3) {
     ROS_ERROR(
         "The footprint must be specified as list of lists on the parameter server, %s was specified as %s",
-        full_param_name.c_str(), std::string(footprint_xmlrpc).c_str());
+        fullParamName.c_str(), std::string(footprintXmlrpc).c_str());
     throw std::runtime_error(
         "The footprint must be specified as list of lists on the parameter server with at least 3 points eg: [[x1, y1], [x2, y2], ..., [xn, yn]]");
   }
 
   geometry_msgs::Point32 pt;
 
-  for (int i = 0; i < footprint_xmlrpc.size(); ++i) {
+  for (int i = 0; i < footprintXmlrpc.size(); ++i) {
     // Make sure each element of the list is an array of size 2. (x and y coordinates)
-    XmlRpc::XmlRpcValue point = footprint_xmlrpc[i];
+    XmlRpc::XmlRpcValue point = footprintXmlrpc[i];
     if (point.getType() != XmlRpc::XmlRpcValue::TypeArray
         || point.size() != 2) {
       ROS_ERROR(
           "The footprint (parameter %s) must be specified as list of lists on the parameter server eg: [[x1, y1], [x2, y2], ..., [xn, yn]], but this spec is not of that form.",
-          full_param_name.c_str());
+          fullParamName.c_str());
       throw std::runtime_error(
           "The footprint must be specified as list of lists on the parameter server eg: [[x1, y1], [x2, y2], ..., [xn, yn]], but this spec is not of that form");
     }
 
-    pt.x = getNumberFromXMLRPC(point[0], full_param_name);
-    pt.y = getNumberFromXMLRPC(point[1], full_param_name);
+    pt.x = getNumberFromXMLRPC(point[0], fullParamName);
+    pt.y = getNumberFromXMLRPC(point[1], fullParamName);
     pt.z = 0.0;
 
     footprintPoints_.push_back(pt);
   }
 }
 
-bool TraversabilityChecker::readFootprintFromString(const std::string& footprint_string)
+bool TraversabilityChecker::readFootprintFromString(const std::string& footprintString)
 {
   std::string error;
-  std::vector<std::vector<float> > vvf = parseVVF(footprint_string, error);
+  std::vector<std::vector<float> > vvf = parseVVF(footprintString, error);
   if (error != "") {
     ROS_ERROR("Error parsing footprint parameter: '%s'", error.c_str());
-    ROS_ERROR("  Footprint string was '%s'.", footprint_string.c_str());
+    ROS_ERROR("  Footprint string was '%s'.", footprintString.c_str());
     return false;
   }
 
@@ -120,7 +122,7 @@ bool TraversabilityChecker::readFootprintFromString(const std::string& footprint
       footprintPoints_.push_back(point);
     } else {
       ROS_ERROR(
-          "Points in the footprint specification must be pairs of numbers.  Found a point with %d numbers.",
+          "Points in the footprint specification must be pairs of numbers. Found a point with %d numbers.",
           int(vvf[i].size()));
       return false;
     }
@@ -128,77 +130,77 @@ bool TraversabilityChecker::readFootprintFromString(const std::string& footprint
   return true;
 }
 
-std::vector<std::vector<float> > TraversabilityChecker::parseVVF( const std::string& input, std::string& error_return )
+std::vector<std::vector<float> > TraversabilityChecker::parseVVF(const std::string& input, std::string& errorReturn)
 {
   std::vector<std::vector<float> > result;
 
-  std::stringstream input_ss(input);
+  std::stringstream inputStringStream(input);
   int depth = 0;
-  std::vector<float> current_vector;
-  while (!!input_ss && !input_ss.eof()) {
-    switch (input_ss.peek()) {
+  std::vector<float> currentVector;
+  while (!!inputStringStream && !inputStringStream.eof()) {
+    switch (inputStringStream.peek()) {
       case EOF:
         break;
       case '[':
         depth++;
         if (depth > 2) {
-          error_return = "Array depth greater than 2";
+          errorReturn = "Array depth greater than 2";
           return result;
         }
-        input_ss.get();
-        current_vector.clear();
+        inputStringStream.get();
+        currentVector.clear();
         break;
       case ']':
         depth--;
         if (depth < 0) {
-          error_return = "More close ] than open [";
+          errorReturn = "More close ] than open [";
           return result;
         }
-        input_ss.get();
+        inputStringStream.get();
         if (depth == 1) {
-          result.push_back(current_vector);
+          result.push_back(currentVector);
         }
         break;
       case ',':
       case ' ':
       case '\t':
-        input_ss.get();
+        inputStringStream.get();
         break;
       default:  // All other characters should be part of the numbers.
         if (depth != 2) {
           std::stringstream err_ss;
           err_ss << "Numbers at depth other than 2. Char was '"
-                 << char(input_ss.peek()) << "'.";
-          error_return = err_ss.str();
+                 << char(inputStringStream.peek()) << "'.";
+          errorReturn = err_ss.str();
           return result;
         }
         float value;
-        input_ss >> value;
-        if (!!input_ss) {
-          current_vector.push_back(value);
+        inputStringStream >> value;
+        if (!!inputStringStream) {
+          currentVector.push_back(value);
         }
         break;
     }
   }
 
   if (depth != 0) {
-    error_return = "Unterminated vector string.";
+    errorReturn = "Unterminated vector string.";
   } else {
-    error_return = "";
+    errorReturn = "";
   }
 
   return result;
 }
 
-double TraversabilityChecker::getNumberFromXMLRPC(XmlRpc::XmlRpcValue& value, const std::string& full_param_name)
+double TraversabilityChecker::getNumberFromXMLRPC(XmlRpc::XmlRpcValue& value, const std::string& fullParamName)
 {
   // Make sure that the value we're looking at is either a double or an int.
   if (value.getType() != XmlRpc::XmlRpcValue::TypeInt
       && value.getType() != XmlRpc::XmlRpcValue::TypeDouble) {
-    std::string& value_string = value;
-    ROS_FATAL(
+    std::string& valueString = value;
+    ROS_ERROR(
         "Values in the footprint specification (param %s) must be numbers. Found value %s.",
-        full_param_name.c_str(), value_string.c_str());
+        fullParamName.c_str(), valueString.c_str());
     throw std::runtime_error(
         "Values in the footprint specification must be numbers");
   }
@@ -226,22 +228,6 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
     return;
   }
 
-  // Add footprint // TODO: Move polygon points to yaml file
-  geometry_msgs::Point32 fl, fr, bl, br;
-  fl.x = 0.355;
-  fl.y = 0.32;
-  fl.z = 0.0;
-  fr.x = 0.355;
-  fr.y = -0.32;
-  fr.z = 0.0;
-  bl.x = -0.355;
-  bl.y = 0.32;
-  bl.z = 0.0;
-  br.x = -0.355;
-  br.y = -0.32;
-  br.z = 0.0;
-
-
   // TODO Include rotation.
   endPose.position.x = startPose.position.x + extrapolationDuration_ * linearVelocityInBaseFrame.vector.x;
   endPose.position.y = startPose.position.y + extrapolationDuration_ * linearVelocityInBaseFrame.vector.y;
@@ -253,10 +239,7 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   path.poses.poses.push_back(startPose);
   path.poses.poses.push_back(endPose);
   path.radius = footprintRadius_;
-  path.footprint.polygon.points.push_back(fl);
-  path.footprint.polygon.points.push_back(fr);
-  path.footprint.polygon.points.push_back(br);
-  path.footprint.polygon.points.push_back(bl);
+  path.footprint.polygon.points = footprintPoints_;
   path.footprint.header = robotPose_.header;
   path.footprint.header.frame_id = "base";
 
