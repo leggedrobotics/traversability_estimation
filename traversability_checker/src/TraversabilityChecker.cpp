@@ -11,6 +11,10 @@
 #include <traversability_msgs/CheckFootprintPath.h>
 #include <any_msgs/SafetyCheck.h>
 
+#include <Eigen/Dense>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+
 namespace traversability_checker {
 
 TraversabilityChecker::TraversabilityChecker(const ros::NodeHandle& nodeHandle)
@@ -50,10 +54,8 @@ bool TraversabilityChecker::readParameters()
     nodeHandle_.getParam(fullParamName, footprintXmlrpc);
     if (footprintXmlrpc.getType() == XmlRpc::XmlRpcValue::TypeString) {
       readFootprintFromString(std::string(footprintXmlrpc));
-      ROS_INFO("Footprint as string.");
     } else if (footprintXmlrpc.getType() == XmlRpc::XmlRpcValue::TypeArray) {
       readFootprintFromXMLRPC(footprintXmlrpc, fullParamName);
-      ROS_INFO("Footprint as XMLRPC.");
     }
   } else if (nodeHandle_.searchParam("footprint_radius", fullRadiusParamName)) {
     nodeHandle_.param(fullRadiusParamName, footprintRadius_, 0.25);
@@ -216,23 +218,44 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   const geometry_msgs::Pose& startPose = robotPose_.pose;
   geometry_msgs::Pose endPose;
 
-  geometry_msgs::Vector3Stamped linearVelocityInTwistFrame, linearVelocityInBaseFrame;
+  geometry_msgs::Vector3Stamped linearVelocityInTwistFrame, linearVelocityInBaseFrame, angularVelocityInTwistFrame, angularVelocityInBaseFrame;
   linearVelocityInTwistFrame.header = robotTwist_.header;
   linearVelocityInTwistFrame.vector = robotTwist_.twist.linear;
+  angularVelocityInTwistFrame.header = robotTwist_.header;
+  angularVelocityInTwistFrame.vector = robotTwist_.twist.angular;
   try {
     ros::Time now = ros::Time::now();
     tfListener_.waitForTransform(robotTwist_.header.frame_id, robotPose_.header.frame_id, now, ros::Duration(0.05));
     tfListener_.transformVector(robotPose_.header.frame_id, linearVelocityInTwistFrame, linearVelocityInBaseFrame);
+    tfListener_.transformVector(robotPose_.header.frame_id, angularVelocityInTwistFrame, angularVelocityInBaseFrame);
   } catch (tf::TransformException ex) {
     ROS_ERROR("%s", ex.what());
     return;
   }
 
-  // TODO Include rotation.
+  // Extrapolation of linear velocity
   endPose.position.x = startPose.position.x + extrapolationDuration_ * linearVelocityInBaseFrame.vector.x;
   endPose.position.y = startPose.position.y + extrapolationDuration_ * linearVelocityInBaseFrame.vector.y;
   endPose.position.z = startPose.position.z + extrapolationDuration_ * linearVelocityInBaseFrame.vector.z;
-  endPose.orientation = startPose.orientation;
+  // Extrapolation of angular velocity
+  Eigen::Vector3f rotationAxis;
+  Eigen::Quaternionf startPoseOrientation, endPoseOrientation, startToEnd;
+  rotationAxis.x() = angularVelocityInBaseFrame.vector.x;
+  rotationAxis.y() = angularVelocityInBaseFrame.vector.y;
+  rotationAxis.z() = angularVelocityInBaseFrame.vector.z;
+  double angle = rotationAxis.norm()*extrapolationDuration_;
+  rotationAxis.normalize();
+  startToEnd = Eigen::AngleAxis<float>(angle, rotationAxis);
+  startPoseOrientation.x() = startPose.orientation.x;
+  startPoseOrientation.y() = startPose.orientation.y;
+  startPoseOrientation.z() = startPose.orientation.z;
+  startPoseOrientation.w() = startPose.orientation.w;
+  endPoseOrientation = startToEnd*startPoseOrientation;
+  endPose.orientation.x = endPoseOrientation.x();
+  endPose.orientation.y = endPoseOrientation.y();
+  endPose.orientation.z = endPoseOrientation.z();
+  endPose.orientation.w = endPoseOrientation.w();
+
   traversability_msgs::CheckFootprintPath check;
   auto& path = check.request.path;
   path.poses.header = robotPose_.header;

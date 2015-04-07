@@ -16,17 +16,18 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 #set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 ## Find catkin macros and libraries
-find_package(catkin REQUIRED
-  COMPONENTS
-    roscpp
-    tf
-    traversability_msgs
-    geometry_msgs
-    any_msgs
+find_package(catkin REQUIRED COMPONENTS
+  cmake_modules
+  roscpp
+  tf
+  traversability_msgs
+  geometry_msgs
+  any_msgs
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+find_package(Eigen REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -45,14 +46,15 @@ find_package(catkin REQUIRED
 catkin_package(
   INCLUDE_DIRS
     include
-#  LIBRARIES traversability_checker
+  LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS
     roscpp
     tf
     traversability_msgs
     geometry_msgs
     any_msgs
-#  DEPENDS system_lib
+  DEPENDS
+    Eigen
 )
 
 ###########
@@ -61,7 +63,10 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(include)
+include_directories(
+  include
+  ${EIGEN_INCLUDE_DIRS}
+)
 
 ## Declare a cpp library
 # add_library(traversability_checker
