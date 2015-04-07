@@ -10,13 +10,9 @@
 #include <pluginlib/class_list_macros.h>
 
 // Grid Map
-#include <grid_map/GridMap.hpp>
+#include <grid_map/grid_map.hpp>
 
-// Grid Map lib
-#include <grid_map_lib/GridMap.hpp>
-#include <grid_map_lib/iterators/GridMapIterator.hpp>
-#include <grid_map_lib/iterators/CircleIterator.hpp>
-#include <grid_map_lib/iterators/SubmapIterator.hpp>
+using namespace grid_map;
 
 namespace filters {
 
@@ -77,57 +73,53 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
 {
   // Add new layer to the elevation map.
   mapOut = mapIn;
-  mapOut.add(type_, mapIn.get("elevation"));
+  mapOut.add(type_);
 
-  // Set clear and valid types.
-  std::vector<std::string> clearTypes, validTypes;
-  clearTypes.push_back(type_);
-  validTypes.push_back("elevation");
-  mapOut.setClearTypes(clearTypes);
-  mapOut.clear();
+  double height, stepHeight, stepHeightMax = 0.0;
+  bool stepHeightExists, heightExists;
 
-  double height, stepHeight, stepHeightMax = 0.0, windowStepHeightMax;
-  bool stepHeightExists;
-
-  for (grid_map_lib::GridMapIterator iterator(mapOut);
+  for (GridMapIterator iterator(mapOut);
       !iterator.isPassedEnd(); ++iterator) {
-    // Check if this is an empty cell (hole in the map).
-    if (!mapOut.isValid(*iterator, validTypes)) continue;
-
-    height = mapOut.at("elevation", *iterator);
-    windowStepHeightMax = 0.0;
+    double heightMin, heightMax;
     stepHeightExists = false;
+    heightExists = false;
 
     // Requested position (center) of circle in map.
     Eigen::Vector2d center;
     mapOut.getPosition(*iterator, center);
 
     // Get the highest step in the circular window.
-    for (grid_map_lib::CircleIterator submapIterator(mapOut, center, windowRadius_);
+    for (CircleIterator submapIterator(mapOut, center, windowRadius_);
         !submapIterator.isPassedEnd(); ++submapIterator) {
-      if (mapOut.isValid(*submapIterator, validTypes)) {
-        stepHeight = std::abs(height - mapOut.at("elevation", *submapIterator));
-        if (stepHeight > windowStepHeightMax) {
-          windowStepHeightMax = stepHeight;
-          stepHeightExists = true;
+      if (mapOut.isValid(*submapIterator, "elevation")) {
+        height = mapOut.at("elevation", *submapIterator);
+        if (!heightExists) {
+          heightMin = height;
+          heightMax = height;
+          heightExists = true;
+          continue;
         }
+        if (height > heightMax) heightMax = height;
+        if (height < heightMin) heightMin = height;
+        stepHeightExists = true;
       }
     }
 
     if (stepHeightExists) {
-      if (windowStepHeightMax < criticalValue_) {
-        mapOut.at(type_, *iterator) = 1.0 - windowStepHeightMax / criticalValue_;
+      stepHeight = heightMax - heightMin;
+      if (stepHeight < criticalValue_) {
+        mapOut.at(type_, *iterator) = 1.0 - stepHeight / criticalValue_;
       }
       else {
         mapOut.at(type_, *iterator) = 0.0;
       }
 
-      if (windowStepHeightMax > stepHeightMax) stepHeightMax = windowStepHeightMax;
+      if (stepHeight > stepHeightMax) stepHeightMax = stepHeight;
 
     }
   }
 
-  ROS_INFO("step height max = %f", stepHeightMax);
+  ROS_DEBUG("step height max = %f", stepHeightMax);
 
   return true;
 }

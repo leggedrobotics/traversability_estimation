@@ -10,15 +10,10 @@
 #include <pluginlib/class_list_macros.h>
 
 // Grid Map
-#include <grid_map/GridMap.hpp>
-
-// Grid Map lib
-#include <grid_map_lib/GridMap.hpp>
-#include <grid_map_lib/GridMapMath.hpp>
-#include <grid_map_lib/iterators/GridMapIterator.hpp>
-#include <grid_map_lib/iterators/CircleIterator.hpp>
+#include <grid_map/grid_map.hpp>
 
 using namespace Eigen;
+using namespace grid_map;
 
 namespace filters {
 
@@ -79,22 +74,14 @@ bool RoughnessFilter<T>::update(const T& mapIn, T& mapOut)
 {
   // Add new layer to the elevation map.
   mapOut = mapIn;
-  mapOut.add(type_, mapIn.get("elevation"));
-
+  mapOut.add(type_);
   double roughnessMax = 0.0;
 
-  // Set clear and valid types.
-  std::vector<std::string> clearTypes, validTypes;
-  validTypes.push_back("surface_normal_x");
-  clearTypes.push_back(type_);
-  mapOut.setClearTypes(clearTypes);
-  mapOut.clear();
-
-  for (grid_map_lib::GridMapIterator iterator(mapOut);
+  for (GridMapIterator iterator(mapOut);
       !iterator.isPassedEnd(); ++iterator) {
 
     // Check if this is an empty cell (hole in the map).
-    if (!mapOut.isValid(*iterator, validTypes)) continue;
+    if (!mapOut.isValid(*iterator, "surface_normal_x")) continue;
 
     // Prepare data computation.
     const int maxNumberOfCells = ceil(pow(2*estimationRadius_/mapOut.getResolution(),2));
@@ -106,11 +93,11 @@ bool RoughnessFilter<T>::update(const T& mapIn, T& mapOut)
 
     // Gather surrounding data.
     size_t nPoints = 0;
-    for (grid_map_lib::CircleIterator submapIterator(mapOut, center, estimationRadius_);
+    for (CircleIterator submapIterator(mapOut, center, estimationRadius_);
         !submapIterator.isPassedEnd(); ++submapIterator) {
-      if (!mapOut.isValid(*submapIterator, validTypes)) continue;
+      if (!mapOut.isValid(*submapIterator, "elevation")) continue;
       Vector3d point;
-      mapOut.getPosition3d("elevation", *submapIterator, point);
+      mapOut.getPosition3("elevation", *submapIterator, point);
       points.col(nPoints) = point;
       nPoints++;
     }
@@ -139,7 +126,7 @@ bool RoughnessFilter<T>::update(const T& mapIn, T& mapOut)
     if (roughness > roughnessMax) roughnessMax = roughness;
   }
 
-  ROS_INFO("roughness max = %f", roughnessMax);
+  ROS_DEBUG("roughness max = %f", roughnessMax);
 
   return true;
 }

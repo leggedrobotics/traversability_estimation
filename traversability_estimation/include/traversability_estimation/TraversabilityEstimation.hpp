@@ -9,7 +9,7 @@
 #pragma once
 
 // Grid Map
-#include <grid_map/GridMap.hpp>
+#include <grid_map/grid_map.hpp>
 
 // Traversability estimation
 #include "traversability_msgs/CheckFootprintPath.h"
@@ -52,13 +52,7 @@ namespace traversability_estimation {
      * traversable and 1.0 means fully traversable.
      * @param[in/out] elevationMap the map for which the traversability is computed.
      */
-    void computeTraversability(grid_map::GridMap& elevationMap);
-
-    /*!
-     * Publishes the traversability grid map as occupancy grid.
-     * @param map the traversability map to publish.
-     */
-    void publishAsOccupancyGrid(const grid_map::GridMap& map) const;
+    bool computeTraversability(const grid_map::GridMap& elevationMap, grid_map::GridMap& traversabilityMap);
 
     /*!
      * ROS service callback function to return a boolean to indicate if a path is traversable.
@@ -69,6 +63,36 @@ namespace traversability_estimation {
     bool checkFootprintPath(traversability_msgs::CheckFootprintPath::Request& request, traversability_msgs::CheckFootprintPath::Response& response);
 
   private:
+
+    /*!
+    * Reads and verifies the ROS parameters.
+    * @return true if successful.
+    */
+    bool readParameters();
+
+    /*!
+    * Callback function for the update timer. Forces an update of the traversability
+    * map from a new elevation map requested from the grid map service.
+    * @param timerEvent the timer event.
+    */
+    void updateTimerCallback(const ros::TimerEvent& timerEvent);
+
+    /*!
+     * Gets the grid map for the desired submap center point.
+     * @param[out] map the map that is received.
+     * @return true if successful, false if ROS service call failed.
+     */
+    bool getGridMap(grid_map_msgs::GridMap& map);
+
+    /*!
+     * Gets the traversability value of the submap defined by the polygon. Is true if the
+     * whole polygon is traversable.
+     * @param[in] polygon polygon that defines submap of the traversability map.
+     * @param[out] traversability traversability value of submap defined by the polygon, the traversability
+     * is the mean of each cell within the polygon.
+     * @return true if the whole polygon is traversable, false otherwise.
+     */
+    bool isTraversable(const grid_map::Polygon& polygon, double& traversability);
 
     //! ROS node handle.
     ros::NodeHandle& nodeHandle_;
@@ -91,17 +115,14 @@ namespace traversability_estimation {
     //! Id of the frame of the elevation map.
     std::string mapFrameId_;
 
+    //! Id of the frame of the robot.
+    std::string robotFrameId_;
+
     //! Publisher of the traversability occupancy grid.
-    ros::Publisher traversabilityGridPublisher_;
-
-    //! Publisher of the slope filter occupancy grid.
-    ros::Publisher slopeFilterGridPublisher_;
-
-    //! Publisher of the step filter occupancy grid.
-    ros::Publisher stepFilterGridPublisher_;
+    ros::Publisher traversabilityMapPublisher_;
 
     //! Publisher of the roughness filter occupancy grid.
-    ros::Publisher roughnessFilterGridPublisher_;
+    ros::Publisher footprintPolygonPublisher_;
   
     //! Timer for the map update.
     ros::Timer updateTimer_;
@@ -112,40 +133,20 @@ namespace traversability_estimation {
     //! Requested map cell types.
     std::vector<std::string> requestedMapTypes_;
 
-    //! Traversability map type.
+    //! Requested map length in [m].
+    Eigen::Array2d mapLength_;
+
+    //! Traversability map types.
     const std::string traversabilityType_;
     const std::string slopeType_;
     const std::string stepType_;
     const std::string roughnessType_;
-
-    //! Requested map length in [m].
-    Eigen::Array2d mapLength_;
 
     //! Filter Chain
     filters::FilterChain<grid_map::GridMap> filter_chain_;
 
     //! Traversability map.
     grid_map::GridMap traversabilityMap_;
-  
-    /*!
-    * Reads and verifies the ROS parameters.
-    * @return true if successful.
-    */
-    bool readParameters();  
-    
-    /*!
-    * Callback function for the update timer. Forces an update of the traversability
-    * map from a new elevation map requested from the grid map service.
-    * @param timerEvent the timer event.
-    */
-    void updateTimerCallback(const ros::TimerEvent& timerEvent);
-
-    /*!
-     * Gets the grid map for the desired submap center point.
-     * @param[out] map the map that is received.
-     * @return true if successful, false if ROS service call failed.
-     */
-    bool getGridMap(grid_map_msg::GridMap& map);
   };
 
 } /* namespace */
