@@ -75,17 +75,14 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
   mapOut = mapIn;
   mapOut.add(type_);
 
-  double height, stepHeight, stepHeightMax = 0.0, windowStepHeightMax;
-  bool stepHeightExists;
+  double height, stepHeight, stepHeightMax = 0.0;
+  bool stepHeightExists, heightExists;
 
   for (GridMapIterator iterator(mapOut);
       !iterator.isPassedEnd(); ++iterator) {
-    // Check if this is an empty cell (hole in the map).
-    if (!mapOut.isValid(*iterator, "elevation")) continue;
-
-    height = mapOut.at("elevation", *iterator);
-    windowStepHeightMax = 0.0;
+    double heightMin, heightMax;
     stepHeightExists = false;
+    heightExists = false;
 
     // Requested position (center) of circle in map.
     Eigen::Vector2d center;
@@ -95,23 +92,29 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
     for (CircleIterator submapIterator(mapOut, center, windowRadius_);
         !submapIterator.isPassedEnd(); ++submapIterator) {
       if (mapOut.isValid(*submapIterator, "elevation")) {
-        stepHeight = std::abs(height - mapOut.at("elevation", *submapIterator));
-        if (stepHeight > windowStepHeightMax) {
-          windowStepHeightMax = stepHeight;
-          stepHeightExists = true;
+        height = mapOut.at("elevation", *submapIterator);
+        if (!heightExists) {
+          heightMin = height;
+          heightMax = height;
+          heightExists = true;
+          continue;
         }
+        if (height > heightMax) heightMax = height;
+        if (height < heightMin) heightMin = height;
+        stepHeightExists = true;
       }
     }
 
     if (stepHeightExists) {
-      if (windowStepHeightMax < criticalValue_) {
-        mapOut.at(type_, *iterator) = 1.0 - windowStepHeightMax / criticalValue_;
+      stepHeight = heightMax - heightMin;
+      if (stepHeight < criticalValue_) {
+        mapOut.at(type_, *iterator) = 1.0 - stepHeight / criticalValue_;
       }
       else {
         mapOut.at(type_, *iterator) = 0.0;
       }
 
-      if (windowStepHeightMax > stepHeightMax) stepHeightMax = windowStepHeightMax;
+      if (stepHeight > stepHeightMax) stepHeightMax = stepHeight;
 
     }
   }
