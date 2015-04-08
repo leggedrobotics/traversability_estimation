@@ -1,4 +1,4 @@
-submap_service: "/elevation_mapping_long_range/get_grid_map"
+submap_service: "/elevation_mapping_long_range/get_submap"
 robot_frame_id: "base"
 map_frame_id: "map"
 update_rate: 2.0
