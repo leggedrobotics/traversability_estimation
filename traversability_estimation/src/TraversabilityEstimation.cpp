@@ -87,7 +87,8 @@ bool TraversabilityEstimation::readParameters()
   return true;
 }
 
-void TraversabilityEstimation::updateTimerCallback(const ros::TimerEvent& timerEvent)
+void TraversabilityEstimation::updateTimerCallback(
+    const ros::TimerEvent& timerEvent)
 {
   grid_map_msgs::GridMap mapMessage;
   ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
@@ -98,7 +99,8 @@ void TraversabilityEstimation::updateTimerCallback(const ros::TimerEvent& timerE
     grid_map::GridMapRosConverter::fromMessage(mapMessage, elevationMap);
     computeTraversability(elevationMap, traversabilityMap);
     grid_map::GridMapRosConverter::toMessage(traversabilityMap, mapMessage);
-    traversabilityMapPublisher_.publish(mapMessage);
+    if (!traversabilityMapPublisher_.getNumSubscribers() < 1)
+      traversabilityMapPublisher_.publish(mapMessage);
   } else {
     ROS_WARN("Failed to retrieve elevation grid map.");
   }
@@ -237,7 +239,8 @@ bool TraversabilityEstimation::checkFootprintPath(
   polygon.setTimestamp(request.path.footprint.header.stamp.toNSec());
   geometry_msgs::PolygonStamped polygonMsg;
   grid_map::PolygonRosConverter::toMessage(polygon, polygonMsg);
-  footprintPolygonPublisher_.publish(polygonMsg);
+  if (!footprintPolygonPublisher_.getNumSubscribers() < 1)
+    footprintPolygonPublisher_.publish(polygonMsg);
 
   response.is_safe = isSafe;
   return true;
