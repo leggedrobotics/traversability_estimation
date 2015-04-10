@@ -8,6 +8,7 @@
 
 #include "filters/StepFilter.hpp"
 #include <pluginlib/class_list_macros.h>
+#include <algorithm>
 
 // Grid Map
 #include <grid_map/grid_map.hpp>
@@ -19,7 +20,9 @@ namespace filters {
 template<typename T>
 StepFilter<T>::StepFilter()
     : criticalValue_(0.3),
-      windowRadius_(0.3),
+      firstWindowRadius_(0.08),
+      secondWindowRadius_(0.08),
+      nCellCritical_(5),
       type_("traversability_step")
 {
 
@@ -35,35 +38,59 @@ template<typename T>
 bool StepFilter<T>::configure()
 {
   if (!FilterBase<T>::getParam(std::string("critical_value"), criticalValue_)) {
-    ROS_ERROR("StepFilter did not find param critical_value");
+    ROS_ERROR("Step filter did not find param critical_value.");
     return false;
   }
 
   if (criticalValue_ < 0.0) {
-    ROS_ERROR("Critical step height must be greater than zero");
+    ROS_ERROR("Critical step height must be greater than zero.");
     return false;
   }
 
-  ROS_INFO("Critical step height = %f", criticalValue_);
+  ROS_INFO("Critical step height = %f.", criticalValue_);
 
-  if (!FilterBase<T>::getParam(std::string("window_radius"), windowRadius_)) {
-    ROS_ERROR("StepFilter did not find param window_radius");
+  if (!FilterBase<T>::getParam(std::string("first_window_radius"), firstWindowRadius_)) {
+    ROS_ERROR("Step filter did not find param 'first_window_radius'.");
     return false;
   }
 
-  if (windowRadius_ < 0.0) {
-    ROS_ERROR("windowRadius_ must be greater than zero");
+  if (firstWindowRadius_ < 0.0) {
+    ROS_ERROR("'first_window_radius' must be greater than zero.");
     return false;
   }
 
-  ROS_INFO("Window radius of step filter = %f", windowRadius_);
+  ROS_INFO("First window radius of step filter = %f.", firstWindowRadius_);
+
+  if (!FilterBase<T>::getParam(std::string("second_window_radius"), secondWindowRadius_)) {
+    ROS_ERROR("Step filter did not find param 'second_window_radius'.");
+    return false;
+  }
+
+  if (secondWindowRadius_ < 0.0) {
+    ROS_ERROR("'second_window_radius' must be greater than zero.");
+    return false;
+  }
+
+  ROS_INFO("Second window radius of step filter = %f.", secondWindowRadius_);
+
+  if (!FilterBase<T>::getParam(std::string("critical_cell_number"), nCellCritical_)) {
+    ROS_ERROR("Step filter did not find param 'critical_cell_number'.");
+    return false;
+  }
+
+  if (nCellCritical_ <= 0) {
+    ROS_ERROR("'critical_cell_number' must be greater than zero.");
+    return false;
+  }
+
+  ROS_INFO("Number of critical cells of step filter = %d.", nCellCritical_);
 
   if (!FilterBase<T>::getParam(std::string("map_type"), type_)) {
-    ROS_ERROR("StepFilter did not find param map_type");
+    ROS_ERROR("Step filter did not find param map_type.");
     return false;
   }
 
-  ROS_INFO("Step map type = %s", type_.c_str());
+  ROS_INFO("Step map type = %s.", type_.c_str());
 
   return true;
 }
@@ -71,59 +98,73 @@ bool StepFilter<T>::configure()
 template<typename T>
 bool StepFilter<T>::update(const T& mapIn, T& mapOut)
 {
-  // Add new layer to the elevation map.
+  // Add new layers to the elevation map.
   mapOut = mapIn;
   mapOut.add(type_);
+  mapOut.add("step_height");
 
-  double height, stepHeight, stepHeightMax = 0.0;
-  bool stepHeightExists, heightExists;
+  double height, step;
 
-  for (GridMapIterator iterator(mapOut);
-      !iterator.isPassedEnd(); ++iterator) {
-    double heightMin, heightMax;
-    stepHeightExists = false;
-    heightExists = false;
+  // First iteration through the elevation map.
+  for (GridMapIterator iterator(mapOut); !iterator.isPassedEnd(); ++iterator) {
+    if (!mapOut.isValid(*iterator, "elevation"))
+      continue;
+    height = mapOut.at("elevation", *iterator);
+    double stepMax = 0.0;
 
     // Requested position (center) of circle in map.
     Eigen::Vector2d center;
     mapOut.getPosition(*iterator, center);
 
     // Get the highest step in the circular window.
-    for (CircleIterator submapIterator(mapOut, center, windowRadius_);
+    for (CircleIterator submapIterator(mapOut, center, firstWindowRadius_);
         !submapIterator.isPassedEnd(); ++submapIterator) {
-      if (mapOut.isValid(*submapIterator, "elevation")) {
-        height = mapOut.at("elevation", *submapIterator);
-        if (!heightExists) {
-          heightMin = height;
-          heightMax = height;
-          heightExists = true;
-          continue;
-        }
-        if (height > heightMax) heightMax = height;
-        if (height < heightMin) heightMin = height;
-        stepHeightExists = true;
-      }
+      if (!mapOut.isValid(*submapIterator, "elevation"))
+        continue;
+      step = std::abs(height - mapOut.at("elevation", *submapIterator));
+      if (step > stepMax)
+        stepMax = step;
     }
 
-    if (stepHeightExists) {
-      stepHeight = heightMax - heightMin;
-      if (stepHeight < criticalValue_) {
-        mapOut.at(type_, *iterator) = 1.0 - stepHeight / criticalValue_;
-      }
-      else {
-        mapOut.at(type_, *iterator) = 0.0;
-      }
-
-      if (stepHeight > stepHeightMax) stepHeightMax = stepHeight;
-
-    }
+    if (stepMax > 0.0)
+      mapOut.at("step_height", *iterator) = stepMax;
   }
 
-  ROS_DEBUG("step height max = %f", stepHeightMax);
+  // Second iteration through the elevation map.
+  for (GridMapIterator iterator(mapOut); !iterator.isPassedEnd(); ++iterator) {
+    int nCells = 0;
+    double stepMax = 0.0;
+    bool isValid = false;
 
+    // Requested position (center) of circle in map.
+    Eigen::Vector2d center;
+    mapOut.getPosition(*iterator, center);
+
+    // Compute the step height.
+    for (CircleIterator submapIterator(mapOut, center, secondWindowRadius_);
+        !submapIterator.isPassedEnd(); ++submapIterator) {
+      if (!mapOut.isValid(*submapIterator, "step_height"))
+        continue;
+      isValid = true;
+      if (mapOut.at("step_height", *submapIterator) > stepMax) {
+        stepMax = mapOut.at("step_height", *submapIterator);
+        if (stepMax > criticalValue_) nCells++;
+      }
+    }
+
+    if (isValid) {
+      step = std::min(stepMax, (double)nCells / (double)nCellCritical_ * stepMax);
+      if (step < criticalValue_) {
+        mapOut.at(type_, *iterator) = 1.0 - step / criticalValue_;
+      } else {
+        mapOut.at(type_, *iterator) = 0.0;
+      }
+    }
+  }
+  // Remove unnecessary layer.
+  mapOut.erase("step_height");
   return true;
 }
-;
 
 } /* namespace */
 

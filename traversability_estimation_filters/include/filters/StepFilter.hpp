@@ -53,8 +53,11 @@ class StepFilter : public FilterBase<T>
   //! Maximum allowed step.
   double criticalValue_;
 
-  //! Window size for step filter
-  double windowRadius_;
+  //! Window sizes for step filter
+  double firstWindowRadius_, secondWindowRadius_;
+
+  //! Critical number of cells greater than maximums allowed step.
+  int nCellCritical_;
 
   //! Step map type.
   std::string type_;
