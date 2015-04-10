@@ -40,8 +40,12 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
   footprintPolygonPublisher_ = nodeHandle_.advertise<geometry_msgs::PolygonStamped>("footprint_polygon", 1, true);
   traversabilityMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>("traversability_map", 1);
 
-  updateTimer_ = nodeHandle_.createTimer(
-      updateDuration_, &TraversabilityEstimation::updateTimerCallback, this);
+  if (!updateDuration_.isZero()) {
+    updateTimer_ = nodeHandle_.createTimer(
+        updateDuration_, &TraversabilityEstimation::updateTimerCallback, this);
+  } else {
+    ROS_WARN("Update rate is zero. No traversability map computed.");
+  }
 
   footprintPathService_ = nodeHandle_.advertiseService("check_footprint_path", &TraversabilityEstimation::checkFootprintPath, this);
 
@@ -65,7 +69,11 @@ bool TraversabilityEstimation::readParameters()
 
   double updateRate;
   nodeHandle_.param("update_rate", updateRate, 1.0);
-  updateDuration_.fromSec(1.0 / updateRate);
+  if (!updateRate == 0.0) {
+    updateDuration_.fromSec(1.0 / updateRate);
+  } else {
+    updateDuration_.fromSec(0.0);
+  }
 
   nodeHandle_.param("map_frame_id", mapFrameId_, string("map"));
   nodeHandle_.param("robot_frame_id", robotFrameId_, string("robot"));
