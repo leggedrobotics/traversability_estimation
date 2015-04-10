@@ -10,6 +10,11 @@
   <url type="bugtracker">https://github.com/ethz-asl/traversability_estimation/issues</url>
 
   <buildtool_depend>catkin</buildtool_depend>
+  
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
+  
+  <run_depend>geometry_msgs</run_depend>
 
   <export>
   </export>
