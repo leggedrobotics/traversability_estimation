@@ -98,7 +98,7 @@ bool StepFilter<T>::configure()
 template<typename T>
 bool StepFilter<T>::update(const T& mapIn, T& mapOut)
 {
-  // Add new layer to the elevation map.
+  // Add new layers to the elevation map.
   mapOut = mapIn;
   mapOut.add(type_);
   mapOut.add("step_height");
@@ -116,18 +116,15 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
     Eigen::Vector2d center;
     mapOut.getPosition(*iterator, center);
 
-    int nCells = 0;
     // Get the highest step in the circular window.
     for (CircleIterator submapIterator(mapOut, center, firstWindowRadius_);
         !submapIterator.isPassedEnd(); ++submapIterator) {
-      nCells++;
       if (!mapOut.isValid(*submapIterator, "elevation"))
         continue;
       step = std::abs(height - mapOut.at("elevation", *submapIterator));
       if (step > stepMax)
         stepMax = step;
     }
-//    ROS_INFO("Cells in circle = %d", nCells);
 
     if (stepMax > 0.0)
       mapOut.at("step_height", *iterator) = stepMax;
@@ -151,17 +148,12 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
       isValid = true;
       if (mapOut.at("step_height", *submapIterator) > stepMax) {
         stepMax = mapOut.at("step_height", *submapIterator);
-        if (stepMax > criticalValue_) {
-          ROS_INFO_STREAM("Step max = " << stepMax);
-          nCells++;
-        }
+        if (stepMax > criticalValue_) nCells++;
       }
     }
-    ROS_INFO_STREAM(nCells);
 
     if (isValid) {
-      step = std::min(stepMax, nCells / nCellCritical_ * stepMax);
-      ROS_INFO_STREAM("Step = " << step);
+      step = std::min(stepMax, (double)nCells / (double)nCellCritical_ * stepMax);
       if (step < criticalValue_) {
         mapOut.at(type_, *iterator) = 1.0 - step / criticalValue_;
       } else {
@@ -169,6 +161,7 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
       }
     }
   }
+  // Remove unnecessary layer.
   mapOut.erase("step_height");
   return true;
 }
