@@ -1,6 +1,7 @@
-rate: 2.0
+rate: 1.0
 extrapolation_duration: 1.0
 footprint_radius: 0.35
 service_to_call: /traversability_estimation/check_footprint_path
-robot_pose_topic: /state_estimator/pose
-robot_twist_topic: /state_estimator/twist
+robot_pose_topic: pose
+twist_topic: twist
+use_twist_with_covariance: false

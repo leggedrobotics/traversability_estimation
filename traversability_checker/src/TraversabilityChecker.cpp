@@ -2,7 +2,7 @@
  * TraversabilityChecker.cpp
  *
  *  Created on: Mar 24, 2015
- *      Author: Péter Fankhauser
+ *      Author: Péter Fankhauser, Martin Wermelinger
  *   Institute: ETH Zurich, Autonomous Systems Lab
  */
 
@@ -18,14 +18,16 @@
 namespace traversability_checker {
 
 TraversabilityChecker::TraversabilityChecker(const ros::NodeHandle& nodeHandle)
-    : nodeHandle_(nodeHandle)
+    : nodeHandle_(nodeHandle),
+      useTwistWithCovariance_(false)
 {
   readParameters();
   safetyPublisher_ = nodeHandle_.advertise<any_msgs::SafetyCheck>("safety_status", 1);
   timer_ = nodeHandle_.createTimer(timerDuration_, &TraversabilityChecker::check, this);
   serviceClient_ = nodeHandle_.serviceClient<traversability_msgs::CheckFootprintPath>(serviceName_);
   robotPoseSubscriber_ = nodeHandle_.subscribe(robotPoseTopic_, 1, &TraversabilityChecker::updateRobotPose, this);
-  robotTwistSubscriber_ = nodeHandle_.subscribe(robotTwistTopic_, 1, &TraversabilityChecker::updateRobotTwist, this);
+  if (useTwistWithCovariance_) twistSubscriber_ = nodeHandle_.subscribe(twistTopic_, 1, &TraversabilityChecker::updateRobotTwistWithCovariance, this);
+  else twistSubscriber_ = nodeHandle_.subscribe(twistTopic_, 1, &TraversabilityChecker::updateRobotTwist, this);
 }
 
 TraversabilityChecker::~TraversabilityChecker()
@@ -36,12 +38,12 @@ bool TraversabilityChecker::readParameters()
 {
   nodeHandle_.param("service_to_call", serviceName_,
                     std::string("/traversability_estimation/check_footprint_path"));
-  nodeHandle_.param("robot_pose_topic", robotPoseTopic_, std::string("/state_estimator/pose"));
-  nodeHandle_.param("robot_twist_topic", robotTwistTopic_, std::string("/state_estimator/twist"));
+  nodeHandle_.param("robot_pose_topic", robotPoseTopic_, std::string("pose"));
+  nodeHandle_.param("twist_topic", twistTopic_, std::string("twist"));
+  nodeHandle_.param("use_twist_with_covariance", useTwistWithCovariance_, false);
   nodeHandle_.param("extrapolation_duration", extrapolationDuration_, 1.0);
-//  nodeHandle_.param("footprint_radius", footprintRadius_, 0.25);
   double rate;
-  nodeHandle_.param("rate", rate, 2.0);
+  nodeHandle_.param("rate", rate, 1.0);
   timerDuration_.fromSec(1.0 / rate);
   ROS_ASSERT(!timerDuration_.isZero());
 
@@ -219,13 +221,13 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   geometry_msgs::Pose endPose;
 
   geometry_msgs::Vector3Stamped linearVelocityInTwistFrame, linearVelocityInBaseFrame, angularVelocityInTwistFrame, angularVelocityInBaseFrame;
-  linearVelocityInTwistFrame.header = robotTwist_.header;
-  linearVelocityInTwistFrame.vector = robotTwist_.twist.linear;
-  angularVelocityInTwistFrame.header = robotTwist_.header;
-  angularVelocityInTwistFrame.vector = robotTwist_.twist.angular;
+  linearVelocityInTwistFrame.header = twist_.header;
+  linearVelocityInTwistFrame.vector = twist_.twist.linear;
+  angularVelocityInTwistFrame.header = twist_.header;
+  angularVelocityInTwistFrame.vector = twist_.twist.angular;
   try {
     ros::Time now = ros::Time::now();
-    tfListener_.waitForTransform(robotTwist_.header.frame_id, robotPose_.header.frame_id, now, ros::Duration(0.05));
+    tfListener_.waitForTransform(twist_.header.frame_id, robotPose_.header.frame_id, now, timerDuration_);
     tfListener_.transformVector(robotPose_.header.frame_id, linearVelocityInTwistFrame, linearVelocityInBaseFrame);
     tfListener_.transformVector(robotPose_.header.frame_id, angularVelocityInTwistFrame, angularVelocityInBaseFrame);
   } catch (tf::TransformException ex) {
@@ -243,7 +245,7 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   rotationAxis.x() = angularVelocityInBaseFrame.vector.x;
   rotationAxis.y() = angularVelocityInBaseFrame.vector.y;
   rotationAxis.z() = angularVelocityInBaseFrame.vector.z;
-  double angle = rotationAxis.norm()*extrapolationDuration_;
+  double angle = rotationAxis.norm() * extrapolationDuration_;
   rotationAxis.normalize();
   startToEnd = Eigen::AngleAxis<float>(angle, rotationAxis);
   startPoseOrientation.x() = startPose.orientation.x;
@@ -294,10 +296,17 @@ void TraversabilityChecker::updateRobotPose(
 }
 
 void TraversabilityChecker::updateRobotTwist(
+    const geometry_msgs::TwistStamped& twist)
+{
+  twist_ = twist;
+  ROS_DEBUG("Updated robot twist with covariance.");
+}
+
+void TraversabilityChecker::updateRobotTwistWithCovariance(
     const geometry_msgs::TwistWithCovarianceStamped& twist)
 {
-  robotTwist_.header = twist.header;
-  robotTwist_.twist = twist.twist.twist;
+  twist_.header = twist.header;
+  twist_.twist = twist.twist.twist;
   ROS_DEBUG("Updated robot twist.");
 }
 

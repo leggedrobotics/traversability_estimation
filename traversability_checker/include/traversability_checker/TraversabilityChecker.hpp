@@ -11,7 +11,6 @@
 // ROS
 #include <ros/ros.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistWithCovarianceStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <tf/transform_listener.h>
@@ -29,7 +28,8 @@ class TraversabilityChecker
   bool readParameters();
   void check(const ros::TimerEvent& timerEvent);
   void updateRobotPose(const geometry_msgs::PoseWithCovarianceStamped& pose);
-  void updateRobotTwist(const geometry_msgs::TwistWithCovarianceStamped& twist);
+  void updateRobotTwist(const geometry_msgs::TwistStamped& twist);
+  void updateRobotTwistWithCovariance(const geometry_msgs::TwistWithCovarianceStamped& twist);
 
   /*!
    * Set the footprint from the given string. (If footprint is defined as string).
@@ -71,12 +71,13 @@ class TraversabilityChecker
   std::string serviceName_;
   ros::Subscriber robotPoseSubscriber_;
   std::string robotPoseTopic_;
-  ros::Subscriber robotTwistSubscriber_;
-  std::string robotTwistTopic_;
+  ros::Subscriber twistSubscriber_;
+  std::string twistTopic_;
+  bool useTwistWithCovariance_;
   double extrapolationDuration_;
   double footprintRadius_;
   geometry_msgs::PoseStamped robotPose_;
-  geometry_msgs::TwistStamped robotTwist_;
+  geometry_msgs::TwistStamped twist_;
 
   //! Vertices of the footprint polygon in base frame.
   std::vector<geometry_msgs::Point32> footprintPoints_;
