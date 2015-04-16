@@ -62,6 +62,9 @@ bool TraversabilityChecker::readParameters()
   } else if (nodeHandle_.searchParam("footprint_radius", fullRadiusParamName)) {
     nodeHandle_.param(fullRadiusParamName, footprintRadius_, 0.25);
   }
+
+  nodeHandle_.param("footprint_frame_id", footprintFrameId_, std::string("base"));
+
   return true;
 }
 
@@ -215,8 +218,24 @@ double TraversabilityChecker::getNumberFromXMLRPC(XmlRpc::XmlRpcValue& value, co
 
 void TraversabilityChecker::check(const ros::TimerEvent&)
 {
-  // TODO Make sure robotPose_ and robotTwist_ were already received.
   ROS_DEBUG("Checking for traversability.");
+  if (robotPose_.header.stamp.isZero()) {
+    ROS_WARN_STREAM(nodeHandle_.getNamespace() << ": No robot pose received yet.");
+    return;
+  }
+
+  if (ros::Time::now() - twist_.header.stamp >= ros::Duration(10.0)) {
+    ROS_INFO_STREAM(nodeHandle_.getNamespace() << ": Twist too old, checking traversability with zero velocity.");
+    twist_.header = robotPose_.header;
+    twist_.twist.linear.x = 0.0;
+    twist_.twist.linear.y = 0.0;
+    twist_.twist.linear.z = 0.0;
+    twist_.twist.angular.x = 0.0;
+    twist_.twist.angular.y = 0.0;
+    twist_.twist.angular.z = 0.0;
+    return;
+  }
+
   const geometry_msgs::Pose& startPose = robotPose_.pose;
   geometry_msgs::Pose endPose;
 
@@ -226,38 +245,45 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   angularVelocityInTwistFrame.header = twist_.header;
   angularVelocityInTwistFrame.vector = twist_.twist.angular;
   try {
-    ros::Time now = ros::Time::now();
-    tfListener_.waitForTransform(twist_.header.frame_id, robotPose_.header.frame_id, now, timerDuration_);
+    tfListener_.waitForTransform(twist_.header.frame_id, robotPose_.header.frame_id, robotPose_.header.stamp, timerDuration_);
     tfListener_.transformVector(robotPose_.header.frame_id, linearVelocityInTwistFrame, linearVelocityInBaseFrame);
     tfListener_.transformVector(robotPose_.header.frame_id, angularVelocityInTwistFrame, angularVelocityInBaseFrame);
   } catch (tf::TransformException ex) {
-    ROS_ERROR("%s", ex.what());
+    ROS_ERROR_STREAM(nodeHandle_.getNamespace() << ": " << ex.what());
     return;
   }
 
-  // Extrapolation of linear velocity
+  // Extrapolation of linear velocity.
   endPose.position.x = startPose.position.x + extrapolationDuration_ * linearVelocityInBaseFrame.vector.x;
   endPose.position.y = startPose.position.y + extrapolationDuration_ * linearVelocityInBaseFrame.vector.y;
   endPose.position.z = startPose.position.z + extrapolationDuration_ * linearVelocityInBaseFrame.vector.z;
-  // Extrapolation of angular velocity
+
+  // Extrapolation of angular velocity.
   Eigen::Vector3f rotationAxis;
   Eigen::Quaternionf startPoseOrientation, endPoseOrientation, startToEnd;
-  rotationAxis.x() = angularVelocityInBaseFrame.vector.x;
-  rotationAxis.y() = angularVelocityInBaseFrame.vector.y;
-  rotationAxis.z() = angularVelocityInBaseFrame.vector.z;
-  double angle = rotationAxis.norm() * extrapolationDuration_;
-  rotationAxis.normalize();
-  startToEnd = Eigen::AngleAxis<float>(angle, rotationAxis);
-  startPoseOrientation.x() = startPose.orientation.x;
-  startPoseOrientation.y() = startPose.orientation.y;
-  startPoseOrientation.z() = startPose.orientation.z;
-  startPoseOrientation.w() = startPose.orientation.w;
-  endPoseOrientation = startToEnd*startPoseOrientation;
-  endPose.orientation.x = endPoseOrientation.x();
-  endPose.orientation.y = endPoseOrientation.y();
-  endPose.orientation.z = endPoseOrientation.z();
-  endPose.orientation.w = endPoseOrientation.w();
 
+  if (angularVelocityInBaseFrame.vector.x != 0 && angularVelocityInBaseFrame.vector.y != 0
+      && angularVelocityInBaseFrame.vector.z != 0) {
+    rotationAxis.x() = angularVelocityInBaseFrame.vector.x;
+    rotationAxis.y() = angularVelocityInBaseFrame.vector.y;
+    rotationAxis.z() = angularVelocityInBaseFrame.vector.z;
+    double angle = rotationAxis.norm() * extrapolationDuration_;
+    rotationAxis.normalize();
+    startToEnd = Eigen::AngleAxis<float>(angle, rotationAxis);
+    startPoseOrientation.x() = startPose.orientation.x;
+    startPoseOrientation.y() = startPose.orientation.y;
+    startPoseOrientation.z() = startPose.orientation.z;
+    startPoseOrientation.w() = startPose.orientation.w;
+    endPoseOrientation = startToEnd * startPoseOrientation;
+    endPose.orientation.x = endPoseOrientation.x();
+    endPose.orientation.y = endPoseOrientation.y();
+    endPose.orientation.z = endPoseOrientation.z();
+    endPose.orientation.w = endPoseOrientation.w();
+  } else {
+    endPose.orientation = startPose.orientation;
+  }
+
+  // Create service request.
   traversability_msgs::CheckFootprintPath check;
   auto& path = check.request.path;
   path.poses.header = robotPose_.header;
@@ -265,9 +291,10 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   path.poses.poses.push_back(endPose);
   path.radius = footprintRadius_;
   path.footprint.polygon.points = footprintPoints_;
-  path.footprint.header = robotPose_.header;
-  path.footprint.header.frame_id = "base";
+  path.footprint.header.stamp = robotPose_.header.stamp;
+  path.footprint.header.frame_id = footprintFrameId_;
 
+  // Sending service request.
   ROS_DEBUG("Sending request to %s.", serviceName_.c_str());
   serviceClient_.waitForExistence();
   ROS_DEBUG("Sending request to %s.", serviceName_.c_str());
@@ -276,11 +303,16 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
     return;
   }
 
+  publishSafetyStatus(check.response.is_safe, robotPose_.header.stamp);
+}
+
+void TraversabilityChecker::publishSafetyStatus(const bool safetyStatus, const ros::Time& timeStamp)
+{
   any_msgs::SafetyCheck safetyStatusMessage;
-  safetyStatusMessage.stamp = robotPose_.header.stamp;
-  safetyStatusMessage.is_safe = check.response.is_safe;
+  safetyStatusMessage.stamp = timeStamp;
+  safetyStatusMessage.is_safe = safetyStatus;
   safetyPublisher_.publish(safetyStatusMessage);
-  if (safetyStatusMessage.is_safe) {
+  if (safetyStatus) {
     ROS_DEBUG("Safe.");
   } else {
     ROS_DEBUG("Not safe.");
