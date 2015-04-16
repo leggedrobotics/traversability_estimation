@@ -30,4 +30,7 @@ grid_map_visualizations:
      data_min: 1.0
      data_max: 0.0
 
-
+  - name: traversability_cloud
+    type: point_cloud
+    params:
+     layer: elevation
