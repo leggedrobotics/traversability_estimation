@@ -44,7 +44,7 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
     updateTimer_ = nodeHandle_.createTimer(
         updateDuration_, &TraversabilityEstimation::updateTimerCallback, this);
   } else {
-    ROS_WARN("Update rate is zero. No traversability map computed.");
+    ROS_WARN("Update rate is zero. No traversability map will be published.");
   }
 
   footprintPathService_ = nodeHandle_.advertiseService("check_footprint_path", &TraversabilityEstimation::checkFootprintPath, this);
@@ -69,7 +69,7 @@ bool TraversabilityEstimation::readParameters()
 
   double updateRate;
   nodeHandle_.param("update_rate", updateRate, 1.0);
-  if (!updateRate == 0.0) {
+  if (updateRate != 0.0) {
     updateDuration_.fromSec(1.0 / updateRate);
   } else {
     updateDuration_.fromSec(0.0);
