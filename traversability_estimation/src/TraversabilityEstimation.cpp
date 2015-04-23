@@ -88,6 +88,8 @@ bool TraversabilityEstimation::readParameters()
   nodeHandle_.param("map_length_x", mapLength_.x(), 5.0);
   nodeHandle_.param("map_length_y", mapLength_.y(), 5.0);
 
+  nodeHandle_.param("traversability_default", traversabilityDefault_, 0.5);
+
   // Configure filter chain
   if (!filter_chain_.configure("traversability_map_filters", nodeHandle_)) {
     ROS_ERROR("Could not configure the filter chain!");
@@ -203,6 +205,7 @@ bool TraversabilityEstimation::checkFootprintPath(
     polygon2.setFrameId(mapFrameId_);
     for (int i = 0; i < arraySize; i++) {
       polygon2 = polygon1;
+      polygon1.removeVertices();
       Eigen::Vector3f footprintVertex, footprintVertexTransformed;
       Eigen::Translation<float, 3> toPosition;
       Eigen::Quaternionf orientation;
@@ -251,32 +254,81 @@ bool TraversabilityEstimation::checkFootprintPath(
     footprintPolygonPublisher_.publish(polygonMsg);
 
   response.is_safe = isSafe;
+  ROS_DEBUG_STREAM(response.traversability);
+  if (isSafe) {
+    ROS_DEBUG_STREAM("Safe.");
+  } else {
+    ROS_DEBUG_STREAM("Not Safe.");
+  }
   return true;
 }
 
 bool TraversabilityEstimation::isTraversable(const grid_map::Polygon& polygon, double& traversability)
 {
-  int nCells = 0;
-  bool isSafe = true;
+  int nCells = 0, nSteps = 0;
   traversability = 0.0;
+  double windowRadius = 0.1;
+
+  // Check for traversability.
+  for (grid_map::PolygonIterator polygonIterator(traversabilityMap_, polygon);
+      !polygonIterator.isPassedEnd(); ++polygonIterator) {
+
+    // Check for steps
+    if (traversabilityMap_.at(stepType_, *polygonIterator) == 0.0)
+      nSteps++;
+    if (nSteps > 3)
+      return false;
+
+    // Check for slopes
+    if (traversabilityMap_.at(slopeType_, *polygonIterator) == 0.0) {
+      // Requested position (center) of circle in map.
+      Eigen::Vector2d center;
+      traversabilityMap_.getPosition(*polygonIterator, center);
+
+      int nSlopes = 0;
+      for (grid_map::CircleIterator circleIterator(traversabilityMap_, center,
+                                                   windowRadius);
+          !circleIterator.isPassedEnd(); ++circleIterator) {
+        if (traversabilityMap_.at(slopeType_, *circleIterator) == 0.0)
+          nSlopes++;
+        if (nSlopes > 20)
+          return false;
+      }
+    }
+
+    // Check for roughness
+    if (traversabilityMap_.at(roughnessType_, *polygonIterator) == 0.0) {
+      // Requested position (center) of circle in map.
+      Eigen::Vector2d center;
+      traversabilityMap_.getPosition(*polygonIterator, center);
+
+      int nRoughness = 0;
+      for (grid_map::CircleIterator circleIterator(traversabilityMap_, center,
+                                                   windowRadius);
+          !circleIterator.isPassedEnd(); ++circleIterator) {
+        if (traversabilityMap_.at(roughnessType_, *circleIterator) == 0.0)
+          nRoughness++;
+        if (nRoughness > 15)
+          return false;
+      }
+    }
+  }
+
   for (grid_map::PolygonIterator polygonIterator(traversabilityMap_,
                                                  polygon);
       !polygonIterator.isPassedEnd(); ++polygonIterator) {
-    if (!traversabilityMap_.isValid(*polygonIterator,
-                                    traversabilityType_))
-      continue;
-
     nCells++;
-    if (traversabilityMap_.at(traversabilityType_, *polygonIterator)
-        == 0.0) {
-      isSafe = false;
-      traversability = 0.0;
-      break;
+
+    if (!traversabilityMap_.isValid(*polygonIterator,
+                                    traversabilityType_)) {
+      traversability += traversabilityDefault_;
+      continue;
+    } else {
+      traversability += traversabilityMap_.at(traversabilityType_, *polygonIterator);
     }
-    traversability += traversabilityMap_.at(traversabilityType_, *polygonIterator);
   }
   traversability /= nCells;
-  return isSafe;
+  return true;
 }
 
 } /* namespace */

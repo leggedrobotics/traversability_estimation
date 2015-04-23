@@ -130,6 +130,9 @@ namespace traversability_estimation {
     //! Duration between map updates.
     ros::Duration updateDuration_;
     
+    //! Default value for traversability of unknown regions.
+    double traversabilityDefault_;
+
     //! Requested map cell types.
     std::vector<std::string> requestedMapTypes_;
 
