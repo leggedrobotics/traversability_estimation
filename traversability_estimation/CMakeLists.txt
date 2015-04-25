@@ -30,6 +30,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 find_package(Eigen REQUIRED)
 
+pkg_check_modules(SM_COMMON schweizer-messer-common REQUIRED)
+pkg_check_modules(SM_TIMING schweizer-messer-timing REQUIRED)
+
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -70,6 +73,8 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
+  ${SM_COMMON_INCLUDE_DIRS}
+  ${SM_TIMING_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
@@ -88,4 +93,6 @@ add_executable(
 target_link_libraries(
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
+  ${SM_COMMON_LIBRARIES}
+  ${SM_TIMING_LIBRARIES}
 )

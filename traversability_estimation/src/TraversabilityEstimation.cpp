@@ -19,6 +19,9 @@
 
 #include <Eigen/Geometry>
 
+// Schweizer-Messer
+#include <sm/timing/Timer.hpp>
+
 using namespace std;
 using namespace nav_msgs;
 using namespace grid_map_msgs;
@@ -170,6 +173,12 @@ bool TraversabilityEstimation::checkFootprintPath(
     return false;
   }
 
+  // Initializations Timer
+  std::string timerId = "check_footprint_path_timer";
+  sm::timing::Timer timer(timerId, true);
+  if (timer.isTiming()) timer.stop();
+  timer.start();
+
   double radius = request.path.radius;
   bool isSafe = true;
   response.traversability = 0.0;
@@ -260,6 +269,12 @@ bool TraversabilityEstimation::checkFootprintPath(
   } else {
     ROS_DEBUG_STREAM("Not Safe.");
   }
+
+  timer.stop();
+  ROS_INFO("Footprint path has been checked in %f s.", sm::timing::Timing::getTotalSeconds(timerId));
+  ROS_DEBUG("Mean: %f s, Min: %f s, Max: %f s.", sm::timing::Timing::getMeanSeconds(timerId), sm::timing::Timing::getMinSeconds(timerId), sm::timing::Timing::getMaxSeconds(timerId));
+  sm::timing::Timing::reset(timerId);
+
   return true;
 }
 

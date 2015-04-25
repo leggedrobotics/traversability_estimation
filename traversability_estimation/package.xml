@@ -11,6 +11,7 @@
   <url type="bugtracker">https://github.com/ethz-asl/traversability_estimation/issues</url>
 
   <buildtool_depend>catkin</buildtool_depend>
+  
   <build_depend>cmake_modules</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>nav_msgs</build_depend>
@@ -22,6 +23,9 @@
   <build_depend>grid_map_filters</build_depend>
   <build_depend>traversability_msgs</build_depend>
   <build_depend>traversability_estimation_filters</build_depend>
+  <build_depend>sm_common</build_depend>
+  <build_depend>sm_timing</build_depend>
+  
   <run_depend>roscpp</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>nav_msgs</run_depend>
@@ -33,5 +37,8 @@
   <run_depend>grid_map_filters</run_depend>
   <run_depend>traversability_msgs</run_depend>
   <run_depend>traversability_estimation_filters</run_depend>
+  <run_depend>sm_common</run_depend>
+  <run_depend>sm_timing</run_depend>
   <run_depend>elevation_mapping</run_depend>
+  
 </package>
