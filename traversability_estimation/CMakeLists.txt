@@ -14,7 +14,6 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
-  traversability_msgs
   grid_map
   grid_map_core
   grid_map_msgs
@@ -45,7 +44,6 @@ catkin_package(
 	${Eigen_INCLUDE_DIRS}
 #  LIBRARIES elevation_mapping
     CATKIN_DEPENDS
-	traversability_msgs
 	grid_map
 	grid_map_core
 	grid_map_msgs
