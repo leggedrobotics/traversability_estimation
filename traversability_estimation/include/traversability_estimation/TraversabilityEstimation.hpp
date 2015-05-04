@@ -19,6 +19,7 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <tf/transform_listener.h>
 #include <filters/filter_chain.h>
+#include <std_srvs/Empty.h>
 
 // STD
 #include <vector>
@@ -47,12 +48,28 @@ namespace traversability_estimation {
     virtual ~TraversabilityEstimation();
 
     /*!
-     * Computes the traversability and add it as type to the elevation map.
+     * Computes the traversability of each filter and adds it as layer to the elevation map.
      * Traversability is set between 0.0 and 1.0, where a value of 0.0 means not
      * traversable and 1.0 means fully traversable.
      * @param[in/out] elevationMap the map for which the traversability is computed.
      */
-    bool computeTraversability(const grid_map::GridMap& elevationMap, grid_map::GridMap& traversabilityMap);
+    bool updateFilters(const grid_map::GridMap& elevationMap, grid_map::GridMap& traversabilityMap);
+
+    /*!
+     * Computes the traversability and publishes it as grid map.
+     * Traversability is set between 0.0 and 1.0, where a value of 0.0 means not
+     * traversable and 1.0 means fully traversable.
+     */
+    void computeTraversability();
+
+    /*!
+     * ROS service callback function that forces an update of the traversability
+     * map from a new elevation map requested from the grid map service.
+     * @param request the ROS service request.
+     * @param response the ROS service response.
+     * @return true if successful.
+     */
+    bool updateServiceCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
     /*!
      * ROS service callback function to return a boolean to indicate if a path is traversable.
@@ -99,6 +116,7 @@ namespace traversability_estimation {
 
     //! ROS service server.
     ros::ServiceServer footprintPathService_;
+    ros::ServiceServer updateTraversabilityService_;
 
     //! Elevation map service client.
     ros::ServiceClient submapClient_;

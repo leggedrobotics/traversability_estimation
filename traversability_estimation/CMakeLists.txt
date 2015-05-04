@@ -24,6 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf_conversions
   traversability_estimation_filters
   traversability_msgs
+  std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -44,18 +45,19 @@ catkin_package(
 	${Eigen_INCLUDE_DIRS}
 #  LIBRARIES elevation_mapping
     CATKIN_DEPENDS
-	grid_map
-	grid_map_core
-	grid_map_msgs
-	grid_map_filters
-	roscpp
-	nav_msgs
-	tf
-	tf_conversions
-	traversability_estimation_filters
-	traversability_msgs
+	  grid_map
+	  grid_map_core
+	  grid_map_msgs
+	  grid_map_filters
+	  roscpp
+	  nav_msgs
+	  tf
+	  tf_conversions
+	  traversability_estimation_filters
+	  traversability_msgs
+	  std_msgs
     DEPENDS
-	Eigen
+	  Eigen
 )
 
 ###########

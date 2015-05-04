@@ -47,6 +47,7 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
     ROS_WARN("Update rate is zero. No traversability map will be published.");
   }
 
+  updateTraversabilityService_ = nodeHandle_.advertiseService("update_traversability", &TraversabilityEstimation::updateServiceCallback, this);
   footprintPathService_ = nodeHandle_.advertiseService("check_footprint_path", &TraversabilityEstimation::checkFootprintPath, this);
 
   requestedMapTypes_.push_back("elevation");
@@ -68,7 +69,7 @@ bool TraversabilityEstimation::readParameters()
                     string("/get_grid_map"));
 
   double updateRate;
-  nodeHandle_.param("update_rate", updateRate, 1.0);
+  nodeHandle_.param("min_update_rate", updateRate, 1.0);
   if (updateRate != 0.0) {
     updateDuration_.fromSec(1.0 / updateRate);
   } else {
@@ -100,6 +101,11 @@ bool TraversabilityEstimation::readParameters()
 void TraversabilityEstimation::updateTimerCallback(
     const ros::TimerEvent& timerEvent)
 {
+  computeTraversability();
+}
+
+void TraversabilityEstimation::computeTraversability()
+{
   grid_map_msgs::GridMap mapMessage;
   ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
   submapClient_.waitForExistence();
@@ -107,13 +113,19 @@ void TraversabilityEstimation::updateTimerCallback(
   if (getGridMap(mapMessage)) {
     grid_map::GridMap elevationMap, traversabilityMap;
     grid_map::GridMapRosConverter::fromMessage(mapMessage, elevationMap);
-    computeTraversability(elevationMap, traversabilityMap);
+    updateFilters(elevationMap, traversabilityMap);
     grid_map::GridMapRosConverter::toMessage(traversabilityMap, mapMessage);
     if (!traversabilityMapPublisher_.getNumSubscribers() < 1)
       traversabilityMapPublisher_.publish(mapMessage);
   } else {
     ROS_WARN("Failed to retrieve elevation grid map.");
   }
+}
+
+bool TraversabilityEstimation::updateServiceCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
+{
+  computeTraversability();
+  return true;
 }
 
 bool TraversabilityEstimation::getGridMap(grid_map_msgs::GridMap& map)
@@ -142,7 +154,7 @@ bool TraversabilityEstimation::getGridMap(grid_map_msgs::GridMap& map)
   return true;
 }
 
-bool TraversabilityEstimation::computeTraversability(const grid_map::GridMap& elevationMap, grid_map::GridMap& traversabilityMap)
+bool TraversabilityEstimation::updateFilters(const grid_map::GridMap& elevationMap, grid_map::GridMap& traversabilityMap)
 {
   // Run the filter chain
   if (filter_chain_.update(elevationMap, traversabilityMap)) {
