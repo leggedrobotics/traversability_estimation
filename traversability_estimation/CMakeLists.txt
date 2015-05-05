@@ -19,7 +19,6 @@ find_package(catkin REQUIRED COMPONENTS
   grid_map_msgs
   grid_map_filters
   roscpp
-  nav_msgs
   tf
   tf_conversions
   traversability_estimation_filters
@@ -50,7 +49,6 @@ catkin_package(
 	  grid_map_msgs
 	  grid_map_filters
 	  roscpp
-	  nav_msgs
 	  tf
 	  tf_conversions
 	  traversability_estimation_filters

@@ -16,7 +16,6 @@
 
 // ROS
 #include <ros/ros.h>
-#include <nav_msgs/OccupancyGrid.h>
 #include <tf/transform_listener.h>
 #include <filters/filter_chain.h>
 #include <std_srvs/Empty.h>
@@ -79,6 +78,12 @@ namespace traversability_estimation {
      */
     bool checkFootprintPath(traversability_msgs::CheckFootprintPath::Request& request, traversability_msgs::CheckFootprintPath::Response& response);
 
+    /*!
+    * Callback function that receives an elevation map as grid map.
+    * @param elevationMap the received elevation map.
+    */
+    void elevationMapCallback(const grid_map_msgs::GridMap& elevationMap);
+
   private:
 
     /*!
@@ -117,6 +122,13 @@ namespace traversability_estimation {
     //! ROS service server.
     ros::ServiceServer footprintPathService_;
     ros::ServiceServer updateTraversabilityService_;
+
+    //! Elevation map subscriber.
+    ros::Subscriber elevationMapSub_;
+
+    //! Name of the elevation map topic.
+    std::string elevationMapTopic_;
+    bool getGridMap_;
 
     //! Elevation map service client.
     ros::ServiceClient submapClient_;
@@ -168,6 +180,9 @@ namespace traversability_estimation {
 
     //! Traversability map.
     grid_map::GridMap traversabilityMap_;
+
+    //! Traversability map.
+    grid_map::GridMap elevationMap_;
   };
 
 } /* namespace */

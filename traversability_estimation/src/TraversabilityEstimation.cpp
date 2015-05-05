@@ -31,7 +31,8 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
       slopeType_("traversability_slope"),
       stepType_("traversability_step"),
       roughnessType_("traversability_roughness"),
-      filter_chain_("grid_map::GridMap")
+      filter_chain_("grid_map::GridMap"),
+      getGridMap_(false)
 {
   ROS_INFO("Traversability estimation node started.");
 
@@ -50,11 +51,13 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
   updateTraversabilityService_ = nodeHandle_.advertiseService("update_traversability", &TraversabilityEstimation::updateServiceCallback, this);
   footprintPathService_ = nodeHandle_.advertiseService("check_footprint_path", &TraversabilityEstimation::checkFootprintPath, this);
 
+  elevationMapSub_ = nodeHandle_.subscribe(elevationMapTopic_,1,&TraversabilityEstimation::elevationMapCallback, this);
+
   requestedMapTypes_.push_back("elevation");
   requestedMapTypes_.push_back("variance");
-  requestedMapTypes_.push_back("surface_normal_x");
-  requestedMapTypes_.push_back("surface_normal_y");
-  requestedMapTypes_.push_back("surface_normal_z");
+//  requestedMapTypes_.push_back("surface_normal_x");
+//  requestedMapTypes_.push_back("surface_normal_y");
+//  requestedMapTypes_.push_back("surface_normal_z");
 }
 
 TraversabilityEstimation::~TraversabilityEstimation()
@@ -67,6 +70,8 @@ bool TraversabilityEstimation::readParameters()
 {
   nodeHandle_.param("submap_service", submapServiceName_,
                     string("/get_grid_map"));
+  nodeHandle_.param("elevation_map_topic", elevationMapTopic_,
+                    string("image_to_gridmap/image_grid_map"));
 
   double updateRate;
   nodeHandle_.param("min_update_rate", updateRate, 1.0);
@@ -98,6 +103,13 @@ bool TraversabilityEstimation::readParameters()
   return true;
 }
 
+void TraversabilityEstimation::elevationMapCallback(const grid_map_msgs::GridMap& elevationMap)
+{
+  grid_map::GridMapRosConverter::fromMessage(elevationMap, elevationMap_);
+  elevationMap_.add("variance", 0.0);
+  getGridMap_ = true;
+}
+
 void TraversabilityEstimation::updateTimerCallback(
     const ros::TimerEvent& timerEvent)
 {
@@ -107,18 +119,26 @@ void TraversabilityEstimation::updateTimerCallback(
 void TraversabilityEstimation::computeTraversability()
 {
   grid_map_msgs::GridMap mapMessage;
-  ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
-  submapClient_.waitForExistence();
-  ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
-  if (getGridMap(mapMessage)) {
-    grid_map::GridMap elevationMap, traversabilityMap;
-    grid_map::GridMapRosConverter::fromMessage(mapMessage, elevationMap);
-    updateFilters(elevationMap, traversabilityMap);
+  if (!getGridMap_) {
+    ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
+    submapClient_.waitForExistence();
+    ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
+    if (getGridMap(mapMessage)) {
+      grid_map::GridMap elevationMap, traversabilityMap;
+      grid_map::GridMapRosConverter::fromMessage(mapMessage, elevationMap);
+      updateFilters(elevationMap, traversabilityMap);
+      grid_map::GridMapRosConverter::toMessage(traversabilityMap, mapMessage);
+      if (!traversabilityMapPublisher_.getNumSubscribers() < 1)
+        traversabilityMapPublisher_.publish(mapMessage);
+    } else {
+      ROS_WARN("Failed to retrieve elevation grid map.");
+    }
+  } else {
+    grid_map::GridMap traversabilityMap;
+    updateFilters(elevationMap_, traversabilityMap);
     grid_map::GridMapRosConverter::toMessage(traversabilityMap, mapMessage);
     if (!traversabilityMapPublisher_.getNumSubscribers() < 1)
       traversabilityMapPublisher_.publish(mapMessage);
-  } else {
-    ROS_WARN("Failed to retrieve elevation grid map.");
   }
 }
 
