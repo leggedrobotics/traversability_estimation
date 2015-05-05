@@ -22,6 +22,7 @@
 
 // STD
 #include <vector>
+#include <string>
 
 // Eigen
 #include <Eigen/Core>

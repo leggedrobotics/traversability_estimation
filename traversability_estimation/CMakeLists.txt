@@ -39,23 +39,24 @@ find_package(Eigen REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-    INCLUDE_DIRS
-	include
-	${Eigen_INCLUDE_DIRS}
-#  LIBRARIES elevation_mapping
-    CATKIN_DEPENDS
-	  grid_map
-	  grid_map_core
-	  grid_map_msgs
-	  grid_map_filters
-	  roscpp
-	  tf
-	  tf_conversions
-	  traversability_estimation_filters
-	  traversability_msgs
-	  std_msgs
-    DEPENDS
-	  Eigen
+  INCLUDE_DIRS
+    include
+    ${Eigen_INCLUDE_DIRS}
+  LIBRARIES
+    ${PROJECT_NAME}
+  CATKIN_DEPENDS
+    grid_map
+    grid_map_core
+    grid_map_msgs
+    grid_map_filters
+    roscpp
+    tf
+    tf_conversions
+    traversability_estimation_filters
+    traversability_msgs
+    std_msgs
+  DEPENDS
+    Eigen
 )
 
 ###########

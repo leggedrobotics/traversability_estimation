@@ -12,7 +12,6 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   
-  <build_depend>cmake_modules</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>tf_conversions</build_depend>

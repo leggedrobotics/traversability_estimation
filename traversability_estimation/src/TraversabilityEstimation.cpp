@@ -20,7 +20,6 @@
 #include <Eigen/Geometry>
 
 using namespace std;
-using namespace nav_msgs;
 using namespace grid_map_msgs;
 
 namespace traversability_estimation {
