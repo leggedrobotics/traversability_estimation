@@ -88,7 +88,7 @@ bool RoughnessFilter<T>::update(const T& mapIn, T& mapOut)
     MatrixXd points(3, maxNumberOfCells);
 
     // Requested position (center) of circle in map.
-    Vector2d center;
+    Position center;
     mapOut.getPosition(*iterator, center);
 
     // Gather surrounding data.
@@ -130,7 +130,6 @@ bool RoughnessFilter<T>::update(const T& mapIn, T& mapOut)
 
   return true;
 }
-;
 
 } /* namespace */
 
