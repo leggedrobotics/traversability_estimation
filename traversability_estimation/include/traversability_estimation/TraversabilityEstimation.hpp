@@ -72,6 +72,15 @@ namespace traversability_estimation {
     bool updateServiceCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
     /*!
+     * ROS service callback function that forces an update of the parameters.
+     * The parameters are read from the .yaml file and put on the parameter server.
+     * @param request the ROS service request.
+     * @param response the ROS service response.
+     * @return true if successful.
+     */
+    bool updateParameter(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+
+    /*!
      * ROS service callback function to return a boolean to indicate if a path is traversable.
      * @param request the ROS service request defining footprint path.
      * @param response the ROS service response containing the traversability of the footprint path.
@@ -123,6 +132,7 @@ namespace traversability_estimation {
     //! ROS service server.
     ros::ServiceServer footprintPathService_;
     ros::ServiceServer updateTraversabilityService_;
+    ros::ServiceServer updateParameters_;
 
     //! Elevation map subscriber.
     ros::Subscriber elevationMapSub_;

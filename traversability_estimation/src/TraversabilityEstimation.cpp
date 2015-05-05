@@ -49,6 +49,7 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
 
   updateTraversabilityService_ = nodeHandle_.advertiseService("update_traversability", &TraversabilityEstimation::updateServiceCallback, this);
   footprintPathService_ = nodeHandle_.advertiseService("check_footprint_path", &TraversabilityEstimation::checkFootprintPath, this);
+  updateParameters_ = nodeHandle_.advertiseService("update_parameters", &TraversabilityEstimation::updateParameter, this);
 
   elevationMapSub_ = nodeHandle_.subscribe(elevationMapTopic_,1,&TraversabilityEstimation::elevationMapCallback, this);
 
@@ -144,6 +145,11 @@ void TraversabilityEstimation::computeTraversability()
 bool TraversabilityEstimation::updateServiceCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
 {
   computeTraversability();
+  return true;
+}
+
+bool TraversabilityEstimation::updateParameter(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
+{
   return true;
 }
 
