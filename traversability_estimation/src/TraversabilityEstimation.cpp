@@ -14,9 +14,10 @@
 // Traversability estimation
 #include "traversability_msgs/CheckFootprintPath.h"
 
-//STL
-#include <deque>
+#include <ros/package.h>
+#include "yaml-cpp/yaml.h"
 
+// Eigen
 #include <Eigen/Geometry>
 
 using namespace std;
@@ -150,6 +151,85 @@ bool TraversabilityEstimation::updateServiceCallback(std_srvs::Empty::Request&, 
 
 bool TraversabilityEstimation::updateParameter(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
 {
+  // Load Yaml file.
+  std::string path = ros::package::getPath("starleth_traversability_estimation");
+  YAML::Node starlethParameter = YAML::LoadFile(path + "/config/starleth.yaml");
+  YAML::Node filterChainNode, filterNode, filterParamsNode;
+
+  // Get new filter parameters.
+  XmlRpc::XmlRpcValue newFilterConfig;
+
+  if (starlethParameter["traversability_map_filters"]) {
+    filterChainNode = starlethParameter["traversability_map_filters"];
+    newFilterConfig.setSize(filterChainNode.size());
+
+    for (int i = 0; i < filterChainNode.size(); i++) {
+      std::string filterType = filterChainNode[i]["type"].as<std::string>();
+      newFilterConfig[i]["name"] = filterChainNode[i]["name"].as<std::string>();
+      ROS_DEBUG("Filter type: %s", filterType.c_str());
+      if (filterType == "traversabilityFilters/SurfaceNormalsFilter") {
+        newFilterConfig[i]["params"]["estimation_radius"] = filterChainNode[i]["params"]["estimation_radius"].as<double>();
+        newFilterConfig[i]["params"]["surface_normal_positive_axis"] = filterChainNode[i]["params"]["surface_normal_positive_axis"].as<std::string>();
+      }
+      if (filterType == "traversabilityFilters/SlopeFilter") {
+        newFilterConfig[i]["params"]["map_type"] = filterChainNode[i]["params"]["map_type"].as<std::string>();
+        newFilterConfig[i]["params"]["critical_value"] = filterChainNode[i]["params"]["critical_value"].as<double>();
+      }
+      if (filterType == "traversabilityFilters/StepFilter") {
+        newFilterConfig[i]["params"]["map_type"] = filterChainNode[i]["params"]["map_type"].as<std::string>();
+        newFilterConfig[i]["params"]["critical_value"] = filterChainNode[i]["params"]["critical_value"].as<double>();
+        newFilterConfig[i]["params"]["first_window_radius"] = filterChainNode[i]["params"]["first_window_radius"].as<double>();
+        newFilterConfig[i]["params"]["second_window_radius"] = filterChainNode[i]["params"]["second_window_radius"].as<double>();
+        newFilterConfig[i]["params"]["critical_cell_number"] = filterChainNode[i]["params"]["critical_cell_number"].as<int>();
+      }
+      if (filterType == "traversabilityFilters/RoughnessFilter") {
+        newFilterConfig[i]["params"]["map_type"] = filterChainNode[i]["params"]["map_type"].as<std::string>();
+        newFilterConfig[i]["params"]["critical_value"] = filterChainNode[i]["params"]["critical_value"].as<double>();
+        newFilterConfig[i]["params"]["estimation_radius"] = filterChainNode[i]["params"]["estimation_radius"].as<double>();
+      }
+      if (filterType == "gridMapFilters/WeightedSumFilter") {
+        for (int j = 0; j < filterChainNode[i]["params"]["layers"].size(); j++) {
+          newFilterConfig[i]["params"]["layers"][j] = filterChainNode[i]["params"]["layers"][j].as<std::string>();
+          newFilterConfig[i]["params"]["weights"][j] = filterChainNode[i]["params"]["weights"][j].as<double>();
+        }
+        newFilterConfig[i]["params"]["layer_out"] = filterChainNode[i]["params"]["layer_out"].as<std::string>();
+        newFilterConfig[i]["params"]["normalize"] = filterChainNode[i]["params"]["normalize"].as<int>();
+      }
+      if (filterType == "gridMapFilters/MinFilter") {
+        for (int j = 0; j < filterChainNode[i]["params"]["layers"].size(); j++) {
+          newFilterConfig[i]["params"]["layers"][j] = filterChainNode[i]["params"]["layers"][j].as<std::string>();
+        }
+        newFilterConfig[i]["params"]["layer_out"] = filterChainNode[i]["params"]["layer_out"].as<std::string>();
+      }
+      if (filterType == "gridMapFilters/ThresholdFilter") {
+        if (filterChainNode[i]["params"]["lower_threshold"]) {
+          newFilterConfig[i]["params"]["lower_threshold"] = filterChainNode[i]["params"]["lower_threshold"].as<double>();
+        }
+        if (filterChainNode[i]["params"]["upper_threshold"]) {
+          newFilterConfig[i]["params"]["upper_threshold"] = filterChainNode[i]["params"]["upper_threshold"].as<double>();
+        }
+        newFilterConfig[i]["params"]["set_to"] = filterChainNode[i]["params"]["set_to"].as<double>();
+        for (int j = 0; j < filterChainNode[i]["params"]["layers"].size(); j++) {
+          newFilterConfig[i]["params"]["layers"][j] = filterChainNode[i]["params"]["layers"][j].as<std::string>();
+        }
+      }
+      if (filterType == "gridMapFilters/DeletionFilter") {
+        for (int j = 0; j < filterChainNode[i]["params"]["layers"].size(); j++) {
+          newFilterConfig[i]["params"]["layers"][j] = filterChainNode[i]["params"]["layers"][j].as<std::string>();
+        }
+      }
+      newFilterConfig[i]["type"] = filterChainNode[i]["type"].as<std::string>();
+    }
+  }
+
+  // Set parameters.
+  nodeHandle_.setParam("traversability_map_filters", newFilterConfig);
+
+  // Reconfigure filter chain.
+  filter_chain_.clear();
+  if (!filter_chain_.configure("traversability_map_filters", nodeHandle_)) {
+    ROS_ERROR("Could not configure the filter chain!");
+  }
   return true;
 }
 

@@ -72,8 +72,9 @@ namespace traversability_estimation {
     bool updateServiceCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
     /*!
-     * ROS service callback function that forces an update of the parameters.
+     * ROS service callback function that forces an update of the filter parameters.
      * The parameters are read from the .yaml file and put on the parameter server.
+     * The filter chain is reconfigured with the new parameter.
      * @param request the ROS service request.
      * @param response the ROS service response.
      * @return true if successful.

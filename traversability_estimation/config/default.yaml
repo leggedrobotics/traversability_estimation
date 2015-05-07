@@ -44,26 +44,20 @@ traversability_map_filters:
 # - name: minFilter
 #   type: gridMapFilters/MinFilter
 #   params:
-#    filter_types: [traversability_slope, traversability_step, traversability_roughness]
-#    type_out: traversability
-#  - name: thresholdFilter
-#    type: gridMapFilters/ThresholdFilter
-#    params:
-#     lower_threshold: 0.2
-##     upper_threshold: 0.9
-#     set_to: 0.0
-#     threshold_types: [traversability]
-#  - name: thresholdFilter
-#    type: gridMapFilters/ThresholdFilter
-#    params:
-##     lower_threshold: 0.2
-#     upper_threshold: 0.9
-#     set_to: 1.0
-#     threshold_types: [traversability]
-#  - name: deletionFilter
-#    type: gridMapFilters/DeletionFilter
-#    params:
-#     deletion_types: [traversability_slope, traversability_step, traversability_roughness]
+#    layers: [traversability_slope, traversability_step, traversability_roughness]
+#    layer_out: traversability
+# - name: lowerThresholdFilter
+#   type: gridMapFilters/ThresholdFilter
+#   params:
+#    lower_threshold: 0.2
+#    set_to: 0.0
+#    layers: [traversability]
+# - name: upperThresholdFilter
+#   type: gridMapFilters/ThresholdFilter
+#   params:
+#    upper_threshold: 0.9
+#    set_to: 1.0
+#    layers: [traversability]
  - name: deletionFilter
    type: gridMapFilters/DeletionFilter
    params:
