@@ -17,7 +17,6 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
-  cmake_modules
   roscpp
   tf
   traversability_msgs
@@ -27,7 +26,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -46,7 +45,8 @@ find_package(Eigen REQUIRED)
 catkin_package(
   INCLUDE_DIRS
     include
-  LIBRARIES ${PROJECT_NAME}
+  LIBRARIES
+    ${PROJECT_NAME}
   CATKIN_DEPENDS
     roscpp
     tf
@@ -65,7 +65,8 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include
-  ${EIGEN_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
 )
 
 ## Declare a cpp library
@@ -82,8 +83,9 @@ add_executable(
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-add_dependencies(${PROJECT_NAME}
-  traversability_msgs_generate_messages_cpp
+add_dependencies(
+  ${PROJECT_NAME}
+  ${catkin_EXPORTED_TARGETS}
 )
 
 ## Specify libraries to link a library or executable target against
