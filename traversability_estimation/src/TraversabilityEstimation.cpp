@@ -228,6 +228,7 @@ bool TraversabilityEstimation::checkFootprintPath(
   double radius = request.path.radius;
   bool isSafe = true;
   response.traversability = 0.0;
+  response.area = 0.0;
   grid_map::Polygon polygon;
   Eigen::Vector2d position;
 
@@ -253,6 +254,7 @@ bool TraversabilityEstimation::checkFootprintPath(
           isSafe = false;
         response.traversability += traversability / (arraySize - 1);
       }
+      response.area = polygon.getArea();
     }
   } else {
     grid_map::Polygon polygon1, polygon2;
@@ -290,6 +292,7 @@ bool TraversabilityEstimation::checkFootprintPath(
         if (!isTraversable(polygon, traversability))
           isSafe = false;
         response.traversability = traversability;
+        response.area = polygon.getArea();
       }
 
       if (arraySize > 1 && i > 0) {
@@ -298,6 +301,11 @@ bool TraversabilityEstimation::checkFootprintPath(
         if (!isTraversable(polygon, traversability))
           isSafe = false;
         response.traversability += traversability / (arraySize - 1);
+        if (i > 1) {
+          response.area += polygon.getArea() - polygon1.getArea();
+        } else {
+          response.area = polygon.getArea();
+        }
       }
     }
   }
