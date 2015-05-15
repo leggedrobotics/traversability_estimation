@@ -15,7 +15,7 @@
 #include "traversability_msgs/CheckFootprintPath.h"
 
 #include <ros/package.h>
-#include "yaml-cpp/yaml.h"
+#include <geometry_msgs/Pose.h>
 
 // Eigen
 #include <Eigen/Geometry>
@@ -143,9 +143,21 @@ void TraversabilityEstimation::computeTraversability()
   }
 }
 
-bool TraversabilityEstimation::updateServiceCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
+bool TraversabilityEstimation::updateServiceCallback(grid_map_msgs::GetGridMapInfo::Request&, grid_map_msgs::GetGridMapInfo::Response& response)
 {
   computeTraversability();
+  response.info.header.frame_id = mapFrameId_;
+  response.info.header.stamp = ros::Time::now();
+  response.info.resolution = traversabilityMap_.getResolution();
+  response.info.length_x = traversabilityMap_.getLength()[0];
+  response.info.length_y = traversabilityMap_.getLength()[1];
+  geometry_msgs::Pose pose;
+  grid_map::Position position = traversabilityMap_.getPosition();
+  pose.position.x = position[0];
+  pose.position.y = position[1];
+  pose.orientation.w = 1.0;
+  response.info.pose = pose;
+
   return true;
 }
 

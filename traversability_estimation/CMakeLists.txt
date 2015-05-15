@@ -24,6 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
   traversability_estimation_filters
   traversability_msgs
   std_msgs
+  geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -55,6 +56,7 @@ catkin_package(
     traversability_estimation_filters
     traversability_msgs
     std_msgs
+    geometry_msgs
   DEPENDS
     Eigen
 )
@@ -87,5 +89,4 @@ add_executable(
 target_link_libraries(
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
-  yaml-cpp
 )

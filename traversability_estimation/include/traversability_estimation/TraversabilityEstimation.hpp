@@ -10,6 +10,7 @@
 
 // Grid Map
 #include <grid_map/grid_map.hpp>
+#include <grid_map_msgs/GetGridMapInfo.h>
 
 // Traversability estimation
 #include "traversability_msgs/CheckFootprintPath.h"
@@ -69,7 +70,7 @@ namespace traversability_estimation {
      * @param response the ROS service response.
      * @return true if successful.
      */
-    bool updateServiceCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+    bool updateServiceCallback(grid_map_msgs::GetGridMapInfo::Request& request, grid_map_msgs::GetGridMapInfo::Response& response);
 
     /*!
      * ROS service callback function that forces an update of the filter parameters.

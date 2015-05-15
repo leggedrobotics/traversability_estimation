@@ -6,6 +6,7 @@
   <maintainer email="pfankhauser@ethz.ch">Peter Fankhauser</maintainer>
   <author email="ralf.kaestner@gmail.com">Ralf Kaestner</author>
   <author email="pfankhauser@ethz.ch">Peter Fankhauser</author>
+  <author email="martiwer@student.ethz.ch">Martin Wermelinger</author>
   <license>MIT</license>
   <url type="website">https://github.com/ethz-asl/traversability_estimation</url>
   <url type="bugtracker">https://github.com/ethz-asl/traversability_estimation/issues</url>
@@ -22,6 +23,7 @@
   <build_depend>traversability_msgs</build_depend>
   <build_depend>traversability_estimation_filters</build_depend>
   <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
   
   <run_depend>roscpp</run_depend>
   <run_depend>sensor_msgs</run_depend>
@@ -34,6 +36,6 @@
   <run_depend>traversability_msgs</run_depend>
   <run_depend>traversability_estimation_filters</run_depend>
   <run_depend>std_msgs</run_depend>
-  <run_depend>elevation_mapping</run_depend>
+  <run_depend>geometry_msgs</run_depend>
   
 </package>
