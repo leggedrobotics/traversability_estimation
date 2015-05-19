@@ -24,8 +24,7 @@ namespace filters {
 
 template<typename T>
 SurfaceNormalsFilter<T>::SurfaceNormalsFilter()
-    : estimationRadius_(0.05),
-      type_("traversability_slope")
+    : estimationRadius_(0.05)
 {
 
 }

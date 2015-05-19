@@ -128,6 +128,15 @@ namespace traversability_estimation {
      */
     bool isTraversable(const grid_map::Polygon& polygon, double& traversability);
 
+    /*!
+     * Checks if the overall inclination of the robot on a line between two
+     * positions is feasible.
+     * @param[in] start first position of the line.
+     * @param[in] end last position of the line.
+     * @return true if the whole line has a feasible inclination, false otherwise.
+     */
+    bool checkInclination(const grid_map::Position start, const grid_map::Position end);
+
     //! ROS node handle.
     ros::NodeHandle& nodeHandle_;
 
@@ -187,6 +196,7 @@ namespace traversability_estimation {
     const std::string slopeType_;
     const std::string stepType_;
     const std::string roughnessType_;
+    const std::string robotSlopeType_;
 
     //! Filter Chain
     filters::FilterChain<grid_map::GridMap> filter_chain_;

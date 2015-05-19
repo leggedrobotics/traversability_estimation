@@ -31,6 +31,7 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
       slopeType_("traversability_slope"),
       stepType_("traversability_step"),
       roughnessType_("traversability_roughness"),
+      robotSlopeType_("robot_slope"),
       filter_chain_("grid_map::GridMap"),
       getGridMap_(false)
 {
@@ -242,12 +243,11 @@ bool TraversabilityEstimation::checkFootprintPath(
   response.traversability = 0.0;
   response.area = 0.0;
   grid_map::Polygon polygon;
-  Eigen::Vector2d position;
 
   double traversability = 0.0;
 
   if (request.path.footprint.polygon.points.size() == 0) {
-    Eigen::Vector2d centerStart, centerEnd;
+    grid_map::Position centerStart, centerEnd;
     for (int i = 0; i < arraySize; i++) {
       centerEnd = centerStart;
       centerStart.x() = request.path.poses.poses[i].position.x;
@@ -257,6 +257,7 @@ bool TraversabilityEstimation::checkFootprintPath(
         polygon = polygon.convexHullCircle(centerStart, radius);
         if (!isTraversable(polygon, traversability))
           isSafe = false;
+        if (!checkInclination(centerStart, centerStart)) isSafe = false;
         response.traversability = traversability;
       }
 
@@ -264,20 +265,23 @@ bool TraversabilityEstimation::checkFootprintPath(
         polygon = polygon.convexHullCircles(centerStart, centerEnd, radius);
         if (!isTraversable(polygon, traversability))
           isSafe = false;
+        if (!checkInclination(centerStart, centerEnd)) isSafe = false;
         response.traversability += traversability / (arraySize - 1);
       }
       response.area = polygon.getArea();
     }
   } else {
     grid_map::Polygon polygon1, polygon2;
+    grid_map::Position start, end;
     polygon1.setFrameId(mapFrameId_);
     polygon2.setFrameId(mapFrameId_);
     for (int i = 0; i < arraySize; i++) {
       polygon2 = polygon1;
+      end = start;
       polygon1.removeVertices();
-      Eigen::Vector3f footprintVertex, footprintVertexTransformed;
-      Eigen::Translation<float, 3> toPosition;
-      Eigen::Quaternionf orientation;
+      grid_map::Position3 positionToVertex, positionToVertexTransformed;
+      Eigen::Translation<double, 3> toPosition;
+      Eigen::Quaterniond orientation;
 
       toPosition.x() = request.path.poses.poses[i].position.x;
       toPosition.y() = request.path.poses.poses[i].position.y;
@@ -286,16 +290,18 @@ bool TraversabilityEstimation::checkFootprintPath(
       orientation.y() = request.path.poses.poses[i].orientation.y;
       orientation.z() = request.path.poses.poses[i].orientation.z;
       orientation.w() = request.path.poses.poses[i].orientation.w;
+      start.x() = toPosition.x();
+      start.y() = toPosition.y();
 
       for (const auto& point : request.path.footprint.polygon.points) {
-        footprintVertex.x() = point.x;
-        footprintVertex.y() = point.y;
-        footprintVertex.z() = point.z;
-        footprintVertexTransformed = toPosition * orientation * footprintVertex;
+        positionToVertex.x() = point.x;
+        positionToVertex.y() = point.y;
+        positionToVertex.z() = point.z;
+        positionToVertexTransformed = toPosition * orientation * positionToVertex;
 
-        Eigen::Vector2d vertex;
-        vertex.x() = footprintVertexTransformed.x();
-        vertex.y() = footprintVertexTransformed.y();
+        grid_map::Position vertex;
+        vertex.x() = positionToVertexTransformed.x();
+        vertex.y() = positionToVertexTransformed.y();
         polygon1.addVertex(vertex);
       }
 
@@ -303,6 +309,7 @@ bool TraversabilityEstimation::checkFootprintPath(
         polygon = polygon1;
         if (!isTraversable(polygon, traversability))
           isSafe = false;
+        if (!checkInclination(start, start)) isSafe = false;
         response.traversability = traversability;
         response.area = polygon.getArea();
       }
@@ -312,6 +319,7 @@ bool TraversabilityEstimation::checkFootprintPath(
 
         if (!isTraversable(polygon, traversability))
           isSafe = false;
+        if (!checkInclination(start, end)) isSafe = false;
         response.traversability += traversability / (arraySize - 1);
         if (i > 1) {
           response.area += polygon.getArea() - polygon1.getArea();
@@ -406,6 +414,19 @@ bool TraversabilityEstimation::isTraversable(const grid_map::Polygon& polygon, d
     }
   }
   traversability /= nCells;
+  return true;
+}
+
+bool TraversabilityEstimation::checkInclination(const grid_map::Position start, const grid_map::Position end)
+{
+  if (end == start) {
+    if (traversabilityMap_.atPosition(robotSlopeType_, start) == 0.0) return false;
+  } else {
+    for (grid_map::LineIterator lineIterator(traversabilityMap_, start, end); !lineIterator.isPassedEnd(); ++lineIterator) {
+      if (!traversabilityMap_.isValid(*lineIterator, robotSlopeType_)) continue;
+      if (traversabilityMap_.at(robotSlopeType_, *lineIterator) == 0.0) return false;
+    }
+  }
   return true;
 }
 

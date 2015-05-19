@@ -57,9 +57,6 @@ class SurfaceNormalsFilter : public FilterBase<T>
   //! Radius of submap for surface normal estimation.
   double estimationRadius_;
 
-  //! slope map type.
-  std::string type_;
-
   //! Surface normal positive axis.
   Eigen::Vector3d surfaceNormalPositiveAxis_;
 };
