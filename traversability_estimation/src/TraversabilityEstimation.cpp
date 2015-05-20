@@ -249,15 +249,15 @@ bool TraversabilityEstimation::checkFootprintPath(
   if (request.path.footprint.polygon.points.size() == 0) {
     grid_map::Position centerStart, centerEnd;
     for (int i = 0; i < arraySize; i++) {
-      centerEnd = centerStart;
-      centerStart.x() = request.path.poses.poses[i].position.x;
-      centerStart.y() = request.path.poses.poses[i].position.y;
+      centerStart = centerEnd;
+      centerEnd.x() = request.path.poses.poses[i].position.x;
+      centerEnd.y() = request.path.poses.poses[i].position.y;
 
       if (arraySize == 1) {
-        polygon = polygon.convexHullCircle(centerStart, radius);
+        polygon = polygon.convexHullCircle(centerEnd, radius);
         if (!isTraversable(polygon, traversability))
           isSafe = false;
-        if (!checkInclination(centerStart, centerStart)) isSafe = false;
+        if (!checkInclination(centerEnd, centerEnd)) isSafe = false;
         response.traversability = traversability;
       }
 
@@ -276,9 +276,9 @@ bool TraversabilityEstimation::checkFootprintPath(
     polygon1.setFrameId(mapFrameId_);
     polygon2.setFrameId(mapFrameId_);
     for (int i = 0; i < arraySize; i++) {
-      polygon2 = polygon1;
-      end = start;
-      polygon1.removeVertices();
+      polygon1 = polygon2;
+      start = end;
+      polygon2.removeVertices();
       grid_map::Position3 positionToVertex, positionToVertexTransformed;
       Eigen::Translation<double, 3> toPosition;
       Eigen::Quaterniond orientation;
@@ -290,8 +290,8 @@ bool TraversabilityEstimation::checkFootprintPath(
       orientation.y() = request.path.poses.poses[i].orientation.y;
       orientation.z() = request.path.poses.poses[i].orientation.z;
       orientation.w() = request.path.poses.poses[i].orientation.w;
-      start.x() = toPosition.x();
-      start.y() = toPosition.y();
+      end.x() = toPosition.x();
+      end.y() = toPosition.y();
 
       for (const auto& point : request.path.footprint.polygon.points) {
         positionToVertex.x() = point.x;
@@ -302,14 +302,26 @@ bool TraversabilityEstimation::checkFootprintPath(
         grid_map::Position vertex;
         vertex.x() = positionToVertexTransformed.x();
         vertex.y() = positionToVertexTransformed.y();
-        polygon1.addVertex(vertex);
+        polygon2.addVertex(vertex);
+      }
+
+      if (request.conservative && i > 0) {
+        grid_map::Vector startToEnd = end - start;
+        std::vector<grid_map::Position> vertices1 = polygon1.getVertices();
+        std::vector<grid_map::Position> vertices2 = polygon2.getVertices();
+        for (const auto& vertex : vertices1) {
+          polygon2.addVertex(vertex + startToEnd);
+        }
+        for (const auto& vertex : vertices2) {
+          polygon1.addVertex(vertex - startToEnd);
+        }
       }
 
       if (arraySize == 1) {
-        polygon = polygon1;
+        polygon = polygon2;
         if (!isTraversable(polygon, traversability))
           isSafe = false;
-        if (!checkInclination(start, start)) isSafe = false;
+        if (!checkInclination(end, end)) isSafe = false;
         response.traversability = traversability;
         response.area = polygon.getArea();
       }
