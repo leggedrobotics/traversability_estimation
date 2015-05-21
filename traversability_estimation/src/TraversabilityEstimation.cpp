@@ -434,7 +434,10 @@ bool TraversabilityEstimation::checkInclination(const grid_map::Position start, 
   if (end == start) {
     if (traversabilityMap_.atPosition(robotSlopeType_, start) == 0.0) return false;
   } else {
-    for (grid_map::LineIterator lineIterator(traversabilityMap_, start, end); !lineIterator.isPassedEnd(); ++lineIterator) {
+    grid_map::Index startIndex, endIndex;
+    traversabilityMap_.getIndex(start, startIndex);
+    traversabilityMap_.getIndex(end, endIndex);
+    for (grid_map::LineIterator lineIterator(traversabilityMap_, startIndex, endIndex); !lineIterator.isPassedEnd(); ++lineIterator) {
       if (!traversabilityMap_.isValid(*lineIterator, robotSlopeType_)) continue;
       if (traversabilityMap_.at(robotSlopeType_, *lineIterator) == 0.0) return false;
     }

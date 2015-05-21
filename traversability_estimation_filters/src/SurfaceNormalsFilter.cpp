@@ -115,7 +115,7 @@ bool SurfaceNormalsFilter<T>::update(const T& mapIn, T& mapOut)
     const Eigen::MatrixXd NN = points.leftCols(nPoints).colwise() - mean;
 
     const Eigen::Matrix3d covarianceMatrix(NN * NN.transpose());
-    Vector3 eigenvalues = Vector3::Identity();
+    Vector3 eigenvalues = Vector3::Ones();
     Eigen::Matrix3d eigenvectors = Eigen::Matrix3d::Identity();
     // Ensure that the matrix is suited for eigenvalues calculation
     if (covarianceMatrix.fullPivHouseholderQr().rank() >= 3) {
@@ -124,6 +124,8 @@ bool SurfaceNormalsFilter<T>::update(const T& mapIn, T& mapOut)
       eigenvectors = solver.eigenvectors().real();
     } else {
       ROS_DEBUG("Covariance matrix needed for eigen decomposition is degenerated. Expected cause: no noise in data (nPoints = %i)", (int) nPoints);
+      // Use z-axis as default surface normal.
+      eigenvalues.z() = 0.0;
     }
     // Keep the smallest eigenvector as surface normal
     int smallestId(0);
