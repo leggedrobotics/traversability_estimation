@@ -18,9 +18,6 @@
 #include <ros/package.h>
 #include <geometry_msgs/Pose.h>
 
-// Schweizer-Messer
-#include <sm/timing/Timer.hpp>
-
 // Eigen
 #include <Eigen/Geometry>
 
@@ -37,14 +34,16 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
       roughnessType_("traversability_roughness"),
       robotSlopeType_("robot_slope"),
       filter_chain_("grid_map::GridMap"),
-      getGridMap_(false)
+      getGridMap_(false),
+      timerId_("check_footprint_timer"),
+      timer_(timerId_, true)
 {
   ROS_INFO("Traversability estimation node started.");
 
   readParameters();
   submapClient_ = nodeHandle_.serviceClient<GetGridMap>(submapServiceName_);
   footprintPolygonPublisher_ = nodeHandle_.advertise<geometry_msgs::PolygonStamped>("footprint_polygon", 1, true);
-  traversabilityMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>("traversability_map", 1);
+  traversabilityMapPublisher_ = nodeHandle_.advertise<GridMap>("traversability_map", 1);
 
   if (!updateDuration_.isZero()) {
     updateTimer_ = nodeHandle_.createTimer(
@@ -109,7 +108,7 @@ bool TraversabilityEstimation::readParameters()
   return true;
 }
 
-void TraversabilityEstimation::elevationMapCallback(const grid_map_msgs::GridMap& elevationMap)
+void TraversabilityEstimation::elevationMapCallback(const GridMap& elevationMap)
 {
   grid_map::GridMapRosConverter::fromMessage(elevationMap, elevationMap_);
   elevationMap_.add("variance", 0.0);
@@ -131,7 +130,7 @@ void TraversabilityEstimation::computeTraversability()
   if (timer.isTiming()) timer.stop();
   timer.start();
 
-  grid_map_msgs::GridMap mapMessage;
+  GridMap mapMessage;
   if (!getGridMap_) {
     ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
     submapClient_.waitForExistence();
@@ -159,7 +158,7 @@ void TraversabilityEstimation::computeTraversability()
   sm::timing::Timing::reset(timerId);
 }
 
-bool TraversabilityEstimation::updateServiceCallback(grid_map_msgs::GetGridMapInfo::Request&, grid_map_msgs::GetGridMapInfo::Response& response)
+bool TraversabilityEstimation::updateServiceCallback(GetGridMapInfo::Request&, GetGridMapInfo::Response& response)
 {
   computeTraversability();
   response.info.header.frame_id = mapFrameId_;
@@ -174,15 +173,17 @@ bool TraversabilityEstimation::updateServiceCallback(grid_map_msgs::GetGridMapIn
   pose.orientation.w = 1.0;
   response.info.pose = pose;
 
+  sm::timing::Timing::reset(timerId_);
+
   return true;
 }
 
 bool TraversabilityEstimation::updateParameter(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
 {
   // Load parameters file.
-  std::string path = ros::package::getPath("starleth_traversability_estimation");
+  string path = ros::package::getPath("starleth_traversability_estimation");
   path = path + "/config/starleth.yaml";
-  std::string commandString = "rosparam load " + path + " /traversability_estimation";
+  string commandString = "rosparam load " + path + " /traversability_estimation";
   const char* command = commandString.c_str();
   if (system(command) != 0)
   {
@@ -199,7 +200,7 @@ bool TraversabilityEstimation::updateParameter(std_srvs::Empty::Request&, std_sr
   return true;
 }
 
-bool TraversabilityEstimation::getGridMap(grid_map_msgs::GridMap& map)
+bool TraversabilityEstimation::getGridMap(GridMap& map)
 {
   submapPoint_.header.stamp = ros::Time(0);
   geometry_msgs::PointStamped submapPointTransformed;
@@ -241,6 +242,13 @@ bool TraversabilityEstimation::checkFootprintPath(
     traversability_msgs::CheckFootprintPath::Request& request,
     traversability_msgs::CheckFootprintPath::Response& response)
 {
+//  // Initialize timer.
+//  string timerId = "check_footprint_timer";
+//  sm::timing::Timer timer(timerId, true);
+//
+  if (timer_.isTiming()) timer_.stop();
+  timer_.start();
+
   if (!traversabilityMap_.exists(traversabilityType_)) {
     ROS_WARN("Failed to retrieve traversability map.");
     return false;
@@ -322,8 +330,8 @@ bool TraversabilityEstimation::checkFootprintPath(
 
       if (request.conservative && i > 0) {
         grid_map::Vector startToEnd = end - start;
-        std::vector<grid_map::Position> vertices1 = polygon1.getVertices();
-        std::vector<grid_map::Position> vertices2 = polygon2.getVertices();
+        vector<grid_map::Position> vertices1 = polygon1.getVertices();
+        vector<grid_map::Position> vertices2 = polygon2.getVertices();
         for (const auto& vertex : vertices1) {
           polygon2.addVertex(vertex + startToEnd);
         }
@@ -373,6 +381,10 @@ bool TraversabilityEstimation::checkFootprintPath(
     ROS_DEBUG_STREAM("Not Safe.");
   }
 
+  timer_.stop();
+
+  ROS_DEBUG("Mean: %f s, Min: %f s, Max: %f s.", sm::timing::Timing::getMeanSeconds(timerId_), sm::timing::Timing::getMinSeconds(timerId_), sm::timing::Timing::getMaxSeconds(timerId_));
+
   return true;
 }
 
@@ -382,7 +394,7 @@ bool TraversabilityEstimation::isTraversable(const grid_map::Polygon& polygon, d
   traversability = 0.0;
   double windowRadius = 0.1; // TODO: read this as a parameter?
   double criticalLength = 0.1;
-  int nSlopesCritical = std::floor(2 * windowRadius * criticalLength / pow(traversabilityMap_.getResolution(), 2));
+  int nSlopesCritical = floor(2 * windowRadius * criticalLength / pow(traversabilityMap_.getResolution(), 2));
 
   // Check for traversability.
   for (grid_map::PolygonIterator polygonIterator(traversabilityMap_, polygon);
