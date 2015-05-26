@@ -14,8 +14,12 @@
 // Traversability estimation
 #include "traversability_msgs/CheckFootprintPath.h"
 
+// ROS
 #include <ros/package.h>
 #include <geometry_msgs/Pose.h>
+
+// Schweizer-Messer
+#include <sm/timing/Timer.hpp>
 
 // Eigen
 #include <Eigen/Geometry>
@@ -120,6 +124,13 @@ void TraversabilityEstimation::updateTimerCallback(
 
 void TraversabilityEstimation::computeTraversability()
 {
+  // Initialize timer.
+  std::string timerId = "traversability_timer";
+  sm::timing::Timer timer(timerId, true);
+
+  if (timer.isTiming()) timer.stop();
+  timer.start();
+
   grid_map_msgs::GridMap mapMessage;
   if (!getGridMap_) {
     ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
@@ -142,6 +153,10 @@ void TraversabilityEstimation::computeTraversability()
     if (!traversabilityMapPublisher_.getNumSubscribers() < 1)
       traversabilityMapPublisher_.publish(mapMessage);
   }
+
+  timer.stop();
+  ROS_INFO("Traversability map has been updated in %f s.", sm::timing::Timing::getTotalSeconds(timerId));
+  sm::timing::Timing::reset(timerId);
 }
 
 bool TraversabilityEstimation::updateServiceCallback(grid_map_msgs::GetGridMapInfo::Request&, grid_map_msgs::GetGridMapInfo::Response& response)
@@ -365,7 +380,7 @@ bool TraversabilityEstimation::isTraversable(const grid_map::Polygon& polygon, d
 {
   int nCells = 0, nSteps = 0;
   traversability = 0.0;
-  double windowRadius = 0.1; // TODO: make this a variable parameter?
+  double windowRadius = 0.1; // TODO: read this as a parameter?
   double criticalLength = 0.1;
   int nSlopesCritical = std::floor(2 * windowRadius * criticalLength / pow(traversabilityMap_.getResolution(), 2));
 
