@@ -365,7 +365,9 @@ bool TraversabilityEstimation::isTraversable(const grid_map::Polygon& polygon, d
 {
   int nCells = 0, nSteps = 0;
   traversability = 0.0;
-  double windowRadius = 0.1;
+  double windowRadius = 0.1; // TODO: make this a variable parameter?
+  double criticalLength = 0.1;
+  int nSlopesCritical = std::floor(2 * windowRadius * criticalLength / pow(traversabilityMap_.getResolution(), 2));
 
   // Check for traversability.
   for (grid_map::PolygonIterator polygonIterator(traversabilityMap_, polygon);
@@ -389,7 +391,7 @@ bool TraversabilityEstimation::isTraversable(const grid_map::Polygon& polygon, d
           !circleIterator.isPassedEnd(); ++circleIterator) {
         if (traversabilityMap_.at(slopeType_, *circleIterator) == 0.0)
           nSlopes++;
-        if (nSlopes > 20)
+        if (nSlopes > nSlopesCritical)
           return false;
       }
     }
@@ -406,7 +408,7 @@ bool TraversabilityEstimation::isTraversable(const grid_map::Polygon& polygon, d
           !circleIterator.isPassedEnd(); ++circleIterator) {
         if (traversabilityMap_.at(roughnessType_, *circleIterator) == 0.0)
           nRoughness++;
-        if (nRoughness > 15)
+        if (nRoughness > (nSlopesCritical * 0.75))
           return false;
       }
     }
@@ -420,7 +422,6 @@ bool TraversabilityEstimation::isTraversable(const grid_map::Polygon& polygon, d
     if (!traversabilityMap_.isValid(*polygonIterator,
                                     traversabilityType_)) {
       traversability += traversabilityDefault_;
-      continue;
     } else {
       traversability += traversabilityMap_.at(traversabilityType_, *polygonIterator);
     }
