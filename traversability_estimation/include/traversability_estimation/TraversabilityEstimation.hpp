@@ -105,6 +105,15 @@ class TraversabilityEstimation
    */
   void elevationMapCallback(const grid_map_msgs::GridMap& elevationMap);
 
+  /*!
+   * ROS service callback function that computes the traversability of a footprint,
+   * oriented in x- and y-direction, at each map cell position.
+   * @param request the ROS service request.
+   * @param response the ROS service response.
+   * @return true if successful.
+   */
+  bool traversabilityFootprint(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+
  private:
 
   /*!
@@ -154,6 +163,7 @@ class TraversabilityEstimation
   ros::ServiceServer footprintPathService_;
   ros::ServiceServer updateTraversabilityService_;
   ros::ServiceServer updateParameters_;
+  ros::ServiceServer traversabilityFootprint_;
 
   //! Elevation map subscriber.
   ros::Subscriber elevationMapSub_;
@@ -185,6 +195,9 @@ class TraversabilityEstimation
 
   //! Publisher of the roughness filter occupancy grid.
   ros::Publisher footprintPolygonPublisher_;
+
+  //! Vertices of the footprint polygon in base frame.
+  std::vector<geometry_msgs::Point32> footprintPoints_;
 
   //! Timer for the map update.
   ros::Timer updateTimer_;

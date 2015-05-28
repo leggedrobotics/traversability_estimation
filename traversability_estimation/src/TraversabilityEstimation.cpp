@@ -18,6 +18,10 @@
 #include <ros/package.h>
 #include <geometry_msgs/Pose.h>
 
+// kindr
+#include <kindr/rotations/RotationEigen.hpp>
+#include <kindr/poses/PoseEigen.hpp>
+
 // Eigen
 #include <Eigen/Geometry>
 
@@ -55,6 +59,7 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
   updateTraversabilityService_ = nodeHandle_.advertiseService("update_traversability", &TraversabilityEstimation::updateServiceCallback, this);
   footprintPathService_ = nodeHandle_.advertiseService("check_footprint_path", &TraversabilityEstimation::checkFootprintPath, this);
   updateParameters_ = nodeHandle_.advertiseService("update_parameters", &TraversabilityEstimation::updateParameter, this);
+  traversabilityFootprint_ = nodeHandle_.advertiseService("traversability_footprint", &TraversabilityEstimation::traversabilityFootprint, this);
 
   elevationMapSub_ = nodeHandle_.subscribe(elevationMapTopic_,1,&TraversabilityEstimation::elevationMapCallback, this);
 
@@ -84,6 +89,22 @@ bool TraversabilityEstimation::readParameters()
     updateDuration_.fromSec(1.0 / updateRate);
   } else {
     updateDuration_.fromSec(0.0);
+  }
+
+  // Read footprint polygon.
+  XmlRpc::XmlRpcValue footprint;
+  nodeHandle_.getParam("footprint_polygon", footprint);
+  if (footprint.size() < 2) {
+    ROS_WARN("Footprint polygon must consist of at least 3 points. Only %i points found.", footprint.size());
+    footprintPoints_.clear();
+  } else {
+    geometry_msgs::Point32 pt;
+    pt.z = 0.0;
+    for (int i = 0; i < footprint.size(); i++) {
+      pt.x = (double) footprint[i][0];
+      pt.y = (double) footprint[i][1];
+      footprintPoints_.push_back(pt);
+    }
   }
 
   nodeHandle_.param("map_frame_id", mapFrameId_, string("map"));
@@ -238,6 +259,91 @@ bool TraversabilityEstimation::updateFilters(const grid_map::GridMap& elevationM
   }
 }
 
+bool TraversabilityEstimation::traversabilityFootprint(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+{
+  // Initialize traversability map.
+  computeTraversability();
+
+  // Initialize timer.
+  std::string timerId = "traversability_footprint";
+  sm::timing::Timer timer(timerId, true);
+
+  if (timer.isTiming()) timer.stop();
+  timer.start();
+
+  traversabilityMap_.add("traversability_x");
+  traversabilityMap_.add("traversability_y");
+
+  grid_map::Position position;
+  grid_map::Polygon polygonX, polygonY;
+
+  // Compute Orientation
+  kindr::rotations::eigen_impl::RotationQuaternionPD xquat, yquat;
+  kindr::rotations::eigen_impl::AngleAxisPD rotationAxis(M_PI_2, 0.0,
+                                                         0.0, 1.0);
+  yquat = rotationAxis * xquat;
+  Eigen::Quaterniond orientationX = xquat.toImplementation();
+  Eigen::Quaterniond orientationY = yquat.toImplementation();
+
+  for (grid_map::GridMapIterator iterator(traversabilityMap_); !iterator.isPassedEnd(); ++iterator) {
+    polygonX.removeVertices();
+    polygonY.removeVertices();
+    traversabilityMap_.getPosition(*iterator, position);
+
+    grid_map::Position3 positionToVertex, positionToVertexTransformedX, positionToVertexTransformedY;
+    Eigen::Translation<double, 3> toPosition;
+    Eigen::Quaterniond orientation;
+
+    toPosition.x() = position.x();
+    toPosition.y() = position.y();
+    toPosition.z() = 0.0;
+
+    for (const auto& point : footprintPoints_) {
+      positionToVertex.x() = point.x;
+      positionToVertex.y() = point.y;
+      positionToVertex.z() = point.z;
+      positionToVertexTransformedX = toPosition * orientationX * positionToVertex;
+      positionToVertexTransformedY = toPosition * orientationY * positionToVertex;
+
+      grid_map::Position vertexX, vertexY;
+      vertexX.x() = positionToVertexTransformedX.x();
+      vertexY.x() = positionToVertexTransformedY.x();
+      vertexX.y() = positionToVertexTransformedX.y();
+      vertexY.y() = positionToVertexTransformedY.y();
+      polygonX.addVertex(vertexX);
+      polygonY.addVertex(vertexY);
+    }
+
+    if (!checkInclination(position, position)) {
+      traversabilityMap_.at("traversability_x", *iterator) = 0.0;
+    } else {
+      double traversability;
+      isTraversable(polygonX, traversability);
+      traversabilityMap_.at("traversability_x", *iterator) = traversability;
+    }
+
+    if (!checkInclination(position, position)) {
+      traversabilityMap_.at("traversability_y", *iterator) = 0.0;
+    } else {
+      double traversability;
+      isTraversable(polygonY, traversability);
+      traversabilityMap_.at("traversability_y", *iterator) = traversability;
+    }
+  }
+
+  ROS_INFO("Publish map.");
+  grid_map_msgs::GridMap mapMessage;
+  grid_map::GridMapRosConverter::toMessage(traversabilityMap_, mapMessage);
+  if (!traversabilityMapPublisher_.getNumSubscribers() < 1)
+    traversabilityMapPublisher_.publish(mapMessage);
+
+  timer.stop();
+  ROS_INFO("Traversability of footprint has been computed in %f s.", sm::timing::Timing::getTotalSeconds(timerId));
+  sm::timing::Timing::reset(timerId);
+
+  return true;
+}
+
 bool TraversabilityEstimation::checkFootprintPath(
     traversability_msgs::CheckFootprintPath::Request& request,
     traversability_msgs::CheckFootprintPath::Response& response)
@@ -258,7 +364,6 @@ bool TraversabilityEstimation::checkFootprintPath(
   }
 
   double radius = request.path.radius;
-//  bool isSafe = true;
   response.is_safe = false;
   response.traversability = 0.0;
   response.area = 0.0;
@@ -371,13 +476,6 @@ bool TraversabilityEstimation::checkFootprintPath(
 
   response.is_safe = true;
   ROS_DEBUG_STREAM(response.traversability);
-//  if (response.is_safe) {
-//    ROS_DEBUG_STREAM("Safe.");
-//  } else {
-//    response.traversability = 0.0;
-//    ROS_DEBUG_STREAM("Not Safe.");
-//  }
-
   timer_.stop();
 
   ROS_DEBUG("Mean: %f s, Min: %f s, Max: %f s.", sm::timing::Timing::getMeanSeconds(timerId_), sm::timing::Timing::getMinSeconds(timerId_), sm::timing::Timing::getMaxSeconds(timerId_));
