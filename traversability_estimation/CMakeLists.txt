@@ -46,8 +46,8 @@ catkin_package(
   INCLUDE_DIRS
     include
     ${Eigen_INCLUDE_DIRS}
-  LIBRARIES
-    ${PROJECT_NAME}
+#  LIBRARIES
+#    ${PROJECT_NAME}
   CATKIN_DEPENDS
     grid_map
     grid_map_core

@@ -242,10 +242,6 @@ bool TraversabilityEstimation::checkFootprintPath(
     traversability_msgs::CheckFootprintPath::Request& request,
     traversability_msgs::CheckFootprintPath::Response& response)
 {
-//  // Initialize timer.
-//  string timerId = "check_footprint_timer";
-//  sm::timing::Timer timer(timerId, true);
-//
   if (timer_.isTiming()) timer_.stop();
   timer_.start();
 
@@ -262,7 +258,8 @@ bool TraversabilityEstimation::checkFootprintPath(
   }
 
   double radius = request.path.radius;
-  bool isSafe = true;
+//  bool isSafe = true;
+  response.is_safe = false;
   response.traversability = 0.0;
   response.area = 0.0;
   grid_map::Polygon polygon;
@@ -279,16 +276,16 @@ bool TraversabilityEstimation::checkFootprintPath(
       if (arraySize == 1) {
         polygon = polygon.convexHullCircle(centerEnd, radius);
         if (!isTraversable(polygon, traversability))
-          isSafe = false;
-        if (!checkInclination(centerEnd, centerEnd)) isSafe = false;
+          return true;
+        if (!checkInclination(centerEnd, centerEnd)) return true;
         response.traversability = traversability;
       }
 
       if (arraySize > 1 && i > 0) {
         polygon = polygon.convexHullCircles(centerStart, centerEnd, radius);
         if (!isTraversable(polygon, traversability))
-          isSafe = false;
-        if (!checkInclination(centerStart, centerEnd)) isSafe = false;
+          return true;
+        if (!checkInclination(centerStart, centerEnd)) return true;
         response.traversability += traversability / (arraySize - 1);
       }
       response.area = polygon.getArea();
@@ -343,8 +340,8 @@ bool TraversabilityEstimation::checkFootprintPath(
       if (arraySize == 1) {
         polygon = polygon2;
         if (!isTraversable(polygon, traversability))
-          isSafe = false;
-        if (!checkInclination(end, end)) isSafe = false;
+          return true;
+        if (!checkInclination(end, end)) return true;
         response.traversability = traversability;
         response.area = polygon.getArea();
       }
@@ -353,8 +350,8 @@ bool TraversabilityEstimation::checkFootprintPath(
         polygon = polygon.convexHull(polygon1, polygon2);
 
         if (!isTraversable(polygon, traversability))
-          isSafe = false;
-        if (!checkInclination(start, end)) isSafe = false;
+          return true;
+        if (!checkInclination(start, end)) return true;
         response.traversability += traversability / (arraySize - 1);
         if (i > 1) {
           response.area += polygon.getArea() - polygon1.getArea();
@@ -372,14 +369,14 @@ bool TraversabilityEstimation::checkFootprintPath(
   if (!footprintPolygonPublisher_.getNumSubscribers() < 1)
     footprintPolygonPublisher_.publish(polygonMsg);
 
-  response.is_safe = isSafe;
+  response.is_safe = true;
   ROS_DEBUG_STREAM(response.traversability);
-  if (isSafe) {
-    ROS_DEBUG_STREAM("Safe.");
-  } else {
-    response.traversability = 0.0;
-    ROS_DEBUG_STREAM("Not Safe.");
-  }
+//  if (response.is_safe) {
+//    ROS_DEBUG_STREAM("Safe.");
+//  } else {
+//    response.traversability = 0.0;
+//    ROS_DEBUG_STREAM("Not Safe.");
+//  }
 
   timer_.stop();
 
