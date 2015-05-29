@@ -25,6 +25,7 @@ find_package(catkin REQUIRED COMPONENTS
   traversability_msgs
   std_msgs
   geometry_msgs
+  sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -64,6 +65,7 @@ catkin_package(
     traversability_msgs
     std_msgs
     geometry_msgs
+    sensor_msgs
   DEPENDS
     Eigen
 )

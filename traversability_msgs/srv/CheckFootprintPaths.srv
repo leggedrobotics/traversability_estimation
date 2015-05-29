@@ -1,6 +1,9 @@
 # Footprint paths to check.
 traversability_msgs/FootprintPath[] paths
 
+# Use conservative footprint
+bool conservative
+
 ---
 
 # For each path if path is safe to traverse.

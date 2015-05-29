@@ -20,6 +20,7 @@
 #include <tf/transform_listener.h>
 #include <filters/filter_chain.h>
 #include <std_srvs/Empty.h>
+#include <sensor_msgs/Image.h>
 
 // Schweizer-Messer
 #include <sm/timing/Timer.hpp>
@@ -53,22 +54,6 @@ class TraversabilityEstimation
   virtual ~TraversabilityEstimation();
 
   /*!
-   * Computes the traversability of each filter and adds it as layer to the elevation map.
-   * Traversability is set between 0.0 and 1.0, where a value of 0.0 means not
-   * traversable and 1.0 means fully traversable.
-   * @param[in/out] elevationMap the map for which the traversability is computed.
-   */
-  bool updateFilters(const grid_map::GridMap& elevationMap,
-                     grid_map::GridMap& traversabilityMap);
-
-  /*!
-   * Computes the traversability and publishes it as grid map.
-   * Traversability is set between 0.0 and 1.0, where a value of 0.0 means not
-   * traversable and 1.0 means fully traversable.
-   */
-  void computeTraversability();
-
-  /*!
    * ROS service callback function that forces an update of the traversability
    * map from a new elevation map requested from the grid map service.
    * @param request the ROS service request.
@@ -100,10 +85,11 @@ class TraversabilityEstimation
       traversability_msgs::CheckFootprintPath::Response& response);
 
   /*!
-   * Callback function that receives an elevation map as grid map.
-   * @param elevationMap the received elevation map.
+   * Callback function that receives an image and converts into
+   * an elevation layer of a grid map.
+   * @param image the received image.
    */
-  void elevationMapCallback(const grid_map_msgs::GridMap& elevationMap);
+  void imageCallback(const sensor_msgs::Image& image);
 
   /*!
    * ROS service callback function that computes the traversability of a footprint,
@@ -121,6 +107,13 @@ class TraversabilityEstimation
    * @return true if successful.
    */
   bool readParameters();
+
+  /*!
+   * Computes the traversability and publishes it as grid map.
+   * Traversability is set between 0.0 and 1.0, where a value of 0.0 means not
+   * traversable and 1.0 means fully traversable.
+   */
+  void computeTraversability();
 
   /*!
    * Callback function for the update timer. Forces an update of the traversability
@@ -165,12 +158,13 @@ class TraversabilityEstimation
   ros::ServiceServer updateParameters_;
   ros::ServiceServer traversabilityFootprint_;
 
-  //! Elevation map subscriber.
-  ros::Subscriber elevationMapSub_;
-
-  //! Name of the elevation map topic.
-  std::string elevationMapTopic_;
-  bool getGridMap_;
+  //! Image subscriber.
+  ros::Subscriber imageSubscriber_;
+  std::string imageTopic_;
+  bool mapInitialized_;
+  double imageResolution_;
+  double imageMinHeight_;
+  double imageMaxHeight_;
 
   //! Elevation map service client.
   ros::ServiceClient submapClient_;
@@ -212,7 +206,7 @@ class TraversabilityEstimation
   std::vector<std::string> requestedMapTypes_;
 
   //! Requested map length in [m].
-  Eigen::Array2d mapLength_;
+  grid_map::Length mapLength_;
 
   //! Traversability map types.
   const std::string traversabilityType_;
