@@ -28,7 +28,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## System dependencies are found with CMake's conventions
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(kindr QUIET)
 if(NOT kindr_FOUND)
   # Attempt to find package-based kindr
@@ -51,7 +51,6 @@ pkg_check_modules(SM_TIMING schweizer-messer-timing REQUIRED)
 catkin_package(
   INCLUDE_DIRS
     include
-    ${Eigen_INCLUDE_DIRS}
 #  LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS
     grid_map
@@ -78,7 +77,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${Eigen_INCLUDE_DIRS}
+  ${Eigen3_INCLUDE_DIRS}
   ${SM_TIMING_INCLUDE_DIRS}
   ${kindr_INCLUDE_DIRS}
 )

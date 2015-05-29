@@ -42,6 +42,7 @@ bool TraversabilityChecker::readParameters()
   nodeHandle_.param("twist_topic", twistTopic_, std::string("twist"));
   nodeHandle_.param("use_twist_with_covariance", useTwistWithCovariance_, false);
   nodeHandle_.param("extrapolation_duration", extrapolationDuration_, 1.0);
+  nodeHandle_.param("footprint_frame_id", footprintFrameId_, std::string("base"));
   double rate;
   nodeHandle_.param("rate", rate, 1.0);
   timerDuration_.fromSec(1.0 / rate);
@@ -64,9 +65,6 @@ bool TraversabilityChecker::readParameters()
       footprintPoints_.push_back(pt);
     }
   }
-
-  nodeHandle_.param("footprint_frame_id", footprintFrameId_, std::string("base"));
-
   return true;
 }
 
