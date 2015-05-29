@@ -161,9 +161,9 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
       isValid = true;
       if (mapOut.at("step_height", *submapIterator) > stepMax) {
         stepMax = mapOut.at("step_height", *submapIterator);
-        if (stepMax > criticalValue_)
-          nCells++;
       }
+      if (mapOut.at("step_height", *submapIterator) > criticalValue_)
+        nCells++;
     }
 
     if (isValid) {
