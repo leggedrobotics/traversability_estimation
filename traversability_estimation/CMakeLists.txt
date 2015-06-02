@@ -14,21 +14,31 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
-  traversability_msgs
   grid_map
   grid_map_core
   grid_map_msgs
   grid_map_filters
   roscpp
-  nav_msgs
   tf
   tf_conversions
   traversability_estimation_filters
   traversability_msgs
+  std_msgs
+  geometry_msgs
+  sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(kindr QUIET)
+if(NOT kindr_FOUND)
+  # Attempt to find package-based kindr
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(kindr kindr REQUIRED)
+endif()
+
+pkg_check_modules(SM_TIMING schweizer-messer-timing REQUIRED)
+
 
 ###################################
 ## catkin specific configuration ##
@@ -40,24 +50,24 @@ find_package(Eigen REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-    INCLUDE_DIRS
-	include
-	${Eigen_INCLUDE_DIRS}
-#  LIBRARIES elevation_mapping
-    CATKIN_DEPENDS
-	traversability_msgs
-	grid_map
-	grid_map_core
-	grid_map_msgs
-	grid_map_filters
-	roscpp
-	nav_msgs
-	tf
-	tf_conversions
-	traversability_estimation_filters
-	traversability_msgs
-    DEPENDS
-	Eigen
+  INCLUDE_DIRS
+    include
+#  LIBRARIES ${PROJECT_NAME}
+  CATKIN_DEPENDS
+    grid_map
+    grid_map_core
+    grid_map_msgs
+    grid_map_filters
+    roscpp
+    tf
+    tf_conversions
+    traversability_estimation_filters
+    traversability_msgs
+    std_msgs
+    geometry_msgs
+    sensor_msgs
+  DEPENDS
+    Eigen
 )
 
 ###########
@@ -69,7 +79,9 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${Eigen_INCLUDE_DIRS}
+  ${Eigen3_INCLUDE_DIRS}
+  ${SM_TIMING_INCLUDE_DIRS}
+  ${kindr_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
@@ -88,4 +100,5 @@ add_executable(
 target_link_libraries(
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
+  ${SM_TIMING_LIBRARIES}
 )

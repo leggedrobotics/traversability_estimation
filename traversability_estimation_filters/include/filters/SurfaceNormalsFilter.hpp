@@ -1,38 +1,40 @@
 /*
- * SlopeFilter.hpp
+ * SurfaceNormalsFilter.hpp
  *
- *  Created on: Mar 11, 2015
+ *  Created on: May 05, 2015
  *      Author: Martin Wermelinger
  *   Institute: ETH Zurich, Autonomous Systems Lab
  */
 
-#ifndef SLOPEFILTER_HPP
-#define SLOPEFILTER_HPP
+#ifndef SURFACENORMALSFILTER_HPP
+#define SURFACENORMALSFILTER_HPP
 
 #include <filters/filter_base.h>
 #include <ros/ros.h>
 
 #include <string>
 
+#include <Eigen/Core>
+
 namespace filters {
 
 /*!
- * Slope Filter class to compute the slope traversability value of an elevation map.
+ * Surface Normals Filter class to compute the surface normals of an elevation map.
  */
 template<typename T>
-class SlopeFilter : public FilterBase<T>
+class SurfaceNormalsFilter : public FilterBase<T>
 {
 
  public:
   /*!
    * Constructor
    */
-  SlopeFilter();
+  SurfaceNormalsFilter();
 
   /*!
    * Destructor.
    */
-  virtual ~SlopeFilter();
+  virtual ~SurfaceNormalsFilter();
 
   /*!
    * Configures the filter from parameters on the Parameter Server
@@ -40,7 +42,8 @@ class SlopeFilter : public FilterBase<T>
   virtual bool configure();
 
   /*!
-   * Computes the slope traversability value based on an elevation map and
+   * TODO: Update description.
+   * Computes the surface normals based on an elevation map and
    * saves it as additional grid map layer.
    * The slope traversability is set between 0.0 and 1.0, where a value of 1.0 means fully
    * traversable and 0.0 means not traversable. NAN indicates unknown values (terrain).
@@ -51,11 +54,11 @@ class SlopeFilter : public FilterBase<T>
 
  private:
 
-  //! Maximum allowed slope.
-  double criticalValue_;
+  //! Radius of submap for surface normal estimation.
+  double estimationRadius_;
 
-  //! slope map type.
-  std::string type_;
+  //! Surface normal positive axis.
+  Eigen::Vector3d surfaceNormalPositiveAxis_;
 };
 
 } /* namespace */

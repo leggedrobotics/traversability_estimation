@@ -15,5 +15,10 @@
         This is a roughness filter for an elevation map.
       </description>
     </class>
+    <class name="traversabilityFilters/SurfaceNormalsFilter" type="filters::SurfaceNormalsFilter<grid_map::GridMap>" base_class_type="filters::FilterBase<grid_map::GridMap>" >
+      <description>
+        This filter computes the surface normals of an elevation map.
+      </description>
+    </class>
   </library>
 </class_libraries>

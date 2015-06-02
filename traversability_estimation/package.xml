@@ -6,14 +6,14 @@
   <maintainer email="pfankhauser@ethz.ch">Peter Fankhauser</maintainer>
   <author email="ralf.kaestner@gmail.com">Ralf Kaestner</author>
   <author email="pfankhauser@ethz.ch">Peter Fankhauser</author>
+  <author email="martiwer@student.ethz.ch">Martin Wermelinger</author>
   <license>MIT</license>
   <url type="website">https://github.com/ethz-asl/traversability_estimation</url>
   <url type="bugtracker">https://github.com/ethz-asl/traversability_estimation/issues</url>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>cmake_modules</build_depend>
+  
   <build_depend>roscpp</build_depend>
-  <build_depend>nav_msgs</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>tf_conversions</build_depend>
   <build_depend>grid_map</build_depend>
@@ -22,9 +22,13 @@
   <build_depend>grid_map_filters</build_depend>
   <build_depend>traversability_msgs</build_depend>
   <build_depend>traversability_estimation_filters</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>sm_timing</build_depend>
+  
   <run_depend>roscpp</run_depend>
   <run_depend>sensor_msgs</run_depend>
-  <run_depend>nav_msgs</run_depend>
   <run_depend>tf</run_depend>
   <run_depend>tf_conversions</run_depend>
   <run_depend>grid_map</run_depend>
@@ -33,5 +37,9 @@
   <run_depend>grid_map_filters</run_depend>
   <run_depend>traversability_msgs</run_depend>
   <run_depend>traversability_estimation_filters</run_depend>
-  <run_depend>elevation_mapping</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>sm_timing</run_depend>
+  
 </package>

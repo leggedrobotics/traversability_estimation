@@ -1,6 +1,9 @@
 # Footprint paths to check.
 traversability_msgs/FootprintPath[] paths
 
+# Use conservative footprint
+bool conservative
+
 ---
 
 # For each path if path is safe to traverse.
@@ -9,3 +12,6 @@ bool[] is_safe
 # Estimate of the traversability for each path.
 # Ranges from 0 to 1 where 0 means not traversable and 1 highly traversable.
 float64[] traversabilities
+
+# Area of each footprint path
+float64[] areas
