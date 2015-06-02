@@ -137,7 +137,7 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
 
   // Create service request.
   traversability_msgs::CheckFootprintPath check;
-  auto& path = check.request.path;
+  auto& path = check.request.path[0];
   path.poses.header = robotPose_.header;
   path.poses.poses.push_back(startPose);
   path.poses.poses.push_back(endPose);
@@ -155,7 +155,7 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
     return;
   }
 
-  publishSafetyStatus(check.response.is_safe, robotPose_.header.stamp);
+  publishSafetyStatus(check.response.result[0].is_safe, robotPose_.header.stamp);
 }
 
 void TraversabilityChecker::publishSafetyStatus(const bool safetyStatus, const ros::Time& timeStamp)
