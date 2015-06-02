@@ -8,3 +8,6 @@ float64 radius
 # Or: Define footprint as polygon in the robot base frame.
 # Polygon is used if it is defined, otherwise radius is used.
 geometry_msgs/PolygonStamped footprint
+
+# Use conservative footprint. Only available if polygon is used.
+bool conservative
