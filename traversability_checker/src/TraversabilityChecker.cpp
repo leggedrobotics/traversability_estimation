@@ -9,6 +9,7 @@
 #include <traversability_checker/TraversabilityChecker.hpp>
 
 #include <traversability_msgs/CheckFootprintPath.h>
+#include <traversability_msgs/FootprintPath.h>
 #include <any_msgs/SafetyCheck.h>
 
 #include <Eigen/Dense>
@@ -137,14 +138,15 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
 
   // Create service request.
   traversability_msgs::CheckFootprintPath check;
-  auto& path = check.request.path[0];
-  path.poses.header = robotPose_.header;
-  path.poses.poses.push_back(startPose);
-  path.poses.poses.push_back(endPose);
-  path.radius = footprintRadius_;
-  path.footprint.polygon.points = footprintPoints_;
-  path.footprint.header.stamp = robotPose_.header.stamp;
-  path.footprint.header.frame_id = footprintFrameId_;
+  traversability_msgs::FootprintPath footprintPath;
+  footprintPath.poses.header = robotPose_.header;
+  footprintPath.poses.poses.push_back(startPose);
+  footprintPath.poses.poses.push_back(endPose);
+  footprintPath.radius = footprintRadius_;
+  footprintPath.footprint.polygon.points = footprintPoints_;
+  footprintPath.footprint.header.stamp = robotPose_.header.stamp;
+  footprintPath.footprint.header.frame_id = footprintFrameId_;
+  check.request.path.push_back(footprintPath);
 
   // Sending service request.
   ROS_DEBUG("Sending request to %s.", serviceName_.c_str());
