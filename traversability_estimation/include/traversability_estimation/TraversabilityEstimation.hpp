@@ -55,7 +55,7 @@ class TraversabilityEstimation
 
   /*!
    * ROS service callback function that forces an update of the traversability map,
-   * given an elevation and returns the map info of the traversability map.
+   * given an elevation map and returns the map info of the traversability map.
    * @param request the ROS service request.
    * @param response the ROS service response containing the traversability map info.
    * @return true if successful.
