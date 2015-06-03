@@ -7,6 +7,7 @@
  */
 
 #include "traversability_estimation/TraversabilityEstimation.hpp"
+#include <traversability_msgs/TraversabilityResult.h>
 
 // Grid Map
 #include <grid_map_msgs/GetGridMap.h>
@@ -338,11 +339,10 @@ bool TraversabilityEstimation::checkFootprintPath(
     return false;
   }
 
-  ROS_INFO("For loop.");
+  traversability_msgs::TraversabilityResult traversabilityResult;
   for (int i = 0; i < request.path.size(); i++) {
-    ROS_INFO("Path");
+    response.result.push_back(traversabilityResult);
     auto& path = request.path[i];
-    ROS_INFO("Result");
     auto& result = response.result[i];
     const int arraySize = path.poses.poses.size();
 
@@ -472,7 +472,6 @@ bool TraversabilityEstimation::checkFootprintPath(
               sm::timing::Timing::getMinSeconds(timerId_),
               sm::timing::Timing::getMaxSeconds(timerId_));
   }
-
   return true;
 }
 
