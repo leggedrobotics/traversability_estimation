@@ -192,6 +192,7 @@ class TraversabilityEstimation
 
   //! Vertices of the footprint polygon in base frame.
   std::vector<geometry_msgs::Point32> footprintPoints_;
+  double footprintYaw_;
 
   //! Timer for the map update.
   ros::Timer updateTimer_;

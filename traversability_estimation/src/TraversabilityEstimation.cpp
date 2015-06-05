@@ -118,6 +118,7 @@ bool TraversabilityEstimation::readParameters()
   nodeHandle_.param("map_length_x", mapLength_.x(), 5.0);
   nodeHandle_.param("map_length_y", mapLength_.y(), 5.0);
   nodeHandle_.param("traversability_default", traversabilityDefault_, 0.5);
+  nodeHandle_.param("footprint_yaw", footprintYaw_, M_PI_2);
 
   // Configure filter chain
   if (!filter_chain_.configure("traversability_map_filters", nodeHandle_)) {
@@ -257,25 +258,26 @@ bool TraversabilityEstimation::traversabilityFootprint(std_srvs::Empty::Request&
   timer.start();
 
   traversabilityMap_.add("traversability_x");
-  traversabilityMap_.add("traversability_y");
+  traversabilityMap_.add("traversability_rot");
 
   grid_map::Position position;
-  grid_map::Polygon polygonX, polygonY;
+  grid_map::Polygon polygonX, polygonRot;
 
+  ROS_INFO_STREAM("footprint yaw: " << footprintYaw_);
   // Compute Orientation
-  kindr::rotations::eigen_impl::RotationQuaternionPD xquat, yquat;
-  kindr::rotations::eigen_impl::AngleAxisPD rotationAxis(M_PI_2, 0.0,
+  kindr::rotations::eigen_impl::RotationQuaternionPD xquat, rquat;
+  kindr::rotations::eigen_impl::AngleAxisPD rotationAxis(footprintYaw_, 0.0,
                                                          0.0, 1.0);
-  yquat = rotationAxis * xquat;
+  rquat = rotationAxis * xquat;
   Eigen::Quaterniond orientationX = xquat.toImplementation();
-  Eigen::Quaterniond orientationY = yquat.toImplementation();
+  Eigen::Quaterniond orientationRot = rquat.toImplementation();
 
   for (grid_map::GridMapIterator iterator(traversabilityMap_); !iterator.isPassedEnd(); ++iterator) {
     polygonX.removeVertices();
-    polygonY.removeVertices();
+    polygonRot.removeVertices();
     traversabilityMap_.getPosition(*iterator, position);
 
-    grid_map::Position3 positionToVertex, positionToVertexTransformedX, positionToVertexTransformedY;
+    grid_map::Position3 positionToVertex, positionToVertexTransformedX, positionToVertexTransformedRot;
     Eigen::Translation<double, 3> toPosition;
     Eigen::Quaterniond orientation;
 
@@ -288,15 +290,15 @@ bool TraversabilityEstimation::traversabilityFootprint(std_srvs::Empty::Request&
       positionToVertex.y() = point.y;
       positionToVertex.z() = point.z;
       positionToVertexTransformedX = toPosition * orientationX * positionToVertex;
-      positionToVertexTransformedY = toPosition * orientationY * positionToVertex;
+      positionToVertexTransformedRot = toPosition * orientationRot * positionToVertex;
 
-      grid_map::Position vertexX, vertexY;
+      grid_map::Position vertexX, vertexRot;
       vertexX.x() = positionToVertexTransformedX.x();
-      vertexY.x() = positionToVertexTransformedY.x();
+      vertexRot.x() = positionToVertexTransformedRot.x();
       vertexX.y() = positionToVertexTransformedX.y();
-      vertexY.y() = positionToVertexTransformedY.y();
+      vertexRot.y() = positionToVertexTransformedRot.y();
       polygonX.addVertex(vertexX);
-      polygonY.addVertex(vertexY);
+      polygonRot.addVertex(vertexRot);
     }
 
     if (!checkInclination(position, position)) {
@@ -308,11 +310,11 @@ bool TraversabilityEstimation::traversabilityFootprint(std_srvs::Empty::Request&
     }
 
     if (!checkInclination(position, position)) {
-      traversabilityMap_.at("traversability_y", *iterator) = 0.0;
+      traversabilityMap_.at("traversability_rot", *iterator) = 0.0;
     } else {
       double traversability;
-      isTraversable(polygonY, traversability);
-      traversabilityMap_.at("traversability_y", *iterator) = traversability;
+      isTraversable(polygonRot, traversability);
+      traversabilityMap_.at("traversability_rot", *iterator) = traversability;
     }
   }
 
