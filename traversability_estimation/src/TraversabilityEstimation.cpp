@@ -263,7 +263,7 @@ bool TraversabilityEstimation::traversabilityFootprint(std_srvs::Empty::Request&
   grid_map::Position position;
   grid_map::Polygon polygonX, polygonRot;
 
-  ROS_INFO_STREAM("footprint yaw: " << footprintYaw_);
+  ROS_DEBUG_STREAM("footprint yaw: " << footprintYaw_);
   // Compute Orientation
   kindr::rotations::eigen_impl::RotationQuaternionPD xquat, rquat;
   kindr::rotations::eigen_impl::AngleAxisPD rotationAxis(footprintYaw_, 0.0,
