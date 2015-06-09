@@ -100,6 +100,19 @@ class TraversabilityEstimation
    */
   bool traversabilityFootprint(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
+  /*!
+   * Updates traversability and returns map info.
+   * @param info the grid map info of the updated map.
+   */
+  void updateTraversability(grid_map_msgs::GridMapInfo& info);
+
+  /*!
+   * Checks for traversability of footprint and returns the traversability.
+   * @param path the footprint path that has to be checked.
+   * @param result traversability result.
+   */
+  void checkFootprintPath(const traversability_msgs::FootprintPath& path, traversability_msgs::TraversabilityResult& result);
+
  private:
 
   /*!

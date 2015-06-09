@@ -1,4 +1,4 @@
-grid_map_topic: /traversability_estimation/traversability_map
+grid_map_topic: /body_path_planner/traversability_map
 
 grid_map_visualizations:
 
