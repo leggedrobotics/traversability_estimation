@@ -51,30 +51,54 @@ class TraversabilityMap
   virtual ~TraversabilityMap();
 
   /*!
-   * Updates the traversability map based on the current elevation map.
+   * Computes the traversability based on the elevation map.
+   * Traversability is set between 0.0 and 1.0, where a value of 0.0 means not
+   * traversable and 1.0 means fully traversable.
+   * @return true if successful.
    */
-  void updateTraversability();
+  bool computeTraversability();
 
   /*!
    * Checks the traversability of a footprint path and returns the traversability.
    * @param[in] path the footprint path that has to be checked.
    * @param[out] result the traversability result.
+   * @return true if successful.
    */
-  void checkFootprintPath(const traversability_msgs::FootprintPath& path, traversability_msgs::TraversabilityResult& result);
+  bool checkFootprintPath(const traversability_msgs::FootprintPath& path, traversability_msgs::TraversabilityResult& result);
 
   /*!
-   * Set the traversability map from the 'traversability' layer of
-   * a grid_map_msgs::GridMap.
-   * @param[in] msg grid map with a layer 'traversability'.
+   * Computes the traversability of a footprint at each map cell position twice:
+   * first oriented in x-direction, and second oriented according to the yaw angle.
+   * @param[in] footprintYaw orientation of the footprint.
+   * @return true if successful.
    */
-  void setTraversabilityMap(const grid_map_msgs::GridMap& msg);
+  bool traversabilityFootprint(double footprintYaw);
 
   /*!
-   * Set the elevation map from the 'elevation' layer of
-   * a grid_map_msgs::GridMap.
+   * The filter chain is reconfigured with the actual parameter on the parameter server.
+   * @return true if successful.
+   */
+  bool updateFilter();
+
+  /*!
+   * Set the traversability map from layers of a grid_map_msgs::GridMap.
+   * @param[in] msg grid map with the layers of a traversability map.
+   * @return true if successful.
+   */
+  bool setTraversabilityMap(const grid_map_msgs::GridMap& msg);
+
+  /*!
+   * Set the elevation map from layers of a grid_map_msgs::GridMap.
    * @param[in] msg grid map with a layer 'elevation'.
+   * @return true if successful.
    */
-  void setElevationMap(const grid_map_msgs::GridMap& msg);
+  bool setElevationMap(const grid_map_msgs::GridMap& msg);
+
+  /*!
+   * Get the traversability map.
+   * @return the requested traversability map.
+   */
+  grid_map::GridMap getTraversabilityMap();
 
  private:
 
@@ -83,13 +107,6 @@ class TraversabilityMap
    * @return true if successful.
    */
   bool readParameters();
-
-  /*!
-   * Computes the traversability based on the elevation map.
-   * Traversability is set between 0.0 and 1.0, where a value of 0.0 means not
-   * traversable and 1.0 means fully traversable.
-   */
-  void computeTraversability();
 
   /*!
    * Gets the traversability value of the submap defined by the polygon. Is true if the
@@ -134,15 +151,23 @@ class TraversabilityMap
 
   //! Traversability map types.
   const std::string traversabilityType_;
+  const std::string slopeType_;
+  const std::string stepType_;
+  const std::string roughnessType_;
+  const std::string robotSlopeType_;
 
   //! Filter Chain
   filters::FilterChain<grid_map::GridMap> filter_chain_;
 
   //! Traversability map.
   grid_map::GridMap traversabilityMap_;
+  std::vector<std::string> traversabilityMapLayers_;
+  bool traversabilityMapInitialized_;
 
   //! Traversability map.
   grid_map::GridMap elevationMap_;
+  std::vector<std::string> elevationMapLayers_;
+  bool elevationMapInitialized_;
 
   //! Timer
   std::string timerId_;

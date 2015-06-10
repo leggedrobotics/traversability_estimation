@@ -87,7 +87,13 @@ include_directories(
 ## Declare a cpp library
 add_library(
   ${PROJECT_NAME}
-  src/TraversabilityEstimation.cpp
+  src/TraversabilityMap.cpp
+)
+
+target_link_libraries(
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  ${SM_TIMING_LIBRARIES}
 )
 
 ## Declare a cpp executable
@@ -101,11 +107,6 @@ add_executable(
 target_link_libraries(
   ${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
-  ${SM_TIMING_LIBRARIES}
-)
-
-target_link_libraries(
   ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
   ${SM_TIMING_LIBRARIES}
 )
