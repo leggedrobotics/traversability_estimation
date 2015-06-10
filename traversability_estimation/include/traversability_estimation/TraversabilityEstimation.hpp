@@ -143,6 +143,7 @@ class TraversabilityEstimation
   //! ROS service server.
   ros::ServiceServer footprintPathService_;
   ros::ServiceServer updateTraversabilityService_;
+  ros::ServiceServer getTraversabilityService_;
   ros::ServiceServer updateParameters_;
   ros::ServiceServer traversabilityFootprint_;
 

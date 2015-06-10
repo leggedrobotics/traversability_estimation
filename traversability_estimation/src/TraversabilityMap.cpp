@@ -148,13 +148,12 @@ bool TraversabilityMap::computeTraversability()
     traversabilityMapInitialized_ = false;
     return false;
   }
-
   traversabilityMapInitialized_ = true;
-  return true;
 
   timer.stop();
   ROS_INFO("Traversability map has been updated in %f s.", sm::timing::Timing::getTotalSeconds(timerId));
   sm::timing::Timing::reset(timerId);
+  return true;
 }
 
 bool TraversabilityMap::traversabilityFootprint(double footprintYaw)
