@@ -16,7 +16,7 @@
 #include <grid_map_msgs/GetGridMap.h>
 
 // Traversability estimation
-#include "traversability_msgs/CheckFootprintPath.h"
+#include <traversability_msgs/CheckFootprintPath.h>
 
 // ROS
 #include <ros/ros.h>

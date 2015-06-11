@@ -241,7 +241,7 @@ bool TraversabilityMap::traversabilityFootprint(double footprintYaw)
 bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintPath& path, traversability_msgs::TraversabilityResult& result)
 {
   if (timer_.isTiming()) timer_.stop();
-    timer_.start();
+  timer_.start();
 
   if (!traversabilityMap_.exists(traversabilityType_)) {
     ROS_WARN("Traversability Estimation: Failed to retrieve traversability map.");

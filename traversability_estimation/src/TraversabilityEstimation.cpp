@@ -218,7 +218,6 @@ bool TraversabilityEstimation::checkFootprintPath(
     traversability_msgs::CheckFootprintPath::Response& response)
 {
   const int nPaths = request.path.size();
-
   if (nPaths == 0) {
     ROS_WARN("No footprint path available to check!");
     return false;
