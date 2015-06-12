@@ -54,10 +54,10 @@ class TraversabilityEstimation
   virtual ~TraversabilityEstimation();
 
   /*!
-   * ROS service callback function that forces an update of the traversability
-   * map from a new elevation map requested from the grid map service.
+   * ROS service callback function that forces an update of the traversability map,
+   * given an elevation map and returns the map info of the traversability map.
    * @param request the ROS service request.
-   * @param response the ROS service response.
+   * @param response the ROS service response containing the traversability map info.
    * @return true if successful.
    */
   bool updateServiceCallback(grid_map_msgs::GetGridMapInfo::Request& request,
@@ -192,6 +192,7 @@ class TraversabilityEstimation
 
   //! Vertices of the footprint polygon in base frame.
   std::vector<geometry_msgs::Point32> footprintPoints_;
+  double footprintYaw_;
 
   //! Timer for the map update.
   ros::Timer updateTimer_;
