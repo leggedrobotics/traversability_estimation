@@ -149,6 +149,7 @@ bool TraversabilityMap::computeTraversability()
     return false;
   }
   traversabilityMapInitialized_ = true;
+  traversabilityMap_.add("step_footprint");
 
   timer.stop();
   ROS_INFO("Traversability map has been updated in %f s.", sm::timing::Timing::getTotalSeconds(timerId));
@@ -386,15 +387,18 @@ bool TraversabilityMap::isTraversable(const grid_map::Polygon& polygon, double& 
   double criticalLength = 0.1;
   int nSlopesCritical = floor(2 * windowRadius * criticalLength / pow(traversabilityMap_.getResolution(), 2));
 
+  // Check for steps
+  if (!checkForStep(polygon)) return false;
+
   // Check for traversability.
   for (grid_map::PolygonIterator polygonIterator(traversabilityMap_, polygon);
       !polygonIterator.isPassedEnd(); ++polygonIterator) {
 
     // Check for steps
-    if (traversabilityMap_.at(stepType_, *polygonIterator) == 0.0)
-      nSteps++;
-    if (nSteps > 3)
-      return false;
+//    if (traversabilityMap_.at(stepType_, *polygonIterator) == 0.0)
+//      nSteps++;
+//    if (nSteps > 3)
+//      return false;
 
     // Check for slopes
     if (traversabilityMap_.at(slopeType_, *polygonIterator) == 0.0) {
@@ -467,6 +471,82 @@ bool TraversabilityMap::updateFilter()
   if (!filter_chain_.configure("traversability_map_filters", nodeHandle_)) {
     ROS_ERROR("Could not configure the filter chain!");
     return false;
+  }
+  return true;
+}
+
+bool TraversabilityMap::checkForStep(const grid_map::Polygon& polygon)
+{
+  // Define Parameter. TODO: read this parameter;
+  double windowRadius = 0.075;
+  double criticalStep = 0.12;
+  double gapWidth = 0.3;
+
+  for (grid_map::PolygonIterator polygonIterator(traversabilityMap_, polygon);
+      !polygonIterator.isPassedEnd(); ++polygonIterator) {
+    if (traversabilityMap_.at(stepType_, *polygonIterator) == 0.0) {
+      if (traversabilityMap_.isValid(*polygonIterator, "step_footprint")) {
+        if (traversabilityMap_.at("step_footprint", *polygonIterator) == 0.0) return false;
+        if (traversabilityMap_.at("step_footprint", *polygonIterator) == 1.0) continue;
+      }
+//      bool stepDetected = false;
+      vector<grid_map::Index> indices;
+      grid_map::Position center;
+      traversabilityMap_.getPosition(*polygonIterator, center);
+      double height = traversabilityMap_.at("elevation", *polygonIterator);
+      for (grid_map::CircleIterator circleIterator(traversabilityMap_, center, windowRadius);
+          !circleIterator.isPassedEnd(); ++circleIterator) {
+        if (traversabilityMap_.at("elevation", *circleIterator) + criticalStep > height) indices.push_back(*circleIterator);
+      }
+      if (indices.empty()) indices.push_back(*polygonIterator);
+      for (auto& index : indices) {
+        grid_map::Length subMapLength_(3*traversabilityMap_.getResolution(), 3*traversabilityMap_.getResolution());
+        grid_map::Position subMapPos;
+        bool isSuccess;
+        traversabilityMap_.getPosition(index, subMapPos);
+        grid_map::GridMap subMap = traversabilityMap_.getSubmap(subMapPos, subMapLength_, isSuccess);
+        if (!isSuccess) {
+          ROS_WARN("Traversability map: Check for step window could not retrieve submap.");
+          traversabilityMap_.at("step_footprint", *polygonIterator) = 0.0;
+          return false;
+        }
+        height = traversabilityMap_.at("elevation", index);
+        // TODO: restrict direction
+        for (grid_map::GridMapIterator subMapIterator(subMap); !subMapIterator.isPassedEnd(); ++subMapIterator) {
+          if (traversabilityMap_.at(stepType_, *subMapIterator) == 0.0) {
+            grid_map::Position pos;
+            subMap.getPosition(*subMapIterator, pos);
+            grid_map::Vector vec = pos - subMapPos;
+            if (vec == grid_map::Vector(0.0, 0.0)) continue;
+            vec *= gapWidth / vec.norm();
+            pos = subMapPos + vec;
+            grid_map::Index endIndex;
+            traversabilityMap_.getIndex(pos, endIndex);
+            bool gapStart = false;
+            for (grid_map::LineIterator lineIterator(traversabilityMap_, index, endIndex); !lineIterator.isPassedEnd(); ++lineIterator) {
+              if (traversabilityMap_.at("elevation", *lineIterator) > height + criticalStep) {
+                traversabilityMap_.at("step_footprint", *polygonIterator) = 0.0;
+//                stepDetected =  true;
+                return false;
+              }
+              if (traversabilityMap_.at("elevation", *lineIterator) < height - criticalStep) {
+                gapStart = true;
+              } else if (gapStart) {
+                // Gap that can be overcome.
+                break;
+              }
+            }
+          }
+//          if (stepDetected) break;
+        }
+//        if (stepDetected) break;
+      }
+//      if (stepDetected) {
+//        traversabilityMap_.at("step_footprint", *polygonIterator) = 0.0;
+//        return false;
+//      }
+      traversabilityMap_.at("step_footprint", *polygonIterator) = 1.0;
+    }
   }
   return true;
 }

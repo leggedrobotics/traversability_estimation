@@ -128,6 +128,14 @@ class TraversabilityMap
   bool checkInclination(const grid_map::Position start,
                         const grid_map::Position end);
 
+  /*!
+   * Checks if there are steps (obstacles) within a submap defined by a polygon.
+   * Small ditches and holes are not detected as steps.
+   * @param[in] polygon polygon that defines submap of the traversability map.
+   * @return true if the whole polygon has no steps, false otherwise.
+   */
+  bool checkForStep(const grid_map::Polygon& polygon);
+
   //! ROS node handle.
   ros::NodeHandle& nodeHandle_;
 
