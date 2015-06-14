@@ -10,7 +10,7 @@
 
 #include <traversability_msgs/CheckFootprintPath.h>
 #include <traversability_msgs/FootprintPath.h>
-#include <any_msgs/SafetyCheck.h>
+#include <any_msgs/State.h>
 
 #include <Eigen/Dense>
 #include <Eigen/Core>
@@ -23,7 +23,7 @@ TraversabilityChecker::TraversabilityChecker(const ros::NodeHandle& nodeHandle)
       useTwistWithCovariance_(false)
 {
   readParameters();
-  safetyPublisher_ = nodeHandle_.advertise<any_msgs::SafetyCheck>("safety_status", 1);
+  safetyPublisher_ = nodeHandle_.advertise<any_msgs::State>("safety_status", 1);
   timer_ = nodeHandle_.createTimer(timerDuration_, &TraversabilityChecker::check, this);
   serviceClient_ = nodeHandle_.serviceClient<traversability_msgs::CheckFootprintPath>(serviceName_);
   robotPoseSubscriber_ = nodeHandle_.subscribe(robotPoseTopic_, 1, &TraversabilityChecker::updateRobotPose, this);
@@ -37,8 +37,7 @@ TraversabilityChecker::~TraversabilityChecker()
 
 bool TraversabilityChecker::readParameters()
 {
-  nodeHandle_.param("service_to_call", serviceName_,
-                    std::string("/traversability_estimation/check_footprint_path"));
+  nodeHandle_.param("service_to_call", serviceName_, std::string("/traversability_estimation/check_footprint_path"));
   nodeHandle_.param("robot_pose_topic", robotPoseTopic_, std::string("pose"));
   nodeHandle_.param("twist_topic", twistTopic_, std::string("twist"));
   nodeHandle_.param("use_twist_with_covariance", useTwistWithCovariance_, false);
@@ -52,10 +51,8 @@ bool TraversabilityChecker::readParameters()
   // Read footprint polygon.
   XmlRpc::XmlRpcValue footprint;
   nodeHandle_.getParam("footprint_polygon", footprint);
-  if (footprint.size() < 2) {
-    ROS_WARN(
-        "Footprint polygon must consist of at least 3 points. Only %i points found.",
-        footprint.size());
+  if (footprint.size() < 3) {
+    ROS_WARN("Footprint polygon must consist of at least 3 points. Only %i points found.", footprint.size());
     footprintPoints_.clear();
   } else {
     geometry_msgs::Point32 pt;
@@ -73,7 +70,11 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
 {
   ROS_DEBUG("Checking for traversability.");
   if (robotPose_.header.stamp.isZero()) {
-    ROS_WARN_STREAM(nodeHandle_.getNamespace() << ": No robot pose received yet.");
+    ROS_WARN_STREAM_THROTTLE(5, nodeHandle_.getNamespace() << ": No robot pose received yet.");
+    return;
+  }
+  if (twist_.header.stamp.isZero()) {
+    ROS_WARN_STREAM_THROTTLE(5, nodeHandle_.getNamespace() << ": No robot twist received yet.");
     return;
   }
 
@@ -101,7 +102,7 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
     tfListener_.waitForTransform(twist_.header.frame_id, robotPose_.header.frame_id, robotPose_.header.stamp, timerDuration_);
     tfListener_.transformVector(robotPose_.header.frame_id, linearVelocityInTwistFrame, linearVelocityInBaseFrame);
     tfListener_.transformVector(robotPose_.header.frame_id, angularVelocityInTwistFrame, angularVelocityInBaseFrame);
-  } catch (tf::TransformException ex) {
+  } catch (tf::TransformException& ex) {
     ROS_ERROR_STREAM(nodeHandle_.getNamespace() << ": " << ex.what());
     return;
   }
@@ -115,8 +116,9 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   Eigen::Vector3f rotationAxis;
   Eigen::Quaternionf startPoseOrientation, endPoseOrientation, startToEnd;
 
-  if (angularVelocityInBaseFrame.vector.x != 0 && angularVelocityInBaseFrame.vector.y != 0
-      && angularVelocityInBaseFrame.vector.z != 0) {
+  if (angularVelocityInBaseFrame.vector.x != 0 &&
+      angularVelocityInBaseFrame.vector.y != 0 &&
+      angularVelocityInBaseFrame.vector.z != 0) {
     rotationAxis.x() = angularVelocityInBaseFrame.vector.x;
     rotationAxis.y() = angularVelocityInBaseFrame.vector.y;
     rotationAxis.z() = angularVelocityInBaseFrame.vector.z;
@@ -162,9 +164,9 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
 
 void TraversabilityChecker::publishSafetyStatus(const bool safetyStatus, const ros::Time& timeStamp)
 {
-  any_msgs::SafetyCheck safetyStatusMessage;
+  any_msgs::State safetyStatusMessage;
   safetyStatusMessage.stamp = timeStamp;
-  safetyStatusMessage.is_safe = safetyStatus;
+  safetyStatusMessage.is_ok = safetyStatus;
   safetyPublisher_.publish(safetyStatusMessage);
   if (safetyStatus) {
     ROS_DEBUG("Safe.");
@@ -173,27 +175,24 @@ void TraversabilityChecker::publishSafetyStatus(const bool safetyStatus, const r
   }
 }
 
-void TraversabilityChecker::updateRobotPose(
-    const geometry_msgs::PoseWithCovarianceStamped& pose)
+void TraversabilityChecker::updateRobotPose(const geometry_msgs::PoseWithCovarianceStamped& pose)
 {
   robotPose_.header = pose.header;
   robotPose_.pose = pose.pose.pose;
   ROS_DEBUG("Updated robot pose.");
 }
 
-void TraversabilityChecker::updateRobotTwist(
-    const geometry_msgs::TwistStamped& twist)
+void TraversabilityChecker::updateRobotTwist(const geometry_msgs::TwistStamped& twist)
 {
   twist_ = twist;
-  ROS_DEBUG("Updated robot twist with covariance.");
+  ROS_DEBUG("Updated robot twist.");
 }
 
-void TraversabilityChecker::updateRobotTwistWithCovariance(
-    const geometry_msgs::TwistWithCovarianceStamped& twist)
+void TraversabilityChecker::updateRobotTwistWithCovariance(const geometry_msgs::TwistWithCovarianceStamped& twist)
 {
   twist_.header = twist.header;
   twist_.twist = twist.twist.twist;
-  ROS_DEBUG("Updated robot twist.");
+  ROS_DEBUG("Updated robot twist with covariance.");
 }
 
 } /* namespace traversability_checker */
