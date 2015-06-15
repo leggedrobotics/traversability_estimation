@@ -211,21 +211,27 @@ bool TraversabilityMap::traversabilityFootprint(double footprintYaw)
       polygonRot.addVertex(vertexRot);
     }
 
-    if (!checkInclination(position, position)) {
-      traversabilityMap_.at("traversability_x", *iterator) = 0.0;
-    } else {
-      double traversability;
-      isTraversable(polygonX, traversability);
-      traversabilityMap_.at("traversability_x", *iterator) = traversability;
-    }
+    double traversability;
+    isTraversable(polygonX, traversability);
+    traversabilityMap_.at("traversability_x", *iterator) = traversability;
+    isTraversable(polygonRot, traversability);
+    traversabilityMap_.at("traversability_rot", *iterator) = traversability;
 
-    if (!checkInclination(position, position)) {
-      traversabilityMap_.at("traversability_rot", *iterator) = 0.0;
-    } else {
-      double traversability;
-      isTraversable(polygonRot, traversability);
-      traversabilityMap_.at("traversability_rot", *iterator) = traversability;
-    }
+//    if (!checkInclination(position, position)) {
+//      traversabilityMap_.at("traversability_x", *iterator) = 0.0;
+//    } else {
+//      double traversability;
+//      isTraversable(polygonX, traversability);
+//      traversabilityMap_.at("traversability_x", *iterator) = traversability;
+//    }
+//
+//    if (!checkInclination(position, position)) {
+//      traversabilityMap_.at("traversability_rot", *iterator) = 0.0;
+//    } else {
+//      double traversability;
+//      isTraversable(polygonRot, traversability);
+//      traversabilityMap_.at("traversability_rot", *iterator) = traversability;
+//    }
   }
 
   grid_map_msgs::GridMap mapMessage;
@@ -524,7 +530,7 @@ bool TraversabilityMap::checkForStep(const grid_map::Polygon& polygon)
                 traversabilityMap_.at("step_footprint", *polygonIterator) = 0.0;
                 return false;
               }
-              if (traversabilityMap_.at("elevation", *lineIterator) < height - criticalStep) {
+              if (traversabilityMap_.at("elevation", *lineIterator) < height - criticalStep || !traversabilityMap_.isValid(*lineIterator, "elevation")) {
                 gapStart = true;
               } else if (gapStart) {
                 // Gap that can be overcome.
