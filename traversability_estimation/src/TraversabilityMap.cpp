@@ -505,6 +505,7 @@ bool TraversabilityMap::checkForStep(const grid_map::Polygon& polygon)
         grid_map::Position subMapPos;
         bool isSuccess;
         traversabilityMap_.getPosition(index, subMapPos);
+        grid_map::Vector toCenter = center - subMapPos;
         grid_map::GridMap subMap = traversabilityMap_.getSubmap(subMapPos, subMapLength_, isSuccess);
         if (!isSuccess) {
           ROS_WARN("Traversability map: Check for step window could not retrieve submap.");
@@ -512,13 +513,15 @@ bool TraversabilityMap::checkForStep(const grid_map::Polygon& polygon)
           return false;
         }
         height = traversabilityMap_.at("elevation", index);
-        // TODO: restrict direction
         for (grid_map::GridMapIterator subMapIterator(subMap); !subMapIterator.isPassedEnd(); ++subMapIterator) {
           if (subMap.at(stepType_, *subMapIterator) == 0.0) {
             grid_map::Position pos;
             subMap.getPosition(*subMapIterator, pos);
             grid_map::Vector vec = pos - subMapPos;
             if (vec.norm() < 0.025) continue;
+            if (toCenter.norm() > 0.025) {
+              if (toCenter.dot(vec) < 0.0) continue;
+            }
             pos = subMapPos + vec;
             while ((pos - subMapPos + vec).norm() < gapWidth && traversabilityMap_.isInside(pos + vec)) pos += vec;
             grid_map::Index endIndex;
@@ -533,7 +536,6 @@ bool TraversabilityMap::checkForStep(const grid_map::Polygon& polygon)
               if (traversabilityMap_.at("elevation", *lineIterator) < height - criticalStep || !traversabilityMap_.isValid(*lineIterator, "elevation")) {
                 gapStart = true;
               } else if (gapStart) {
-                // Gap that can be overcome.
                 gapEnd = true;
                 break;
               }
