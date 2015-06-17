@@ -152,11 +152,14 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
 
   // Sending service request.
   ROS_DEBUG("Sending request to %s.", serviceName_.c_str());
-  serviceClient_.waitForExistence();
-  ROS_DEBUG("Sending request to %s.", serviceName_.c_str());
-  if (!serviceClient_.call(check)) {
-    ROS_ERROR("Failed to call service %s.", serviceName_.c_str());
-    return;
+  if(serviceClient_.waitForExistence(ros::Duration(2))) {
+    ROS_DEBUG("Sending request to %s.", serviceName_.c_str());
+    if (!serviceClient_.call(check)) {
+      ROS_ERROR("Failed to call service %s.", serviceName_.c_str());
+      return;
+    }
+  } else {
+    ROS_WARN("Service %s has not been advertised.", serviceName_.c_str());
   }
 
   publishSafetyStatus(check.response.result[0].is_safe, robotPose_.header.stamp);
