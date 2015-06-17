@@ -514,7 +514,7 @@ bool TraversabilityMap::checkForStep(const grid_map::Polygon& polygon)
         }
         height = traversabilityMap_.at("elevation", index);
         for (grid_map::GridMapIterator subMapIterator(subMap); !subMapIterator.isPassedEnd(); ++subMapIterator) {
-          if (subMap.at(stepType_, *subMapIterator) == 0.0) {
+          if (subMap.at(stepType_, *subMapIterator) == 0.0 && subMap.at("elevation", *subMapIterator) < height - criticalStep) {
             grid_map::Position pos;
             subMap.getPosition(*subMapIterator, pos);
             grid_map::Vector vec = pos - subMapPos;
