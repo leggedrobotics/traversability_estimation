@@ -156,16 +156,19 @@ void TraversabilityEstimation::computeTraversability()
   grid_map_msgs::GridMap mapMessage;
   if (!mapInitialized_) {
     ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
-    submapClient_.waitForExistence();
-    ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
-    if (getGridMap(mapMessage)) {
-      grid_map::GridMapRosConverter::fromMessage(mapMessage, elevationMap_);
-      if (!filter_chain_.update(elevationMap_, traversabilityMap_)) ROS_ERROR("Could not update the filter chain! No traversability computed!");
-      grid_map::GridMapRosConverter::toMessage(traversabilityMap_, mapMessage);
-      if (!traversabilityMapPublisher_.getNumSubscribers() < 1)
-        traversabilityMapPublisher_.publish(mapMessage);
+    if(submapClient_.waitForExistence(ros::Duration(2))) {
+      ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
+      if (getGridMap(mapMessage)) {
+        grid_map::GridMapRosConverter::fromMessage(mapMessage, elevationMap_);
+        if (!filter_chain_.update(elevationMap_, traversabilityMap_)) ROS_ERROR("Could not update the filter chain! No traversability computed!");
+        grid_map::GridMapRosConverter::toMessage(traversabilityMap_, mapMessage);
+        if (!traversabilityMapPublisher_.getNumSubscribers() < 1)
+          traversabilityMapPublisher_.publish(mapMessage);
+      } else {
+        ROS_WARN("Failed to retrieve elevation grid map.");
+      }
     } else {
-      ROS_WARN("Failed to retrieve elevation grid map.");
+      ROS_WARN("Service %s has not been advertised.", submapServiceName_.c_str());
     }
   } else {
     if (!filter_chain_.update(elevationMap_, traversabilityMap_)) ROS_ERROR("Could not update the filter chain! No traversability computed!");
