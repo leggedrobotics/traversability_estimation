@@ -13,6 +13,8 @@
 #include <ros/package.h>
 #include <geometry_msgs/Pose.h>
 
+#include <google/profiler.h>
+
 using namespace std;
 
 namespace traversability_estimation {
@@ -28,7 +30,6 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
       getImageCallback_(false)
 {
   ROS_INFO("Traversability estimation node started.");
-
   readParameters();
   submapClient_ = nodeHandle_.serviceClient<grid_map_msgs::GetGridMap>(submapServiceName_);
 
@@ -203,12 +204,14 @@ bool TraversabilityEstimation::requestElevationMap(grid_map_msgs::GridMap& map)
 bool TraversabilityEstimation::traversabilityFootprint(
     std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
+//  ProfilerStart("/home/martiwer/Documents/Profile/traversability_estimation_2.prof");
   // Update traversability map.
   if (!updateTraversability())
     return false;
 
   if (!traversabilityMap_.traversabilityFootprint(footprintYaw_))
     return false;
+//  ProfilerStop();
 
   return true;
 }

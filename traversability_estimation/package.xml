@@ -26,6 +26,7 @@
   <build_depend>geometry_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>sm_timing</build_depend>
+  <build_depend>gperftools_21</build_depend>
   
   <run_depend>roscpp</run_depend>
   <run_depend>sensor_msgs</run_depend>
@@ -41,5 +42,6 @@
   <run_depend>geometry_msgs</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>sm_timing</run_depend>
+  <run_depend>gperftools_21</run_depend>
   
 </package>

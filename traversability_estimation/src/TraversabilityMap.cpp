@@ -23,6 +23,8 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <google/profiler.h>
+
 using namespace std;
 
 namespace traversability_estimation {
@@ -41,6 +43,7 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
       timer_(timerId_, true)
 {
   ROS_INFO("Traversability Map started.");
+//  ProfilerStart("/home/martiwer/Documents/Profile/traversability_map.prof");
 
   readParameters();
   footprintPolygonPublisher_ = nodeHandle_.advertise<geometry_msgs::PolygonStamped>("footprint_polygon", 1, true);
@@ -58,6 +61,7 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
 
 TraversabilityMap::~TraversabilityMap()
 {
+//  ProfilerStop();
   nodeHandle_.shutdown();
 }
 
