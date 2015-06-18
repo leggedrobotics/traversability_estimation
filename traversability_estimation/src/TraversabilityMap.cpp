@@ -281,8 +281,8 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
 
       if (arraySize == 1) {
         polygon = polygon.convexHullCircle(end, radius);
-        if (!checkInclination(end, end))
-          return true;
+//        if (!checkInclination(end, end))
+//          return true;
         if (!isTraversable(polygon, traversability))
           return true;
         result.traversability = traversability;
@@ -290,8 +290,8 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
 
       if (arraySize > 1 && i > 0) {
         polygon = polygon.convexHullCircles(start, end, radius);
-        if (!checkInclination(start, end))
-          return true;
+//        if (!checkInclination(start, end))
+//          return true;
         if (!isTraversable(polygon, traversability))
           return true;
         result.traversability += traversability / (arraySize - 1);
@@ -347,8 +347,8 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
 
       if (arraySize == 1) {
         polygon = polygon2;
-        if (!checkInclination(end, end))
-          return true;
+//        if (!checkInclination(end, end))
+//          return true;
         if (!isTraversable(polygon, traversability))
           return true;
         result.traversability = traversability;
@@ -357,8 +357,8 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
 
       if (arraySize > 1 && i > 0) {
         polygon = polygon.convexHull(polygon1, polygon2);
-        if (!checkInclination(start, end))
-          return true;
+//        if (!checkInclination(start, end))
+//          return true;
         if (!isTraversable(polygon, traversability))
           return true;
         result.traversability += traversability / (arraySize - 1);
