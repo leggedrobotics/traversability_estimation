@@ -38,7 +38,7 @@ class TraversabilityChecker
 
   bool readParameters();
 
-  bool enableService(traversability_msgs::Overwrite::Request& request, traversability_msgs::Overwrite::Response& response);
+  bool overwriteService(traversability_msgs::Overwrite::Request& request, traversability_msgs::Overwrite::Response& response);
 
   /*!
    * Publish the status of the traversability safety.

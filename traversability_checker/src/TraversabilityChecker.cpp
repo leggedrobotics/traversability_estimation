@@ -21,13 +21,13 @@ namespace traversability_checker {
 TraversabilityChecker::TraversabilityChecker(const ros::NodeHandle& nodeHandle)
     : nodeHandle_(nodeHandle),
       useTwistWithCovariance_(false),
-      overwrite_(true)
+      overwrite_(false)
 {
   readParameters();
   safetyPublisher_ = nodeHandle_.advertise<any_msgs::State>("safety_status", 1);
   timer_ = nodeHandle_.createTimer(timerDuration_, &TraversabilityChecker::check, this);
   checkFootprintPathServiceClient_ = nodeHandle_.serviceClient<traversability_msgs::CheckFootprintPath>(checkFootprintPathServiceName_);
-  overwriteServiceServer_ = nodeHandle_.advertiseService(overwriteServiceName_, &TraversabilityChecker::enableService, this);
+  overwriteServiceServer_ = nodeHandle_.advertiseService(overwriteServiceName_, &TraversabilityChecker::overwriteService, this);
   robotPoseSubscriber_ = nodeHandle_.subscribe(robotPoseTopic_, 1, &TraversabilityChecker::updateRobotPose, this);
   if (useTwistWithCovariance_) twistSubscriber_ = nodeHandle_.subscribe(twistTopic_, 1, &TraversabilityChecker::updateRobotTwistWithCovariance, this);
   else twistSubscriber_ = nodeHandle_.subscribe(twistTopic_, 1, &TraversabilityChecker::updateRobotTwist, this);
@@ -40,7 +40,7 @@ TraversabilityChecker::~TraversabilityChecker()
 bool TraversabilityChecker::readParameters()
 {
   nodeHandle_.param("check_footprint_path_service_name", checkFootprintPathServiceName_, std::string("/traversability_estimation/check_footprint_path"));
-  nodeHandle_.param("overwrite_service_name", overwriteServiceName_, std::string("/default_enable_service_name"));
+  nodeHandle_.param("overwrite_service_name", overwriteServiceName_, std::string("overwrite"));
   nodeHandle_.param("robot_pose_topic", robotPoseTopic_, std::string("pose"));
   nodeHandle_.param("twist_topic", twistTopic_, std::string("twist"));
   nodeHandle_.param("use_twist_with_covariance", useTwistWithCovariance_, false);
@@ -69,7 +69,7 @@ bool TraversabilityChecker::readParameters()
   return true;
 }
 
-bool TraversabilityChecker::enableService(traversability_msgs::Overwrite::Request& request, traversability_msgs::Overwrite::Response& response)
+bool TraversabilityChecker::overwriteService(traversability_msgs::Overwrite::Request& request, traversability_msgs::Overwrite::Response& response)
 {
   overwrite_ = request.enable;
   return true;
@@ -77,7 +77,7 @@ bool TraversabilityChecker::enableService(traversability_msgs::Overwrite::Reques
 
 void TraversabilityChecker::check(const ros::TimerEvent&)
 {
-  if (!overwrite_) {
+  if (overwrite_) {
     ROS_DEBUG("Traversability checking is overwritten, publish is safe.");
     publishSafetyStatus(true, ros::Time::now());
     return;
