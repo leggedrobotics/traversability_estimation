@@ -20,12 +20,14 @@ namespace traversability_checker {
 
 TraversabilityChecker::TraversabilityChecker(const ros::NodeHandle& nodeHandle)
     : nodeHandle_(nodeHandle),
-      useTwistWithCovariance_(false)
+      useTwistWithCovariance_(false),
+      overwrite_(false)
 {
   readParameters();
   safetyPublisher_ = nodeHandle_.advertise<any_msgs::State>("safety_status", 1);
   timer_ = nodeHandle_.createTimer(timerDuration_, &TraversabilityChecker::check, this);
-  serviceClient_ = nodeHandle_.serviceClient<traversability_msgs::CheckFootprintPath>(serviceName_);
+  checkFootprintPathServiceClient_ = nodeHandle_.serviceClient<traversability_msgs::CheckFootprintPath>(checkFootprintPathServiceName_);
+  overwriteServiceServer_ = nodeHandle_.advertiseService(overwriteServiceName_, &TraversabilityChecker::overwriteService, this);
   robotPoseSubscriber_ = nodeHandle_.subscribe(robotPoseTopic_, 1, &TraversabilityChecker::updateRobotPose, this);
   if (useTwistWithCovariance_) twistSubscriber_ = nodeHandle_.subscribe(twistTopic_, 1, &TraversabilityChecker::updateRobotTwistWithCovariance, this);
   else twistSubscriber_ = nodeHandle_.subscribe(twistTopic_, 1, &TraversabilityChecker::updateRobotTwist, this);
@@ -37,7 +39,8 @@ TraversabilityChecker::~TraversabilityChecker()
 
 bool TraversabilityChecker::readParameters()
 {
-  nodeHandle_.param("service_to_call", serviceName_, std::string("/traversability_estimation/check_footprint_path"));
+  nodeHandle_.param("check_footprint_path_service_name", checkFootprintPathServiceName_, std::string("/traversability_estimation/check_footprint_path"));
+  nodeHandle_.param("overwrite_service_name", overwriteServiceName_, std::string("overwrite"));
   nodeHandle_.param("robot_pose_topic", robotPoseTopic_, std::string("pose"));
   nodeHandle_.param("twist_topic", twistTopic_, std::string("twist"));
   nodeHandle_.param("use_twist_with_covariance", useTwistWithCovariance_, false);
@@ -66,20 +69,28 @@ bool TraversabilityChecker::readParameters()
   return true;
 }
 
+bool TraversabilityChecker::overwriteService(traversability_msgs::Overwrite::Request& request, traversability_msgs::Overwrite::Response& response)
+{
+  overwrite_ = request.enable;
+  return true;
+}
+
 void TraversabilityChecker::check(const ros::TimerEvent&)
 {
+  if (overwrite_) {
+    ROS_DEBUG("Traversability checking is overwritten, publish is safe.");
+    publishSafetyStatus(true, ros::Time::now());
+    return;
+  }
+
   ROS_DEBUG("Checking for traversability.");
   if (robotPose_.header.stamp.isZero()) {
     ROS_WARN_STREAM_THROTTLE(5, nodeHandle_.getNamespace() << ": No robot pose received yet.");
     return;
   }
-  if (twist_.header.stamp.isZero()) {
-    ROS_WARN_STREAM_THROTTLE(5, nodeHandle_.getNamespace() << ": No robot twist received yet.");
-    return;
-  }
 
   if (ros::Time::now() - twist_.header.stamp >= ros::Duration(10.0)) {
-    ROS_INFO_STREAM(nodeHandle_.getNamespace() << ": Twist too old, checking traversability with zero velocity.");
+    ROS_INFO_STREAM(nodeHandle_.getNamespace() << ": Twist not received yet or too old, checking traversability with zero velocity.");
     twist_.header = robotPose_.header;
     twist_.twist.linear.x = 0.0;
     twist_.twist.linear.y = 0.0;
@@ -87,7 +98,6 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
     twist_.twist.angular.x = 0.0;
     twist_.twist.angular.y = 0.0;
     twist_.twist.angular.z = 0.0;
-    return;
   }
 
   const geometry_msgs::Pose& startPose = robotPose_.pose;
@@ -151,11 +161,11 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   check.request.path.push_back(footprintPath);
 
   // Sending service request.
-  ROS_DEBUG("Sending request to %s.", serviceName_.c_str());
-  serviceClient_.waitForExistence();
-  ROS_DEBUG("Sending request to %s.", serviceName_.c_str());
-  if (!serviceClient_.call(check)) {
-    ROS_ERROR("Failed to call service %s.", serviceName_.c_str());
+  ROS_DEBUG("Sending request to %s.", checkFootprintPathServiceName_.c_str());
+  checkFootprintPathServiceClient_.waitForExistence();
+  ROS_DEBUG("Sending request to %s.", checkFootprintPathServiceName_.c_str());
+  if (!checkFootprintPathServiceClient_.call(check)) {
+    ROS_ERROR("Failed to call service %s.", checkFootprintPathServiceName_.c_str());
     return;
   }
 

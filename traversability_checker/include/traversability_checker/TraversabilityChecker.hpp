@@ -19,6 +19,9 @@
 // STD
 #include <string>
 
+// traversability msgs
+#include <traversability_msgs/Overwrite.h>
+
 namespace traversability_checker {
 
 class TraversabilityChecker
@@ -35,6 +38,8 @@ class TraversabilityChecker
 
   bool readParameters();
 
+  bool overwriteService(traversability_msgs::Overwrite::Request& request, traversability_msgs::Overwrite::Response& response);
+
   /*!
    * Publish the status of the traversability safety.
    * @param safetyStatus the status of the traversability
@@ -48,8 +53,10 @@ class TraversabilityChecker
   ros::Publisher safetyPublisher_;
   ros::Timer timer_;
   ros::Duration timerDuration_;
-  ros::ServiceClient serviceClient_;
-  std::string serviceName_;
+  ros::ServiceClient checkFootprintPathServiceClient_;
+  std::string checkFootprintPathServiceName_;
+  ros::ServiceServer overwriteServiceServer_;
+  std::string overwriteServiceName_;
   ros::Subscriber robotPoseSubscriber_;
   std::string robotPoseTopic_;
   ros::Subscriber twistSubscriber_;
@@ -57,6 +64,7 @@ class TraversabilityChecker
   bool useTwistWithCovariance_;
   double extrapolationDuration_;
   double footprintRadius_;
+  bool overwrite_;
   geometry_msgs::PoseStamped robotPose_;
   geometry_msgs::TwistStamped twist_;
 
