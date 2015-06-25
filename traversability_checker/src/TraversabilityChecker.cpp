@@ -88,13 +88,9 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
     ROS_WARN_STREAM_THROTTLE(5, nodeHandle_.getNamespace() << ": No robot pose received yet.");
     return;
   }
-  if (twist_.header.stamp.isZero()) {
-    ROS_WARN_STREAM_THROTTLE(5, nodeHandle_.getNamespace() << ": No robot twist received yet.");
-    return;
-  }
 
   if (ros::Time::now() - twist_.header.stamp >= ros::Duration(10.0)) {
-    ROS_INFO_STREAM(nodeHandle_.getNamespace() << ": Twist too old, checking traversability with zero velocity.");
+    ROS_INFO_STREAM(nodeHandle_.getNamespace() << ": Twist not received yet or too old, checking traversability with zero velocity.");
     twist_.header = robotPose_.header;
     twist_.twist.linear.x = 0.0;
     twist_.twist.linear.y = 0.0;
@@ -102,7 +98,6 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
     twist_.twist.angular.x = 0.0;
     twist_.twist.angular.y = 0.0;
     twist_.twist.angular.z = 0.0;
-    return;
   }
 
   const geometry_msgs::Pose& startPose = robotPose_.pose;
