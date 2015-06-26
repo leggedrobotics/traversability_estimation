@@ -311,7 +311,7 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
 //          return true;
         result.traversability += traversability / (arraySize - 1);
       }
-      result.area = polygon.getArea();
+//      result.area = polygon.getArea();
     }
   } else {
     grid_map::Polygon polygon1, polygon2;
