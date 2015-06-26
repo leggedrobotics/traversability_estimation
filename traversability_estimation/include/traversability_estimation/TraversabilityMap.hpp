@@ -118,6 +118,8 @@ class TraversabilityMap
    */
   bool isTraversable(const grid_map::Polygon& polygon, double& traversability);
 
+  bool isTraversable(const grid_map::Position& center, const double& radius, double& traversability);
+
   /*!
    * Checks if the overall inclination of the robot on a line between two
    * positions is feasible.
@@ -125,8 +127,8 @@ class TraversabilityMap
    * @param[in] end last position of the line.
    * @return true if the whole line has a feasible inclination, false otherwise.
    */
-  bool checkInclination(const grid_map::Position start,
-                        const grid_map::Position end);
+  bool checkInclination(const grid_map::Position& start,
+                        const grid_map::Position& end);
 
   /*!
    * Checks if there are steps (obstacles) within a submap defined by a polygon.
