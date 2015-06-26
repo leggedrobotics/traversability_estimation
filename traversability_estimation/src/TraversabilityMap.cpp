@@ -38,9 +38,9 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
       robotSlopeType_("robot_slope"),
       filter_chain_("grid_map::GridMap"),
       elevationMapInitialized_(false),
-      traversabilityMapInitialized_(false),
-      timerId_("check_footprint_timer"),
-      timer_(timerId_, true)
+      traversabilityMapInitialized_(false)
+//      timerId_("check_footprint_timer"),
+//      timer_(timerId_, true)
 {
   ROS_INFO("Traversability Map started.");
 //  ProfilerStart("/home/martiwer/Documents/Profile/traversability_map.prof");
@@ -131,7 +131,7 @@ grid_map::GridMap TraversabilityMap::getTraversabilityMap()
 bool TraversabilityMap::computeTraversability()
 {
   // reset check footprint timer.
-  sm::timing::Timing::reset(timerId_);
+//  sm::timing::Timing::reset(timerId_);
   // Initialize timer.
   string timerId = "traversability";
   sm::timing::Timer timer(timerId, true);
@@ -251,8 +251,8 @@ bool TraversabilityMap::traversabilityFootprint(double footprintYaw)
 
 bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintPath& path, traversability_msgs::TraversabilityResult& result)
 {
-  if (timer_.isTiming()) timer_.stop();
-  timer_.start();
+//  if (timer_.isTiming()) timer_.stop();
+//  timer_.start();
 
   if (!traversabilityMap_.exists(traversabilityType_)) {
     ROS_WARN("Traversability Estimation: Failed to retrieve traversability map.");
@@ -380,11 +380,11 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
 
   result.is_safe = true;
   ROS_DEBUG_STREAM("Traversability: " << result.traversability);
-  timer_.stop();
-  ROS_DEBUG("Mean: %f s, Min: %f s, Max: %f s.",
-            sm::timing::Timing::getMeanSeconds(timerId_),
-            sm::timing::Timing::getMinSeconds(timerId_),
-            sm::timing::Timing::getMaxSeconds(timerId_));
+//  timer_.stop();
+//  ROS_DEBUG("Mean: %f s, Min: %f s, Max: %f s.",
+//            sm::timing::Timing::getMeanSeconds(timerId_),
+//            sm::timing::Timing::getMinSeconds(timerId_),
+//            sm::timing::Timing::getMaxSeconds(timerId_));
 
   return true;
 }

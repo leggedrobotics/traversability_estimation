@@ -177,9 +177,9 @@ class TraversabilityMap
   std::vector<std::string> elevationMapLayers_;
   bool elevationMapInitialized_;
 
-  //! Timer
-  std::string timerId_;
-  sm::timing::Timer timer_;
+//  //! Timer
+//  std::string timerId_;
+//  sm::timing::Timer timer_;
 };
 
 } /* namespace */
