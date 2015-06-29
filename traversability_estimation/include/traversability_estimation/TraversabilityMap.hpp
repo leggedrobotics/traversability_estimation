@@ -100,6 +100,8 @@ class TraversabilityMap
    */
   grid_map::GridMap getTraversabilityMap();
 
+  void resetTraversabilityFootprintLayers();
+
  private:
 
   /*!

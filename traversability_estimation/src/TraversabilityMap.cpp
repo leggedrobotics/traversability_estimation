@@ -128,6 +128,16 @@ grid_map::GridMap TraversabilityMap::getTraversabilityMap()
   return traversabilityMap_;
 }
 
+void TraversabilityMap::resetTraversabilityFootprintLayers()
+{
+  std::vector<std::string> clearLayers;
+  if (traversabilityMap_.exists("step_footprint")) clearLayers.push_back("step_footprint");
+  if (traversabilityMap_.exists("slope_footprint")) clearLayers.push_back("slope_footprint");
+  if (traversabilityMap_.exists("traversability_footprint")) clearLayers.push_back("traversability_footprint");
+  traversabilityMap_.setBasicLayers(clearLayers);
+  traversabilityMap_.clear();
+}
+
 bool TraversabilityMap::computeTraversability()
 {
   // reset check footprint timer.
@@ -691,17 +701,6 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
     }
   }
 
-//  for (grid_map::PolygonIterator polygonIterator(traversabilityMap_,
-//                                                 polygon);
-//      !polygonIterator.isPassedEnd(); ++polygonIterator) {
-//    nCells++;
-//    if (!traversabilityMap_.isValid(*polygonIterator,
-//                                    traversabilityType_)) {
-//      traversability += traversabilityDefault_;
-//    } else {
-//      traversability += traversabilityMap_.at(traversabilityType_, *polygonIterator);
-//    }
-//  }
   traversability /= nCells;
   traversabilityMap_.at("traversability_footprint", indexCenter) = traversability;
   return true;
