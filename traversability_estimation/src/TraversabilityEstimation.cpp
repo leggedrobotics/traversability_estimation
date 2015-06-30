@@ -272,7 +272,7 @@ bool TraversabilityEstimation::traversabilityFootprint(std_srvs::Empty::Request&
   Eigen::Quaterniond orientationX = xquat.toImplementation();
   Eigen::Quaterniond orientationRot = rquat.toImplementation();
 
-  for (grid_map::GridMapIterator iterator(traversabilityMap_); !iterator.isPassedEnd(); ++iterator) {
+  for (grid_map::GridMapIterator iterator(traversabilityMap_); !iterator.isPastEnd(); ++iterator) {
     polygonX.removeVertices();
     polygonRot.removeVertices();
     traversabilityMap_.getPosition(*iterator, position);
@@ -487,7 +487,7 @@ bool TraversabilityEstimation::isTraversable(const grid_map::Polygon& polygon, d
 
   // Check for traversability.
   for (grid_map::PolygonIterator polygonIterator(traversabilityMap_, polygon);
-      !polygonIterator.isPassedEnd(); ++polygonIterator) {
+      !polygonIterator.isPastEnd(); ++polygonIterator) {
 
     // Check for steps
     if (traversabilityMap_.at(stepType_, *polygonIterator) == 0.0)
@@ -503,7 +503,7 @@ bool TraversabilityEstimation::isTraversable(const grid_map::Polygon& polygon, d
       int nSlopes = 0;
       for (grid_map::CircleIterator circleIterator(traversabilityMap_, center,
                                                    windowRadius);
-          !circleIterator.isPassedEnd(); ++circleIterator) {
+          !circleIterator.isPastEnd(); ++circleIterator) {
         if (traversabilityMap_.at(slopeType_, *circleIterator) == 0.0)
           nSlopes++;
         if (nSlopes > nSlopesCritical)
@@ -519,7 +519,7 @@ bool TraversabilityEstimation::isTraversable(const grid_map::Polygon& polygon, d
       int nRoughness = 0;
       for (grid_map::CircleIterator circleIterator(traversabilityMap_, center,
                                                    windowRadius);
-          !circleIterator.isPassedEnd(); ++circleIterator) {
+          !circleIterator.isPastEnd(); ++circleIterator) {
         if (traversabilityMap_.at(roughnessType_, *circleIterator) == 0.0)
           nRoughness++;
         if (nRoughness > (nSlopesCritical * 0.75))
@@ -530,7 +530,7 @@ bool TraversabilityEstimation::isTraversable(const grid_map::Polygon& polygon, d
 
   for (grid_map::PolygonIterator polygonIterator(traversabilityMap_,
                                                  polygon);
-      !polygonIterator.isPassedEnd(); ++polygonIterator) {
+      !polygonIterator.isPastEnd(); ++polygonIterator) {
     nCells++;
     if (!traversabilityMap_.isValid(*polygonIterator,
                                     traversabilityType_)) {
@@ -551,7 +551,7 @@ bool TraversabilityEstimation::checkInclination(const grid_map::Position start, 
     grid_map::Index startIndex, endIndex;
     traversabilityMap_.getIndex(start, startIndex);
     traversabilityMap_.getIndex(end, endIndex);
-    for (grid_map::LineIterator lineIterator(traversabilityMap_, startIndex, endIndex); !lineIterator.isPassedEnd(); ++lineIterator) {
+    for (grid_map::LineIterator lineIterator(traversabilityMap_, startIndex, endIndex); !lineIterator.isPastEnd(); ++lineIterator) {
       if (!traversabilityMap_.isValid(*lineIterator, robotSlopeType_)) continue;
       if (traversabilityMap_.at(robotSlopeType_, *lineIterator) == 0.0) return false;
     }
