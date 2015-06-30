@@ -65,7 +65,7 @@ bool SlopeFilter<T>::update(const T& mapIn, T& mapOut)
   double slope, slopeMax = 0.0;
 
   for (GridMapIterator iterator(mapOut);
-      !iterator.isPassedEnd(); ++iterator) {
+      !iterator.isPastEnd(); ++iterator) {
 
     // Check if there is a surface normal (empty cell).
     if (!mapOut.isValid(*iterator, "surface_normal_z")) continue;
