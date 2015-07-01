@@ -109,7 +109,7 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
   double height, step;
 
   // First iteration through the elevation map.
-  for (GridMapIterator iterator(mapOut); !iterator.isPassedEnd(); ++iterator) {
+  for (GridMapIterator iterator(mapOut); !iterator.isPastEnd(); ++iterator) {
     if (!mapOut.isValid(*iterator, "elevation"))
       continue;
     height = mapOut.at("elevation", *iterator);
@@ -122,7 +122,7 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
     // Get the highest step in the circular window.
     bool init = false;
     for (CircleIterator submapIterator(mapOut, center, firstWindowRadius_);
-        !submapIterator.isPassedEnd(); ++submapIterator) {
+        !submapIterator.isPastEnd(); ++submapIterator) {
       if (!mapOut.isValid(*submapIterator, "elevation"))
         continue;
       height = mapOut.at("elevation", *submapIterator);
@@ -144,7 +144,7 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
   }
 
   // Second iteration through the elevation map.
-  for (GridMapIterator iterator(mapOut); !iterator.isPassedEnd(); ++iterator) {
+  for (GridMapIterator iterator(mapOut); !iterator.isPastEnd(); ++iterator) {
     int nCells = 0;
     double stepMax = 0.0;
     bool isValid = false;
@@ -155,7 +155,7 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
 
     // Compute the step height.
     for (CircleIterator submapIterator(mapOut, center, secondWindowRadius_);
-        !submapIterator.isPassedEnd(); ++submapIterator) {
+        !submapIterator.isPastEnd(); ++submapIterator) {
       if (!mapOut.isValid(*submapIterator, "step_height"))
         continue;
       isValid = true;

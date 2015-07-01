@@ -84,7 +84,7 @@ bool SurfaceNormalsFilter<T>::update(const T& mapIn, T& mapOut)
 
   // For each cell in requested area.
   for (GridMapIterator iterator(mapOut);
-      !iterator.isPassedEnd(); ++iterator) {
+      !iterator.isPastEnd(); ++iterator) {
     // Check if this is an empty cell (hole in the map).
     if (!mapOut.isValid(*iterator, "elevation")) continue;
     // Check if surface normal for this cell has already been computed earlier.
@@ -101,7 +101,7 @@ bool SurfaceNormalsFilter<T>::update(const T& mapIn, T& mapOut)
     // Gather surrounding data.
     size_t nPoints = 0;
     for (CircleIterator submapIterator(mapOut, center, estimationRadius_);
-        !submapIterator.isPassedEnd(); ++submapIterator) {
+        !submapIterator.isPastEnd(); ++submapIterator) {
       if (!mapOut.isValid(*submapIterator, "elevation")) continue;
       Position3 point;
       mapOut.getPosition3("elevation", *submapIterator, point);

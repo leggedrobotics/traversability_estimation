@@ -78,7 +78,7 @@ bool RoughnessFilter<T>::update(const T& mapIn, T& mapOut)
   double roughnessMax = 0.0;
 
   for (GridMapIterator iterator(mapOut);
-      !iterator.isPassedEnd(); ++iterator) {
+      !iterator.isPastEnd(); ++iterator) {
 
     // Check if this is an empty cell (hole in the map).
     if (!mapOut.isValid(*iterator, "surface_normal_x")) continue;
@@ -94,7 +94,7 @@ bool RoughnessFilter<T>::update(const T& mapIn, T& mapOut)
     // Gather surrounding data.
     size_t nPoints = 0;
     for (CircleIterator submapIterator(mapOut, center, estimationRadius_);
-        !submapIterator.isPassedEnd(); ++submapIterator) {
+        !submapIterator.isPastEnd(); ++submapIterator) {
       if (!mapOut.isValid(*submapIterator, "elevation")) continue;
       Vector3d point;
       mapOut.getPosition3("elevation", *submapIterator, point);
