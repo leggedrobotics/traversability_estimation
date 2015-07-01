@@ -133,12 +133,22 @@ class TraversabilityMap
                         const grid_map::Position& end);
 
   /*!
-   * Checks if there are steps (obstacles) within a submap defined by a polygon.
+   * Checks if the map is traversable, only regarding steps, at the position defined
+   * by the map index.
    * Small ditches and holes are not detected as steps.
-   * @param[in] polygon polygon that defines submap of the traversability map.
-   * @return true if the whole polygon has no steps, false otherwise.
+   * @param[in] index index of the map to check.
+   * @return true if no step is detected, false otherwise.
    */
-  bool checkForStep(const grid_map::Polygon& polygon);
+  bool checkForStep(const grid_map::Index& indexStep);
+
+  /*!
+   * Checks if the map is traversable, only regarding slope, at the position defined
+   * by the map index.
+   * Small local slopes are not detected as slopes.
+   * @param[in] index index of the map to check.
+   * @return true if no step is detected, false otherwise.
+   */
+  bool checkForSlope(const grid_map::Index& index);
 
   //! ROS node handle.
   ros::NodeHandle& nodeHandle_;
