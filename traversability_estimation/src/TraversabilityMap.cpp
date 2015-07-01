@@ -421,34 +421,37 @@ bool TraversabilityMap::isTraversable(grid_map::Polygon& polygon, double& traver
   std::vector<grid_map::Position> vertices = polygon.getVertices();
   grid_map::Index index;
   for (auto& vertex : vertices) {
-    traversabilityMap_.getIndex(vertex, index);
-    if (!polygon.isInside(vertex)) {
-      index[0] -= 1;
-      index[1] -= 1;
-      grid_map::Index newIndex;
-      grid_map::Position newPos;
-      bool inside = false;
-      for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-          newIndex[0] = index[0] + i;
-          newIndex[1] = index[1] + j;
-          traversabilityMap_.getPosition(newIndex, newPos);
-          if (polygon.isInside(newPos)) {
-            inside = true;
+    if (traversabilityMap_.getIndex(vertex, index)) {
+      if (!polygon.isInside(vertex)) {
+        index[0] -= 1;
+        index[1] -= 1;
+        grid_map::Index newIndex;
+        grid_map::Position newPos;
+        bool inside = false;
+        for (int i = 0; i < 3; i++) {
+          for (int j = 0; j < 3; j++) {
+            newIndex[0] = index[0] + i;
+            newIndex[1] = index[1] + j;
+            if (traversabilityMap_.getPosition(newIndex, newPos)) {
+              if (polygon.isInside(newPos)) {
+                inside = true;
+                break;
+              }
+            }
+          }
+          if (inside) {
+            index = newIndex;
             break;
           }
         }
-        if (inside) {
-          index = newIndex;
-          break;
-        }
       }
+      indices.push_back(index);
     }
-    indices.push_back(index);
   }
+
   for (auto& checkIndex : indices) {
     if (!checkForSlope(checkIndex)) return false;
-    if (!checkForSlope(checkIndex)) return false;
+    if (!checkForStep(checkIndex)) return false;
   }
 
   // Iterate through polygon and check for traversability.
@@ -459,7 +462,7 @@ bool TraversabilityMap::isTraversable(grid_map::Polygon& polygon, double& traver
     if (!checkForSlope(*polygonIterator)) return false;
 
     // Check for steps
-    if (!checkForSlope(*polygonIterator)) return false;
+    if (!checkForStep(*polygonIterator)) return false;
 
     // Check for roughness (not used at the moment!)
 //    if (traversabilityMap_.at(roughnessType_, *polygonIterator) == 0.0) {
