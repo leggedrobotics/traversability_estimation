@@ -118,7 +118,7 @@ class TraversabilityMap
    * is the mean of each cell within the polygon.
    * @return true if the whole polygon is traversable, false otherwise.
    */
-  bool isTraversable(const grid_map::Polygon& polygon, double& traversability);
+  bool isTraversable(grid_map::Polygon& polygon, double& traversability);
 
   bool isTraversable(const grid_map::Position& center, const double& radius, double& traversability);
 

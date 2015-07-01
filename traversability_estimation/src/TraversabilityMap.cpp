@@ -411,10 +411,45 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
   return true;
 }
 
-bool TraversabilityMap::isTraversable(const grid_map::Polygon& polygon, double& traversability)
+bool TraversabilityMap::isTraversable(grid_map::Polygon& polygon, double& traversability)
 {
   int nCells = 0;
   traversability = 0.0;
+
+  // Check vertices of Polygon
+  std::vector<grid_map::Index> indices;
+  std::vector<grid_map::Position> vertices = polygon.getVertices();
+  grid_map::Index index;
+  for (auto& vertex : vertices) {
+    traversabilityMap_.getIndex(vertex, index);
+    if (!polygon.isInside(vertex)) {
+      index[0] -= 1;
+      index[1] -= 1;
+      grid_map::Index newIndex;
+      grid_map::Position newPos;
+      bool inside = false;
+      for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+          newIndex[0] = index[0] + i;
+          newIndex[1] = index[1] + j;
+          traversabilityMap_.getPosition(newIndex, newPos);
+          if (polygon.isInside(newPos)) {
+            inside = true;
+            break;
+          }
+        }
+        if (inside) {
+          index = newIndex;
+          break;
+        }
+      }
+    }
+    indices.push_back(index);
+  }
+  for (auto& checkIndex : indices) {
+    if (!checkForSlope(checkIndex)) return false;
+    if (!checkForSlope(checkIndex)) return false;
+  }
 
   // Iterate through polygon and check for traversability.
   for (grid_map::PolygonIterator polygonIterator(traversabilityMap_, polygon);
@@ -424,7 +459,7 @@ bool TraversabilityMap::isTraversable(const grid_map::Polygon& polygon, double& 
     if (!checkForSlope(*polygonIterator)) return false;
 
     // Check for steps
-    if (!checkForStep(*polygonIterator)) return false;
+    if (!checkForSlope(*polygonIterator)) return false;
 
     // Check for roughness (not used at the moment!)
 //    if (traversabilityMap_.at(roughnessType_, *polygonIterator) == 0.0) {
@@ -520,7 +555,6 @@ bool TraversabilityMap::updateFilter()
 
 bool TraversabilityMap::checkForStep(const grid_map::Index& indexStep)
 {
-  ROS_INFO_STREAM(indexStep);
   if (traversabilityMap_.at(stepType_, indexStep) == 0.0) {
     if (!traversabilityMap_.isValid(indexStep, "step_footprint")) {
       double windowRadiusStep = 0.075;
