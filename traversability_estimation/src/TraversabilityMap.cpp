@@ -38,7 +38,9 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
       robotSlopeType_("robot_slope"),
       filter_chain_("grid_map::GridMap"),
       elevationMapInitialized_(false),
-      traversabilityMapInitialized_(false)
+      traversabilityMapInitialized_(false),
+      nTraversable_(0),
+      nNotTraversable_(0)
 //      timerId_("check_footprint_timer"),
 //      timer_(timerId_, true)
 {
@@ -121,6 +123,15 @@ bool TraversabilityMap::setTraversabilityMap(const grid_map_msgs::GridMap& msg)
   traversabilityMap_ = traversabilityMap;
   traversabilityMapInitialized_ = true;
   return true;
+}
+
+void TraversabilityMap::printTraversableFraction()
+{
+  ROS_INFO_STREAM("Traversability Map: nTraversable = " << nTraversable_);
+  ROS_INFO_STREAM("Traversability Map: nNotTraversable = " << nNotTraversable_);
+  ROS_INFO_STREAM("Traversability Map: Traversable Fraction = " << (double) nTraversable_ / (double) (nTraversable_ + nNotTraversable_));
+  nTraversable_ = 0;
+  nNotTraversable_ = 0;
 }
 
 grid_map::GridMap TraversabilityMap::getTraversabilityMap()
@@ -292,8 +303,10 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
 //        polygon = polygon.convexHullCircle(end, radius);
 //        if (!checkInclination(end, end))
 //          return true;
-        if (!isTraversable(end, radius, traversability))
+        if (!isTraversable(end, radius, traversability)) {
+          nNotTraversable_++;
           return true;
+        }
         result.traversability = traversability;
       }
 
@@ -309,7 +322,10 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
         for (grid_map::LineIterator lineIterator(traversabilityMap_, startIndex, endIndex); !lineIterator.isPastEnd(); ++lineIterator) {
           grid_map::Position center;
           traversabilityMap_.getPosition(*lineIterator, center);
-          if (!isTraversable(center, radius, traversabilityTemp)) return true;
+          if (!isTraversable(center, radius, traversabilityTemp)) {
+            nNotTraversable_++;
+            return true;
+          }
           traversabilitySum += traversabilityTemp;
           nLine++;
         }
@@ -371,8 +387,10 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
         polygon = polygon2;
 //        if (!checkInclination(end, end))
 //          return true;
-        if (!isTraversable(polygon, traversability))
+        if (!isTraversable(polygon, traversability)) {
+          nNotTraversable_++;
           return true;
+        }
         result.traversability = traversability;
         result.area = polygon.getArea();
       }
@@ -381,8 +399,10 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
         polygon = polygon.convexHull(polygon1, polygon2);
 //        if (!checkInclination(start, end))
 //          return true;
-        if (!isTraversable(polygon, traversability))
+        if (!isTraversable(polygon, traversability)) {
+          nNotTraversable_++;
           return true;
+        }
         result.traversability += traversability / (arraySize - 1);
         if (i > 1) {
           result.area += polygon.getArea() - polygon1.getArea();
@@ -400,6 +420,7 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
   if (!footprintPolygonPublisher_.getNumSubscribers() < 1)
     footprintPolygonPublisher_.publish(polygonMsg);
 
+  nTraversable_++;
   result.is_safe = true;
   ROS_DEBUG_STREAM("Traversability: " << result.traversability);
 //  timer_.stop();
@@ -448,10 +469,17 @@ bool TraversabilityMap::isTraversable(grid_map::Polygon& polygon, double& traver
       indices.push_back(index);
     }
   }
+  grid_map::Position centroid = polygon.getCentroid();
+  traversabilityMap_.getIndex(centroid, index);
+  indices.push_back(index);
 
   for (auto& checkIndex : indices) {
-    if (!checkForSlope(checkIndex)) return false;
-    if (!checkForStep(checkIndex)) return false;
+    if (!checkForSlope(checkIndex)) {
+      return false;
+    }
+    if (!checkForStep(checkIndex)) {
+      return false;
+    }
   }
 
   // Iterate through polygon and check for traversability.

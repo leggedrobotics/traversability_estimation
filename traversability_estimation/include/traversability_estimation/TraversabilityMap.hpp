@@ -102,6 +102,8 @@ class TraversabilityMap
 
   void resetTraversabilityFootprintLayers();
 
+  void printTraversableFraction();
+
  private:
 
   /*!
@@ -190,6 +192,9 @@ class TraversabilityMap
   grid_map::GridMap elevationMap_;
   std::vector<std::string> elevationMapLayers_;
   bool elevationMapInitialized_;
+
+  int nTraversable_;
+  int nNotTraversable_;
 
 //  //! Timer
 //  std::string timerId_;
