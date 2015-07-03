@@ -104,6 +104,8 @@ class TraversabilityMap
 
   void printTraversableFraction();
 
+  void publishTraversabilityMap();
+
  private:
 
   /*!
@@ -122,7 +124,7 @@ class TraversabilityMap
    */
   bool isTraversable(grid_map::Polygon& polygon, double& traversability);
 
-  bool isTraversable(const grid_map::Position& center, const double& radius, double& traversability);
+  bool isTraversable(const grid_map::Position& center, const double& radiusMax, double& traversability, const double& radiusMin = 0);
 
   /*!
    * Checks if the overall inclination of the robot on a line between two
