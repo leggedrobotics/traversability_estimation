@@ -27,8 +27,8 @@
 #include <vector>
 #include <string>
 
-// Eigen
-#include <Eigen/Core>
+// Boost
+#include <boost/thread/recursive_mutex.hpp>
 
 namespace traversability_estimation {
 
@@ -197,6 +197,10 @@ class TraversabilityMap
 
   int nTraversable_;
   int nNotTraversable_;
+
+  //! Mutex lock for traversability map.
+  boost::recursive_mutex traversabilityMapMutex_;
+  boost::recursive_mutex elevationMapMutex_;
 
 //  //! Timer
 //  std::string timerId_;

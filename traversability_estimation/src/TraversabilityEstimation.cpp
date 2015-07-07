@@ -115,9 +115,11 @@ void TraversabilityEstimation::updateTimerCallback(const ros::TimerEvent& timerE
 
 bool TraversabilityEstimation::updateServiceCallback(grid_map_msgs::GetGridMapInfo::Request&, grid_map_msgs::GetGridMapInfo::Response& response)
 {
-  if (!updateTraversability()) {
-    ROS_ERROR("Traversability Estimation: Cannot update traversability!");
-    return false;
+  if (updateDuration_.isZero()) {
+    if (!updateTraversability()) {
+      ROS_ERROR("Traversability Estimation: Cannot update traversability!");
+      return false;
+    }
   }
   grid_map_msgs::GridMap msg;
   grid_map::GridMap traversabilityMap = traversabilityMap_.getTraversabilityMap();

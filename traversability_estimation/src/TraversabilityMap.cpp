@@ -97,6 +97,7 @@ bool TraversabilityMap::readParameters()
 
 bool TraversabilityMap::setElevationMap(const grid_map_msgs::GridMap& msg)
 {
+  boost::recursive_mutex::scoped_lock scopedLockForElevationMap(elevationMapMutex_);
   grid_map::GridMap elevationMap;
   grid_map::GridMapRosConverter::fromMessage(msg, elevationMap);
   for (auto& layer : elevationMapLayers_) {
@@ -112,6 +113,7 @@ bool TraversabilityMap::setElevationMap(const grid_map_msgs::GridMap& msg)
 
 bool TraversabilityMap::setTraversabilityMap(const grid_map_msgs::GridMap& msg)
 {
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   grid_map::GridMap traversabilityMap;
   grid_map::GridMapRosConverter::fromMessage(msg, traversabilityMap);
   for (auto& layer : traversabilityMapLayers_) {
@@ -145,11 +147,13 @@ void TraversabilityMap::publishTraversabilityMap()
 
 grid_map::GridMap TraversabilityMap::getTraversabilityMap()
 {
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   return traversabilityMap_;
 }
 
 void TraversabilityMap::resetTraversabilityFootprintLayers()
 {
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   if (traversabilityMap_.exists("step_footprint")) traversabilityMap_.clear("step_footprint");
   if (traversabilityMap_.exists("slope_footprint")) traversabilityMap_.clear("slope_footprint");
   if (traversabilityMap_.exists("traversability_footprint")) traversabilityMap_.clear("traversability_footprint");
@@ -157,6 +161,8 @@ void TraversabilityMap::resetTraversabilityFootprintLayers()
 
 bool TraversabilityMap::computeTraversability()
 {
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
+  boost::recursive_mutex::scoped_lock scopedLockForElevationMap(elevationMapMutex_);
   // reset check footprint timer.
 //  sm::timing::Timing::reset(timerId_);
   // Initialize timer.
@@ -308,6 +314,7 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
         grid_map::Index startIndex, endIndex;
         traversabilityMap_.getIndex(start, startIndex);
         traversabilityMap_.getIndex(end, endIndex);
+        int nSkip = 3; // TODO: Remove magic number.
         for (grid_map::LineIterator lineIterator(traversabilityMap_, endIndex, startIndex); !lineIterator.isPastEnd(); ++lineIterator) {
           grid_map::Position center;
           traversabilityMap_.getPosition(*lineIterator, center);
@@ -317,6 +324,9 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
           }
           traversabilitySum += traversabilityTemp;
           nLine++;
+          for (int j = 0; j < nSkip; j++) {
+            if (!lineIterator.isPastEnd()) ++lineIterator;
+          }
         }
         traversability = traversabilitySum / (double) nLine;
 //        if (!isTraversable(polygon, traversability))
