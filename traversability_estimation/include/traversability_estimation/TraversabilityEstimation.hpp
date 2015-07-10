@@ -107,6 +107,14 @@ class TraversabilityEstimation
   bool getTraversabilityMap(grid_map_msgs::GetGridMap::Request& request,
                              grid_map_msgs::GetGridMap::Response& response);
 
+  /*!
+   * Saves the grid map with all layer to a ROS bag.
+   * @param request the ROS service request.
+   * @param response the ROS service response.
+   * @return true if successful.
+   */
+  bool saveToBag(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+
  private:
 
   /*!
@@ -146,6 +154,7 @@ class TraversabilityEstimation
   ros::ServiceServer getTraversabilityService_;
   ros::ServiceServer updateParameters_;
   ros::ServiceServer traversabilityFootprint_;
+  ros::ServiceServer saveToBagService_;
 
   //! Image subscriber.
   ros::Subscriber imageSubscriber_;

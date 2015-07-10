@@ -263,6 +263,17 @@ bool TraversabilityMap::traversabilityFootprint(double footprintYaw)
   return true;
 }
 
+bool TraversabilityMap::traversabilityFootprint(const double& radius, const double& offset)
+{
+  double traversability;
+  grid_map::Position center;
+  for (grid_map::GridMapIterator iterator(traversabilityMap_); !iterator.isPastEnd(); ++iterator) {
+    traversabilityMap_.getPosition(*iterator, center);
+    isTraversable(center, radius + offset, traversability, radius);
+  }
+  return true;
+}
+
 bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintPath& path, traversability_msgs::TraversabilityResult& result)
 {
 //  if (timer_.isTiming()) timer_.stop();
@@ -538,17 +549,24 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
 
     if (radiusMin == 0.0) {
       // Check for slopes
-      if (!checkForSlope(*iterator)) return false;
+      if (!checkForSlope(*iterator)) {
+        traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
+        return false;
+      }
 
       // Check for steps
       if (!checkForStep(*iterator)) {
+        traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
         return false;
       }
     } else {
       // Check for slopes
       if (!checkForSlope(*iterator)) {
         double radius = iterator.getCurrentRadius();
-        if (radius <= radiusMin) return false;
+        if (radius <= radiusMin) {
+          traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
+          return false;
+        }
         double factor = ((radius - radiusMin) / (radiusMax - radiusMin) + 1.0) / 2.0;
         traversability *= factor / nCells;
         traversabilityMap_.at("traversability_footprint", indexCenter) = traversability;
@@ -558,7 +576,10 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
       // Check for steps
       if (!checkForStep(*iterator)) {
         double radius = iterator.getCurrentRadius();
-        if (radius <= radiusMin) return false;
+        if (radius <= radiusMin) {
+          traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
+          return false;
+        }
         double factor = ((radius - radiusMin) / (radiusMax - radiusMin) + 1.0) / 2.0;
         traversability *= factor / nCells;
         traversabilityMap_.at("traversability_footprint", indexCenter) = traversability;

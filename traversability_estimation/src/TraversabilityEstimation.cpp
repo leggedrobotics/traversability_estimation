@@ -45,6 +45,7 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
   footprintPathService_ = nodeHandle_.advertiseService("check_footprint_path", &TraversabilityEstimation::checkFootprintPath, this);
   updateParameters_ = nodeHandle_.advertiseService("update_parameters", &TraversabilityEstimation::updateParameter, this);
   traversabilityFootprint_ = nodeHandle_.advertiseService("traversability_footprint", &TraversabilityEstimation::traversabilityFootprint, this);
+  saveToBagService_ = nodeHandle_.advertiseService("save_to_bag", &TraversabilityEstimation::saveToBag, this);
   imageSubscriber_ = nodeHandle_.subscribe(imageTopic_,1,&TraversabilityEstimation::imageCallback, this);
 
   elevationMapLayers_.push_back("elevation");
@@ -261,6 +262,15 @@ bool TraversabilityEstimation::getTraversabilityMap(
     grid_map::GridMapRosConverter::toMessage(subMap, layers, response.map);
   }
   return isSuccess;
+}
+
+bool TraversabilityEstimation::saveToBag(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+{
+  ROS_INFO("Save to bag.");
+  string pathToBag = ros::package::getPath("body_path_planner");
+  pathToBag += "/global_maps/flat.bag";
+  std::string topic = "traversability_map";
+  return grid_map::GridMapRosConverter::saveToBag(traversabilityMap_.getTraversabilityMap(), pathToBag, topic);
 }
 
 } /* namespace */

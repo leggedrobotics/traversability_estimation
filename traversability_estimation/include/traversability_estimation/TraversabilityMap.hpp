@@ -73,6 +73,7 @@ class TraversabilityMap
    * @return true if successful.
    */
   bool traversabilityFootprint(double footprintYaw);
+  bool traversabilityFootprint(const double& radius, const double& offset);
 
   /*!
    * The filter chain is reconfigured with the actual parameter on the parameter server.

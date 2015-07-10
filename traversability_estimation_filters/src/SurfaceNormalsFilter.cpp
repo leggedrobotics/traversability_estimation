@@ -71,7 +71,6 @@ bool SurfaceNormalsFilter<T>::configure()
 template<typename T>
 bool SurfaceNormalsFilter<T>::update(const T& mapIn, T& mapOut)
 {
-  ROS_INFO("Computing surface normals...");
   mapOut = mapIn;
   mapOut.add("surface_normal_x");
   mapOut.add("surface_normal_y");
