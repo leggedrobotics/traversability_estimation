@@ -107,6 +107,8 @@ class TraversabilityMap
 
   void publishTraversabilityMap();
 
+  bool traversabilityMapInitialized();
+
  private:
 
   /*!

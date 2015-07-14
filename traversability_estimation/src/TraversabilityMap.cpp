@@ -97,7 +97,6 @@ bool TraversabilityMap::readParameters()
 
 bool TraversabilityMap::setElevationMap(const grid_map_msgs::GridMap& msg)
 {
-  boost::recursive_mutex::scoped_lock scopedLockForElevationMap(elevationMapMutex_);
   grid_map::GridMap elevationMap;
   grid_map::GridMapRosConverter::fromMessage(msg, elevationMap);
   for (auto& layer : elevationMapLayers_) {
@@ -106,6 +105,7 @@ bool TraversabilityMap::setElevationMap(const grid_map_msgs::GridMap& msg)
       return false;
     }
   }
+  boost::recursive_mutex::scoped_lock scopedLockForElevationMap(elevationMapMutex_);
   elevationMap_ = elevationMap;
   elevationMapInitialized_ = true;
   return true;
@@ -113,7 +113,6 @@ bool TraversabilityMap::setElevationMap(const grid_map_msgs::GridMap& msg)
 
 bool TraversabilityMap::setTraversabilityMap(const grid_map_msgs::GridMap& msg)
 {
-  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   grid_map::GridMap traversabilityMap;
   grid_map::GridMapRosConverter::fromMessage(msg, traversabilityMap);
   for (auto& layer : traversabilityMapLayers_) {
@@ -122,6 +121,7 @@ bool TraversabilityMap::setTraversabilityMap(const grid_map_msgs::GridMap& msg)
       return false;
     }
   }
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   traversabilityMap_ = traversabilityMap;
   traversabilityMapInitialized_ = true;
   return true;
@@ -140,7 +140,9 @@ void TraversabilityMap::publishTraversabilityMap()
 {
   if (!traversabilityMapPublisher_.getNumSubscribers() < 1) {
     grid_map_msgs::GridMap mapMessage;
+    boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
     grid_map::GridMapRosConverter::toMessage(traversabilityMap_, mapMessage);
+    scopedLockForTraversabilityMap.unlock();
     traversabilityMapPublisher_.publish(mapMessage);
   }
 }
@@ -149,6 +151,11 @@ grid_map::GridMap TraversabilityMap::getTraversabilityMap()
 {
   boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   return traversabilityMap_;
+}
+
+bool TraversabilityMap::traversabilityMapInitialized()
+{
+  return traversabilityMapInitialized_;
 }
 
 void TraversabilityMap::resetTraversabilityFootprintLayers()
@@ -162,7 +169,11 @@ void TraversabilityMap::resetTraversabilityFootprintLayers()
 bool TraversabilityMap::computeTraversability()
 {
   boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
+  grid_map::GridMap traversabilityMapCopy = traversabilityMap_;
+  scopedLockForTraversabilityMap.unlock();
   boost::recursive_mutex::scoped_lock scopedLockForElevationMap(elevationMapMutex_);
+  grid_map::GridMap elevationMapCopy = elevationMap_;
+  scopedLockForElevationMap.unlock();
   // reset check footprint timer.
 //  sm::timing::Timing::reset(timerId_);
   // Initialize timer.
@@ -172,7 +183,7 @@ bool TraversabilityMap::computeTraversability()
   timer.start();
 
   if (elevationMapInitialized_) {
-    if (!filter_chain_.update(elevationMap_, traversabilityMap_)) {
+    if (!filter_chain_.update(elevationMapCopy, traversabilityMapCopy)) {
       ROS_ERROR("Traversability Estimation: Could not update the filter chain! No traversability computed!");
       traversabilityMapInitialized_ = false;
       return false;
@@ -184,9 +195,13 @@ bool TraversabilityMap::computeTraversability()
     return false;
   }
   traversabilityMapInitialized_ = true;
-  traversabilityMap_.add("step_footprint");
-  traversabilityMap_.add("slope_footprint");
-  traversabilityMap_.add("traversability_footprint");
+  traversabilityMapCopy.add("step_footprint");
+  traversabilityMapCopy.add("slope_footprint");
+  traversabilityMapCopy.add("traversability_footprint");
+
+  scopedLockForTraversabilityMap.lock();
+  traversabilityMap_ = traversabilityMapCopy;
+  scopedLockForTraversabilityMap.unlock();
 
   timer.stop();
   ROS_INFO("Traversability map has been updated in %f s.", sm::timing::Timing::getTotalSeconds(timerId));

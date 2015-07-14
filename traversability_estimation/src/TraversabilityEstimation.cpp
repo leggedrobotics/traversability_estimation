@@ -122,6 +122,10 @@ bool TraversabilityEstimation::updateServiceCallback(grid_map_msgs::GetGridMapIn
       return false;
     }
   }
+  // Wait until traversability map is computed.
+  while (!traversabilityMap_.traversabilityMapInitialized()) {
+    sleep(1.0);
+  }
   grid_map_msgs::GridMap msg;
   grid_map::GridMap traversabilityMap = traversabilityMap_.getTraversabilityMap();
 
@@ -245,6 +249,7 @@ bool TraversabilityEstimation::getTraversabilityMap(
     grid_map_msgs::GetGridMap::Request& request,
     grid_map_msgs::GetGridMap::Response& response)
 {
+  ROS_INFO("Get traversability.");
   grid_map::Position requestedSubmapPosition(request.position_x, request.position_y);
   grid_map::Length requestedSubmapLength(request.length_x, request.length_y);
   grid_map_msgs::GridMap msg;
