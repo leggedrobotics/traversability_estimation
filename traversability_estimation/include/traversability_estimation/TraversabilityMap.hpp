@@ -87,6 +87,7 @@ class TraversabilityMap
    * @return true if successful.
    */
   bool setTraversabilityMap(const grid_map_msgs::GridMap& msg);
+  void setTraversabilityMap(const grid_map::GridMap& map);
 
   /*!
    * Set the elevation map from layers of a grid_map_msgs::GridMap.

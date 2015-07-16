@@ -127,6 +127,12 @@ bool TraversabilityMap::setTraversabilityMap(const grid_map_msgs::GridMap& msg)
   return true;
 }
 
+void TraversabilityMap::setTraversabilityMap(const grid_map::GridMap& map)
+{
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
+  traversabilityMap_ = map;
+}
+
 void TraversabilityMap::printTraversableFraction()
 {
   ROS_INFO_STREAM("Traversability Map: nTraversable = " << nTraversable_);
@@ -188,7 +194,6 @@ bool TraversabilityMap::computeTraversability()
       traversabilityMapInitialized_ = false;
       return false;
     }
-    publishTraversabilityMap();
   } else {
     ROS_ERROR("Traversability Estimation: Elevation map is not initialized!");
     traversabilityMapInitialized_ = false;
@@ -202,6 +207,7 @@ bool TraversabilityMap::computeTraversability()
   scopedLockForTraversabilityMap.lock();
   traversabilityMap_ = traversabilityMapCopy;
   scopedLockForTraversabilityMap.unlock();
+  publishTraversabilityMap();
 
   timer.stop();
   ROS_INFO("Traversability map has been updated in %f s.", sm::timing::Timing::getTotalSeconds(timerId));
