@@ -41,8 +41,6 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
       traversabilityMapInitialized_(false),
       nTraversable_(0),
       nNotTraversable_(0)
-//      timerId_("check_footprint_timer"),
-//      timer_(timerId_, true)
 {
   ROS_INFO("Traversability Map started.");
 //  ProfilerStart("/home/martiwer/Documents/Profile/traversability_map.prof");
@@ -58,7 +56,7 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
   traversabilityMapLayers_.push_back(slopeType_);
   traversabilityMapLayers_.push_back(stepType_);
   traversabilityMapLayers_.push_back(roughnessType_);
-  traversabilityMapLayers_.push_back(robotSlopeType_);
+//  traversabilityMapLayers_.push_back(robotSlopeType_);
 }
 
 TraversabilityMap::~TraversabilityMap()
@@ -71,7 +69,7 @@ bool TraversabilityMap::readParameters()
 {
   // Read footprint polygon.
   XmlRpc::XmlRpcValue footprint;
-  nodeHandle_.getParam("footprint_polygon", footprint);
+  nodeHandle_.getParam("traversability_map/footprint_polygon", footprint);
   if (footprint.size() < 2) {
     ROS_WARN("Footprint polygon must consist of at least 3 points. Only %i points found.", footprint.size());
     footprintPoints_.clear();
@@ -85,8 +83,8 @@ bool TraversabilityMap::readParameters()
     }
   }
 
-  nodeHandle_.param("map_frame_id", mapFrameId_, string("map"));
-  nodeHandle_.param("traversability_default", traversabilityDefault_, 0.5);
+  nodeHandle_.param("traversability_map/frame_id", mapFrameId_, string("map"));
+  nodeHandle_.param("traversability_map/traversability_default", traversabilityDefault_, 0.5);
 
   // Configure filter chain
   if (!filter_chain_.configure("traversability_map_filters", nodeHandle_)) {
@@ -180,9 +178,7 @@ bool TraversabilityMap::computeTraversability()
   boost::recursive_mutex::scoped_lock scopedLockForElevationMap(elevationMapMutex_);
   grid_map::GridMap elevationMapCopy = elevationMap_;
   scopedLockForElevationMap.unlock();
-  // reset check footprint timer.
-//  sm::timing::Timing::reset(timerId_);
-  // Initialize timer.
+
   string timerId = "traversability";
   sm::timing::Timer timer(timerId, true);
   if (timer.isTiming()) timer.stop();
@@ -210,7 +206,7 @@ bool TraversabilityMap::computeTraversability()
   publishTraversabilityMap();
 
   timer.stop();
-  ROS_INFO("Traversability map has been updated in %f s.", sm::timing::Timing::getTotalSeconds(timerId));
+  ROS_DEBUG("Traversability map has been updated in %f s.", sm::timing::Timing::getTotalSeconds(timerId));
   sm::timing::Timing::reset(timerId);
   return true;
 }
@@ -297,8 +293,6 @@ bool TraversabilityMap::traversabilityFootprint(const double& radius, const doub
 
 bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintPath& path, traversability_msgs::TraversabilityResult& result)
 {
-//  if (timer_.isTiming()) timer_.stop();
-//  timer_.start();
 
   if (!traversabilityMap_.exists(traversabilityType_)) {
     ROS_WARN("Traversability Estimation: Failed to retrieve traversability map.");
@@ -444,21 +438,9 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
     }
   }
 
-//  polygon.setFrameId(mapFrameId_);
-//  polygon.setTimestamp(path.footprint.header.stamp.toNSec());
-//  geometry_msgs::PolygonStamped polygonMsg;
-//  grid_map::PolygonRosConverter::toMessage(polygon, polygonMsg);
-//  if (!footprintPolygonPublisher_.getNumSubscribers() < 1)
-//    footprintPolygonPublisher_.publish(polygonMsg);
-
   nTraversable_++;
   result.is_safe = true;
   ROS_DEBUG_STREAM("Traversability: " << result.traversability);
-//  timer_.stop();
-//  ROS_DEBUG("Mean: %f s, Min: %f s, Max: %f s.",
-//            sm::timing::Timing::getMeanSeconds(timerId_),
-//            sm::timing::Timing::getMinSeconds(timerId_),
-//            sm::timing::Timing::getMaxSeconds(timerId_));
 
   return true;
 }

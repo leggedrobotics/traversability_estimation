@@ -78,9 +78,8 @@ bool TraversabilityEstimation::readParameters()
   nodeHandle_.param("min_height", imageMinHeight_, 0.0);
   nodeHandle_.param("max_height", imageMaxHeight_, 1.0);
 
-  nodeHandle_.param("map_frame_id", mapFrameId_, string("map"));
+  nodeHandle_.param("traversability_map/frame_id", mapFrameId_, string("map"));
   nodeHandle_.param("robot_frame_id", robotFrameId_, string("robot"));
-//  nodeHandle_.param("footprint_frame_id", robotFrameId_, string("robot"));
   grid_map::Position mapCenter;
   nodeHandle_.param("map_center_x", mapCenter.x(), 0.0);
   nodeHandle_.param("map_center_y", mapCenter.y(), 0.0);
@@ -273,7 +272,7 @@ bool TraversabilityEstimation::saveToBag(std_srvs::Empty::Request& request, std_
 {
   ROS_INFO("Save to bag.");
   string pathToBag = ros::package::getPath("body_path_planner");
-  pathToBag += "/global_maps/flat.bag";
+  pathToBag += "/global_maps/lee_empty.bag";
   std::string topic = "traversability_map";
   return grid_map::GridMapRosConverter::saveToBag(traversabilityMap_.getTraversabilityMap(), pathToBag, topic);
 }

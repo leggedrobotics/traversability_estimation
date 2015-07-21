@@ -205,10 +205,6 @@ class TraversabilityMap
   //! Mutex lock for traversability map.
   boost::recursive_mutex traversabilityMapMutex_;
   boost::recursive_mutex elevationMapMutex_;
-
-//  //! Timer
-//  std::string timerId_;
-//  sm::timing::Timer timer_;
 };
 
 } /* namespace */
