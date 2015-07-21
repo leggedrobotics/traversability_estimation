@@ -547,7 +547,7 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
   traversability = 0.0;
 
   // Iterate through polygon and check for traversability.
-  for (grid_map::CircleIterator iterator(traversabilityMap_, center, radiusMax);
+  for (grid_map::SpiralIterator iterator(traversabilityMap_, center, radiusMax);
       !iterator.isPastEnd(); ++iterator) {
 
     if (radiusMin == 0.0) {
