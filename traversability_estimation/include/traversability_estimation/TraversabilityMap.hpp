@@ -33,8 +33,7 @@
 namespace traversability_estimation {
 
 /*!
- * The terrain traversability estimation main class. Coordinates the ROS
- * interfaces, the timing, and the data handling between the other classes.
+ * The terrain traversability estimation core. Performs all traversability computation.
  */
 class TraversabilityMap
 {
