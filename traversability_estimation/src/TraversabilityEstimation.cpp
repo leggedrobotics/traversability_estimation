@@ -77,6 +77,8 @@ bool TraversabilityEstimation::readParameters()
   nodeHandle_.param("resolution", imageResolution_, 0.03);
   nodeHandle_.param("min_height", imageMinHeight_, 0.0);
   nodeHandle_.param("max_height", imageMaxHeight_, 1.0);
+  nodeHandle_.param("image_position_x", imagePosition_.x(), 0.0);
+  nodeHandle_.param("image_position_y", imagePosition_.y(), 0.0);
 
   nodeHandle_.param("traversability_map/frame_id", mapFrameId_, string("map"));
   nodeHandle_.param("robot_frame_id", robotFrameId_, string("robot"));
@@ -97,7 +99,7 @@ bool TraversabilityEstimation::readParameters()
 void TraversabilityEstimation::imageCallback(const sensor_msgs::Image& image)
 {
   if (!getImageCallback_) {
-    grid_map::GridMapRosConverter::initializeFromImage(image, imageResolution_, imageGridMap_);
+    grid_map::GridMapRosConverter::initializeFromImage(image, imageResolution_, imageGridMap_, imagePosition_);
     ROS_INFO("Initialized map with size %f x %f m (%i x %i cells).", imageGridMap_.getLength().x(), imageGridMap_.getLength().y(), imageGridMap_.getSize()(0), imageGridMap_.getSize()(1));
     imageGridMap_.add("variance", 0.0); // TODO: Add value for variance.
     getImageCallback_ = true;

@@ -160,6 +160,7 @@ class TraversabilityEstimation
   ros::Subscriber imageSubscriber_;
   std::string imageTopic_;
   grid_map::GridMap imageGridMap_;
+  grid_map::Position imagePosition_;
   bool getImageCallback_;
   double imageResolution_;
   double imageMinHeight_;
