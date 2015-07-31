@@ -99,7 +99,7 @@ bool TraversabilityEstimation::readParameters()
 void TraversabilityEstimation::imageCallback(const sensor_msgs::Image& image)
 {
   if (!getImageCallback_) {
-    grid_map::GridMapRosConverter::initializeFromImage(image, imageResolution_, imageGridMap_, imagePosition_);
+    grid_map::GridMapRosConverter::initializeFromImage(image, imageResolution_, imageGridMap_);
     ROS_INFO("Initialized map with size %f x %f m (%i x %i cells).", imageGridMap_.getLength().x(), imageGridMap_.getLength().y(), imageGridMap_.getSize()(0), imageGridMap_.getSize()(1));
     imageGridMap_.add("variance", 0.0); // TODO: Add value for variance.
     getImageCallback_ = true;
