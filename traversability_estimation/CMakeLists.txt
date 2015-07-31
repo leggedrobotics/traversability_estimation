@@ -14,6 +14,7 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
+  gperftools_21
   grid_map
   grid_map_core
   grid_map_msgs
@@ -52,7 +53,7 @@ pkg_check_modules(SM_TIMING schweizer-messer-timing REQUIRED)
 catkin_package(
   INCLUDE_DIRS
     include
-#  LIBRARIES ${PROJECT_NAME}
+  LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS
     grid_map
     grid_map_core
@@ -85,20 +86,30 @@ include_directories(
 )
 
 ## Declare a cpp library
-# add_library(elevation_mapping
-#   src/${PROJECT_NAME}/elevation_mapping.cpp
-# )
+add_library(
+  ${PROJECT_NAME}
+  src/TraversabilityMap.cpp
+)
+
+target_link_libraries(
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  ${SM_TIMING_LIBRARIES}
+  ${GPERFTOOLS_PROFILER}
+)
 
 ## Declare a cpp executable
 add_executable(
-  ${PROJECT_NAME}
+  ${PROJECT_NAME}_node
   src/traversability_estimation_node.cpp
   src/TraversabilityEstimation.cpp
 )
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(
-  ${PROJECT_NAME}
+  ${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
+  ${PROJECT_NAME}
   ${SM_TIMING_LIBRARIES}
+  ${GPERFTOOLS_PROFILER}
 )

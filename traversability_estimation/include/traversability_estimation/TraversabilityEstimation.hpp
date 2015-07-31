@@ -8,12 +8,15 @@
 
 #pragma once
 
+#include "traversability_estimation/TraversabilityMap.hpp"
+
 // Grid Map
 #include <grid_map/grid_map.hpp>
 #include <grid_map_msgs/GetGridMapInfo.h>
+#include <grid_map_msgs/GetGridMap.h>
 
 // Traversability estimation
-#include "traversability_msgs/CheckFootprintPath.h"
+#include <traversability_msgs/CheckFootprintPath.h>
 
 // ROS
 #include <ros/ros.h>
@@ -22,15 +25,9 @@
 #include <std_srvs/Empty.h>
 #include <sensor_msgs/Image.h>
 
-// Schweizer-Messer
-#include <sm/timing/Timer.hpp>
-
 // STD
 #include <vector>
 #include <string>
-
-// Eigen
-#include <Eigen/Core>
 
 namespace traversability_estimation {
 
@@ -92,13 +89,31 @@ class TraversabilityEstimation
   void imageCallback(const sensor_msgs::Image& image);
 
   /*!
-   * ROS service callback function that computes the traversability of a footprint,
-   * oriented in x- and y-direction, at each map cell position.
+   * ROS service callback function that computes the traversability of a footprint
+   * at each map cell position twice: first oriented in x-direction, and second
+   * oriented according to the yaw angle.
    * @param request the ROS service request.
    * @param response the ROS service response.
    * @return true if successful.
    */
   bool traversabilityFootprint(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+
+  /*!
+   * ROS service callback function to return the traversability map (or a submap of it).
+   * @param request the ROS service request defining the location and size of the (sub-)map.
+   * @param response the ROS service response containing the requested (sub-)map.
+   * @return true if successful.
+   */
+  bool getTraversabilityMap(grid_map_msgs::GetGridMap::Request& request,
+                             grid_map_msgs::GetGridMap::Response& response);
+
+  /*!
+   * Saves the grid map with all layer to a ROS bag.
+   * @param request the ROS service request.
+   * @param response the ROS service response.
+   * @return true if successful.
+   */
+  bool saveToBag(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
  private:
 
@@ -112,8 +127,9 @@ class TraversabilityEstimation
    * Computes the traversability and publishes it as grid map.
    * Traversability is set between 0.0 and 1.0, where a value of 0.0 means not
    * traversable and 1.0 means fully traversable.
+   * @return true if successful.
    */
-  void computeTraversability();
+  bool updateTraversability();
 
   /*!
    * Callback function for the update timer. Forces an update of the traversability
@@ -127,27 +143,7 @@ class TraversabilityEstimation
    * @param[out] map the map that is received.
    * @return true if successful, false if ROS service call failed.
    */
-  bool getGridMap(grid_map_msgs::GridMap& map);
-
-  /*!
-   * Gets the traversability value of the submap defined by the polygon. Is true if the
-   * whole polygon is traversable.
-   * @param[in] polygon polygon that defines submap of the traversability map.
-   * @param[out] traversability traversability value of submap defined by the polygon, the traversability
-   * is the mean of each cell within the polygon.
-   * @return true if the whole polygon is traversable, false otherwise.
-   */
-  bool isTraversable(const grid_map::Polygon& polygon, double& traversability);
-
-  /*!
-   * Checks if the overall inclination of the robot on a line between two
-   * positions is feasible.
-   * @param[in] start first position of the line.
-   * @param[in] end last position of the line.
-   * @return true if the whole line has a feasible inclination, false otherwise.
-   */
-  bool checkInclination(const grid_map::Position start,
-                        const grid_map::Position end);
+  bool requestElevationMap(grid_map_msgs::GridMap& map);
 
   //! ROS node handle.
   ros::NodeHandle& nodeHandle_;
@@ -155,13 +151,17 @@ class TraversabilityEstimation
   //! ROS service server.
   ros::ServiceServer footprintPathService_;
   ros::ServiceServer updateTraversabilityService_;
+  ros::ServiceServer getTraversabilityService_;
   ros::ServiceServer updateParameters_;
   ros::ServiceServer traversabilityFootprint_;
+  ros::ServiceServer saveToBagService_;
 
   //! Image subscriber.
   ros::Subscriber imageSubscriber_;
   std::string imageTopic_;
-  bool mapInitialized_;
+  grid_map::GridMap imageGridMap_;
+  grid_map::Position imagePosition_;
+  bool getImageCallback_;
   double imageResolution_;
   double imageMinHeight_;
   double imageMaxHeight_;
@@ -184,14 +184,7 @@ class TraversabilityEstimation
   //! Id of the frame of the robot.
   std::string robotFrameId_;
 
-  //! Publisher of the traversability occupancy grid.
-  ros::Publisher traversabilityMapPublisher_;
-
-  //! Publisher of the roughness filter occupancy grid.
-  ros::Publisher footprintPolygonPublisher_;
-
   //! Vertices of the footprint polygon in base frame.
-  std::vector<geometry_msgs::Point32> footprintPoints_;
   double footprintYaw_;
 
   //! Timer for the map update.
@@ -200,11 +193,8 @@ class TraversabilityEstimation
   //! Duration between map updates.
   ros::Duration updateDuration_;
 
-  //! Default value for traversability of unknown regions.
-  double traversabilityDefault_;
-
-  //! Requested map cell types.
-  std::vector<std::string> requestedMapTypes_;
+  //! Requested elevation map layers.
+  std::vector<std::string> elevationMapLayers_;
 
   //! Requested map length in [m].
   grid_map::Length mapLength_;
@@ -216,18 +206,8 @@ class TraversabilityEstimation
   const std::string roughnessType_;
   const std::string robotSlopeType_;
 
-  //! Filter Chain
-  filters::FilterChain<grid_map::GridMap> filter_chain_;
-
-  //! Traversability map.
-  grid_map::GridMap traversabilityMap_;
-
-  //! Traversability map.
-  grid_map::GridMap elevationMap_;
-
-  //! Timer
-  std::string timerId_;
-  sm::timing::Timer timer_;
+  //! Traversability map
+  TraversabilityMap traversabilityMap_;
 };
 
 } /* namespace */
