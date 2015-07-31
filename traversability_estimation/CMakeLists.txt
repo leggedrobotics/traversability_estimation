@@ -32,12 +32,11 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
 find_package(kindr QUIET)
+find_package(PkgConfig REQUIRED)
 if(NOT kindr_FOUND)
   # Attempt to find package-based kindr
-  find_package(PkgConfig REQUIRED)
   pkg_check_modules(kindr kindr REQUIRED)
 endif()
-
 pkg_check_modules(SM_TIMING schweizer-messer-timing REQUIRED)
 
 
