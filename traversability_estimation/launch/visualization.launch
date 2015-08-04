@@ -2,7 +2,7 @@
   <node pkg="grid_map_visualization" type="grid_map_visualization" name="traversability_map_visualization" output="screen">
 	<rosparam command="load" file="$(find traversability_estimation)/config/visualization/traversability.yaml"/>
   </node>
-  <node pkg="grid_map_visualization" type="grid_map_visualization" name="body_path_planner_map_visualization" output="screen">
-	<rosparam command="load" file="$(find body_path_planner)/config/visualization.yaml"/>
+  <node pkg="grid_map_visualization" type="grid_map_visualization" name="navigation_planner_map_visualization" output="screen">
+	<rosparam command="load" file="$(find traversability_planner)/config/visualization_navigation_planner.yaml"/>
   </node>
 </launch>
