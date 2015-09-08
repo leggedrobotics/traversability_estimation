@@ -51,6 +51,16 @@ class TraversabilityEstimation
   virtual ~TraversabilityEstimation();
 
   /*!
+   * ROS service callback function to load an elevation map from a ROS bag file and to compute
+   * the corresponding traversability.
+   * @param request the ROS service request.
+   * @param response the ROS service response.
+   * @return true if successful.
+   */
+  bool loadElevationMap(std_srvs::Empty::Request& request,
+                       std_srvs::Empty::Response& response);
+
+  /*!
    * ROS service callback function that forces an update of the traversability map,
    * given an elevation map and returns the map info of the traversability map.
    * @param request the ROS service request.
@@ -155,6 +165,7 @@ class TraversabilityEstimation
   ros::ServiceServer updateParameters_;
   ros::ServiceServer traversabilityFootprint_;
   ros::ServiceServer saveToBagService_;
+  ros::ServiceServer loadElevationMapService_;
 
   //! Image subscriber.
   ros::Subscriber imageSubscriber_;
@@ -208,6 +219,10 @@ class TraversabilityEstimation
 
   //! Traversability map
   TraversabilityMap traversabilityMap_;
+
+  //! Path and topic to load elevation map.
+  std::string pathToBag_;
+  std::string bagTopicName_;
 };
 
 } /* namespace */
