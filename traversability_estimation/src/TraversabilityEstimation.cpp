@@ -40,6 +40,7 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
     ROS_WARN("Update rate is zero. No traversability map will be published.");
   }
 
+  loadElevationMapService_ = nodeHandle_.advertiseService("load_elevation_map", &TraversabilityEstimation::loadElevationMap, this);
   updateTraversabilityService_ = nodeHandle_.advertiseService("update_traversability", &TraversabilityEstimation::updateServiceCallback, this);
   getTraversabilityService_ = nodeHandle_.advertiseService("get_traversability", &TraversabilityEstimation::getTraversabilityMap, this);
   footprintPathService_ = nodeHandle_.advertiseService("check_footprint_path", &TraversabilityEstimation::checkFootprintPath, this);
@@ -93,13 +94,43 @@ bool TraversabilityEstimation::readParameters()
   nodeHandle_.param("map_length_y", mapLength_.y(), 5.0);
   nodeHandle_.param("footprint_yaw", footprintYaw_, M_PI_2);
 
+  nodeHandle_.param("elevation_map/topic", bagTopicName_,  std::string("grid_map"));
+  nodeHandle_.param("elevation_map/path_to_bag", pathToBag_, std::string("elevation_map.bag"));
+
+  return true;
+}
+
+bool TraversabilityEstimation::loadElevationMap(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
+{
+  ROS_INFO("TraversabilityEstimation: loadElevationMap");
+  grid_map::GridMap map;
+  grid_map_msgs::GridMap msg;
+  if (!grid_map::GridMapRosConverter::loadFromBag(pathToBag_, bagTopicName_, map)) {
+    ROS_ERROR("TraversabilityEstimation: Cannot find bag or topic of the elevation map!");
+    return false;
+  }
+  ROS_DEBUG_STREAM("Map frame id: " << map.getFrameId());
+  for (auto layer : map.getLayers()) {
+    ROS_DEBUG_STREAM("Map layers: " << layer);
+  }
+  ROS_DEBUG_STREAM("Map size: " << map.getLength());
+  ROS_DEBUG_STREAM("Map position: " << map.getPosition());
+  ROS_DEBUG_STREAM("Map resolution: " << map.getResolution());
+
+  map.setTimestamp(ros::Time::now().toNSec());
+  grid_map::GridMapRosConverter::toMessage(map, msg);
+  traversabilityMap_.setElevationMap(msg);
+  if (!traversabilityMap_.computeTraversability()) {
+    ROS_WARN("TraversabilityEstimation: loadElevationMap: cannot compute traversability.");
+    return false;
+  }
   return true;
 }
 
 void TraversabilityEstimation::imageCallback(const sensor_msgs::Image& image)
 {
   if (!getImageCallback_) {
-    grid_map::GridMapRosConverter::initializeFromImage(image, imageResolution_, imageGridMap_);
+    grid_map::GridMapRosConverter::initializeFromImage(image, imageResolution_, imageGridMap_, imagePosition_);
     ROS_INFO("Initialized map with size %f x %f m (%i x %i cells).", imageGridMap_.getLength().x(), imageGridMap_.getLength().y(), imageGridMap_.getSize()(0), imageGridMap_.getSize()(1));
     imageGridMap_.add("variance", 0.0); // TODO: Add value for variance.
     getImageCallback_ = true;
@@ -170,7 +201,8 @@ bool TraversabilityEstimation::updateParameter(std_srvs::Empty::Request&, std_sr
 {
   // Load parameters file.
   string path = ros::package::getPath("starleth_traversability_estimation");
-  path = path + "/config/starleth.yaml";
+  path = path + "/config/filter_parameter.yaml";
+//  path = path + "/config/artor_filter_parameter.yaml";
   string commandString = "rosparam load " + path + " /traversability_estimation";
   const char* command = commandString.c_str();
   if (system(command) != 0)
@@ -212,14 +244,8 @@ bool TraversabilityEstimation::requestElevationMap(grid_map_msgs::GridMap& map)
 bool TraversabilityEstimation::traversabilityFootprint(
     std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
-//  ProfilerStart("/home/martiwer/Documents/Profile/traversability_estimation_2.prof");
-  // Update traversability map.
-  if (!updateTraversability())
-    return false;
-
   if (!traversabilityMap_.traversabilityFootprint(footprintYaw_))
     return false;
-//  ProfilerStop();
 
   return true;
 }
@@ -273,8 +299,8 @@ bool TraversabilityEstimation::getTraversabilityMap(
 bool TraversabilityEstimation::saveToBag(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
   ROS_INFO("Save to bag.");
-  string pathToBag = ros::package::getPath("body_path_planner");
-  pathToBag += "/global_maps/lee_empty.bag";
+  string pathToBag = ros::package::getPath("traversability_planner");
+  pathToBag += "/global_maps/traversability_map.bag";
   std::string topic = "traversability_map";
   return grid_map::GridMapRosConverter::saveToBag(traversabilityMap_.getTraversabilityMap(), pathToBag, topic);
 }
