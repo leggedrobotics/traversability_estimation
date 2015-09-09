@@ -175,6 +175,11 @@ class TraversabilityMap
   //! Vertices of the footprint polygon in base frame.
   std::vector<geometry_msgs::Point32> footprintPoints_;
 
+  //! Robot parameter
+  double maxGapWidth_;
+  double circularFootprintOffset_; // TODO: get this with FootprintPath msg.
+  double criticalStepHeight_;
+
   //! Default value for traversability of unknown regions.
   double traversabilityDefault_;
 
