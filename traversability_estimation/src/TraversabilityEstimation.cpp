@@ -51,9 +51,6 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
 
   elevationMapLayers_.push_back("elevation");
   elevationMapLayers_.push_back("variance");
-  elevationMapLayers_.push_back("surface_normal_x");
-  elevationMapLayers_.push_back("surface_normal_y");
-  elevationMapLayers_.push_back("surface_normal_z");
 }
 
 TraversabilityEstimation::~TraversabilityEstimation()
