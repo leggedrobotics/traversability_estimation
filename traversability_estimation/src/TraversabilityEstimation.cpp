@@ -51,9 +51,6 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
 
   elevationMapLayers_.push_back("elevation");
   elevationMapLayers_.push_back("variance");
-  elevationMapLayers_.push_back("surface_normal_x");
-  elevationMapLayers_.push_back("surface_normal_y");
-  elevationMapLayers_.push_back("surface_normal_z");
 }
 
 TraversabilityEstimation::~TraversabilityEstimation()
@@ -202,7 +199,6 @@ bool TraversabilityEstimation::updateParameter(std_srvs::Empty::Request&, std_sr
   // Load parameters file.
   string path = ros::package::getPath("starleth_traversability_estimation");
   path = path + "/config/filter_parameter.yaml";
-//  path = path + "/config/artor_filter_parameter.yaml";
   string commandString = "rosparam load " + path + " /traversability_estimation";
   const char* command = commandString.c_str();
   if (system(command) != 0)
@@ -276,7 +272,6 @@ bool TraversabilityEstimation::getTraversabilityMap(
     grid_map_msgs::GetGridMap::Request& request,
     grid_map_msgs::GetGridMap::Response& response)
 {
-  ROS_INFO("Get traversability.");
   grid_map::Position requestedSubmapPosition(request.position_x, request.position_y);
   grid_map::Length requestedSubmapLength(request.length_x, request.length_y);
   grid_map_msgs::GridMap msg;

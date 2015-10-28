@@ -39,11 +39,10 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
       filter_chain_("grid_map::GridMap"),
       elevationMapInitialized_(false),
       traversabilityMapInitialized_(false),
-      nTraversable_(0),
-      nNotTraversable_(0)
+      checkForRoughness_(false),
+      checkRobotInclination_(false)
 {
   ROS_INFO("Traversability Map started.");
-//  ProfilerStart("/home/martiwer/Documents/Profile/traversability_map.prof");
 
   readParameters();
   footprintPolygonPublisher_ = nodeHandle_.advertise<geometry_msgs::PolygonStamped>("footprint_polygon", 1, true);
@@ -56,12 +55,10 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
   traversabilityMapLayers_.push_back(slopeType_);
   traversabilityMapLayers_.push_back(stepType_);
   traversabilityMapLayers_.push_back(roughnessType_);
-//  traversabilityMapLayers_.push_back(robotSlopeType_);
 }
 
 TraversabilityMap::~TraversabilityMap()
 {
-//  ProfilerStop();
   nodeHandle_.shutdown();
 }
 
@@ -85,6 +82,8 @@ bool TraversabilityMap::readParameters()
 
   nodeHandle_.param("traversability_map/frame_id", mapFrameId_, string("map"));
   nodeHandle_.param("traversability_map/traversability_default", traversabilityDefault_, 0.5);
+  nodeHandle_.param("traversability_map/verify_roughness_footprint", checkForRoughness_, false);
+  nodeHandle_.param("traversability_map/check_robot_inclination", checkRobotInclination_, false);
   nodeHandle_.param("max_gap_width", maxGapWidth_, 0.3);
   nodeHandle_.param("circular_footprint_offset", circularFootprintOffset_, 0.15);
   nodeHandle_.param("traversability_map_filters/stepFilter/critical_value", criticalStepHeight_, 0.12);
@@ -132,15 +131,6 @@ void TraversabilityMap::setTraversabilityMap(const grid_map::GridMap& map)
 {
   boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   traversabilityMap_ = map;
-}
-
-void TraversabilityMap::printTraversableFraction()
-{
-  ROS_INFO_STREAM("Traversability Map: nTraversable = " << nTraversable_);
-  ROS_INFO_STREAM("Traversability Map: nNotTraversable = " << nNotTraversable_);
-  ROS_INFO_STREAM("Traversability Map: Traversable Fraction = " << (double) nTraversable_ / (double) (nTraversable_ + nNotTraversable_));
-  nTraversable_ = 0;
-  nNotTraversable_ = 0;
 }
 
 void TraversabilityMap::publishTraversabilityMap()
@@ -201,6 +191,7 @@ bool TraversabilityMap::computeTraversability()
   traversabilityMapInitialized_ = true;
   traversabilityMapCopy.add("step_footprint");
   traversabilityMapCopy.add("slope_footprint");
+  if (checkForRoughness_) traversabilityMapCopy.add("roughness_footprint");
   traversabilityMapCopy.add("traversability_footprint");
 
   scopedLockForTraversabilityMap.lock();
@@ -325,20 +316,21 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
       end.y() = path.poses.poses[i].position.y;
 
       if (arraySize == 1) {
-//        polygon = polygon.convexHullCircle(end, radius);
-//        if (!checkInclination(end, end))
-//          return true;
+        if (checkRobotInclination_) {
+          if (!checkInclination(end, end))
+            return true;
+        }
         if (!isTraversable(end, radius + offset, traversability, radius)) {
-          nNotTraversable_++;
           return true;
         }
         result.traversability = traversability;
       }
 
       if (arraySize > 1 && i > 0) {
-//        polygon = polygon.convexHullCircles(start, end, radius);
-//        if (!checkInclination(start, end))
-//          return true;
+        if (checkRobotInclination_) {
+          if (!checkInclination(start, end))
+            return true;
+        }
         double traversabilityTemp, traversabilitySum = 0.0;
         int nLine = 0;
         grid_map::Index startIndex, endIndex;
@@ -349,7 +341,6 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
           grid_map::Position center;
           traversabilityMap_.getPosition(*lineIterator, center);
           if (!isTraversable(center, radius + offset, traversabilityTemp, radius)) {
-            nNotTraversable_++;
             return true;
           }
           traversabilitySum += traversabilityTemp;
@@ -359,11 +350,8 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
           }
         }
         traversability = traversabilitySum / (double) nLine;
-//        if (!isTraversable(polygon, traversability))
-//          return true;
         result.traversability += traversability / (arraySize - 1);
       }
-//      result.area = polygon.getArea();
     }
   } else {
     grid_map::Polygon polygon1, polygon2;
@@ -414,10 +402,11 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
 
       if (arraySize == 1) {
         polygon = polygon2;
-//        if (!checkInclination(end, end))
-//          return true;
+        if (checkRobotInclination_) {
+          if (!checkInclination(end, end))
+            return true;
+        }
         if (!isTraversable(polygon, traversability)) {
-          nNotTraversable_++;
           return true;
         }
         result.traversability = traversability;
@@ -426,10 +415,11 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
 
       if (arraySize > 1 && i > 0) {
         polygon = polygon.convexHull(polygon1, polygon2);
-//        if (!checkInclination(start, end))
-//          return true;
+        if (checkRobotInclination_) {
+          if (!checkInclination(start, end))
+            return true;
+        }
         if (!isTraversable(polygon, traversability)) {
-          nNotTraversable_++;
           return true;
         }
         result.traversability += traversability / (arraySize - 1);
@@ -442,7 +432,6 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
     }
   }
 
-  nTraversable_++;
   result.is_safe = true;
   ROS_DEBUG_STREAM("Traversability: " << result.traversability);
 
@@ -454,51 +443,6 @@ bool TraversabilityMap::isTraversable(grid_map::Polygon& polygon, double& traver
   int nCells = 0;
   traversability = 0.0;
 
-//  // Check vertices of Polygon
-//  std::vector<grid_map::Index> indices;
-//  std::vector<grid_map::Position> vertices = polygon.getVertices();
-//  grid_map::Index index;
-//  for (auto& vertex : vertices) {
-//    if (traversabilityMap_.getIndex(vertex, index)) {
-//      if (!polygon.isInside(vertex)) {
-//        index[0] -= 1;
-//        index[1] -= 1;
-//        grid_map::Index newIndex;
-//        grid_map::Position newPos;
-//        bool inside = false;
-//        for (int i = 0; i < 3; i++) {
-//          for (int j = 0; j < 3; j++) {
-//            newIndex[0] = index[0] + i;
-//            newIndex[1] = index[1] + j;
-//            if (traversabilityMap_.getPosition(newIndex, newPos)) {
-//              if (polygon.isInside(newPos)) {
-//                inside = true;
-//                break;
-//              }
-//            }
-//          }
-//          if (inside) {
-//            index = newIndex;
-//            break;
-//          }
-//        }
-//      }
-//      indices.push_back(index);
-//    }
-//  }
-//  grid_map::Position centroid = polygon.getCentroid();
-//  traversabilityMap_.getIndex(centroid, index);
-//  indices.push_back(index);
-//
-//  for (auto& checkIndex : indices) {
-//    if (!checkForSlope(checkIndex)) {
-//      return false;
-//    }
-//    if (!checkForStep(checkIndex)) {
-//      return false;
-//    }
-//  }
-
   // Iterate through polygon and check for traversability.
   for (grid_map::PolygonIterator polygonIterator(traversabilityMap_, polygon);
       !polygonIterator.isPastEnd(); ++polygonIterator) {
@@ -509,21 +453,10 @@ bool TraversabilityMap::isTraversable(grid_map::Polygon& polygon, double& traver
     // Check for steps
     if (!checkForStep(*polygonIterator)) return false;
 
-    // Check for roughness (not used at the moment!)
-//    if (traversabilityMap_.at(roughnessType_, *polygonIterator) == 0.0) {
-//      // Requested position (center) of circle in map.
-//      grid_map::Position center;
-//      traversabilityMap_.getPosition(*polygonIterator, center);
-//      int nRoughness = 0;
-//      for (grid_map::CircleIterator circleIterator(traversabilityMap_, center,
-//                                                   windowRadius);
-//          !circleIterator.isPastEnd(); ++circleIterator) {
-//        if (traversabilityMap_.at(roughnessType_, *circleIterator) == 0.0)
-//          nRoughness++;
-//        if (nRoughness > (nSlopesCritical * 0.75))
-//          return false;
-//      }
-//    }
+    // Check for roughness
+    if (checkForRoughness_) {
+      if(!checkForRoughness(*polygonIterator)) return false;
+    }
 
     nCells++;
     if (!traversabilityMap_.isValid(*polygonIterator,
@@ -566,6 +499,14 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
         traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
         return false;
       }
+
+      // Check for roughness
+      if (checkForRoughness_) {
+        if (!checkForRoughness(*iterator)) {
+          traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
+          return false;
+        }
+      }
     } else {
       // Check for slopes
       if (!checkForSlope(*iterator)) {
@@ -591,6 +532,21 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
         traversability *= factor / nCells;
         traversabilityMap_.at("traversability_footprint", indexCenter) = traversability;
         return true;
+      }
+
+      // Check for roughness
+      if (checkForRoughness_) {
+        if (!checkForRoughness(*iterator)) {
+          double radius = iterator.getCurrentRadius();
+          if (radius <= radiusMin) {
+            traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
+            return false;
+          }
+          double factor = ((radius - radiusMin) / (radiusMax - radiusMin) + 1.0) / 2.0;
+          traversability *= factor / nCells;
+          traversabilityMap_.at("traversability_footprint", indexCenter) = traversability;
+          return true;
+        }
       }
     }
 
@@ -728,6 +684,35 @@ bool TraversabilityMap::checkForSlope(const grid_map::Index& index)
       }
       traversabilityMap_.at("slope_footprint", index) = 1.0;
     } else if (traversabilityMap_.at("slope_footprint", index) == 0.0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool TraversabilityMap::checkForRoughness(const grid_map::Index& index)
+{
+  if (traversabilityMap_.at(roughnessType_, index) == 0.0) {
+    if (!traversabilityMap_.isValid(index, "roughness_footprint")) {
+      double windowRadius = 3.0*traversabilityMap_.getResolution();; // TODO: read this as a parameter?
+      double criticalLength = maxGapWidth_ / 3.0;
+      int nRoughnessCritical = floor(1.5 * windowRadius * criticalLength / pow(traversabilityMap_.getResolution(), 2));
+
+      // Requested position (center) of circle in map.
+      grid_map::Position center;
+      traversabilityMap_.getPosition(index, center);
+      int nRoughness = 0;
+      for (grid_map::CircleIterator circleIterator(traversabilityMap_, center, windowRadius);
+          !circleIterator.isPastEnd(); ++circleIterator) {
+        if (traversabilityMap_.at(roughnessType_, *circleIterator) == 0.0)
+          nRoughness++;
+        if (nRoughness > nRoughnessCritical) {
+          traversabilityMap_.at("roughness_footprint", index) = 0.0;
+          return false;
+        }
+      }
+      traversabilityMap_.at("roughness_footprint", index) = 1.0;
+    } else if (traversabilityMap_.at("roughness_footprint", index) == 0.0) {
       return false;
     }
   }
