@@ -14,7 +14,6 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
-  gperftools_21
   grid_map
   grid_map_core
   grid_map_msgs
@@ -94,7 +93,6 @@ target_link_libraries(
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${SM_TIMING_LIBRARIES}
-  ${GPERFTOOLS_PROFILER}
 )
 
 ## Declare a cpp executable
@@ -110,5 +108,4 @@ target_link_libraries(
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}
   ${SM_TIMING_LIBRARIES}
-  ${GPERFTOOLS_PROFILER}
 )
