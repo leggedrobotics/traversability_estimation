@@ -23,8 +23,6 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-#include <google/profiler.h>
-
 using namespace std;
 
 namespace traversability_estimation {
@@ -45,7 +43,6 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
   ROS_INFO("Traversability Map started.");
 
   readParameters();
-  footprintPolygonPublisher_ = nodeHandle_.advertise<geometry_msgs::PolygonStamped>("footprint_polygon", 1, true);
   traversabilityMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>("traversability_map", 1);
 
   elevationMapLayers_.push_back("elevation");

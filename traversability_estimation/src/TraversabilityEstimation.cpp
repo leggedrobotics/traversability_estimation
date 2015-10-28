@@ -13,8 +13,6 @@
 #include <ros/package.h>
 #include <geometry_msgs/Pose.h>
 
-#include <google/profiler.h>
-
 using namespace std;
 
 namespace traversability_estimation {

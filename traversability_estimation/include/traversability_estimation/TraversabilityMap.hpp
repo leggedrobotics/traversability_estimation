@@ -202,11 +202,8 @@ class TraversabilityMap
   //! Id of the frame of the robot.
   std::string robotFrameId_;
 
-  //! Publisher of the traversability occupancy grid.
+  //! Publisher of the traversability map.
   ros::Publisher traversabilityMapPublisher_;
-
-  //! Publisher of the roughness filter occupancy grid.
-  ros::Publisher footprintPolygonPublisher_;
 
   //! Vertices of the footprint polygon in base frame.
   std::vector<geometry_msgs::Point32> footprintPoints_;
