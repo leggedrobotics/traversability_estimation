@@ -152,7 +152,15 @@ This is the main Traversability Estimation node. It uses the elevation map and t
 
 ### Traversability Estimation Filters
 
-* *[Step Filter](traversability_estimation_filters/src/StepFilter.cpp)* Compute the step traversability value based on an elevation map.
+The traversability estimation filters can be applied to an elevation map. Each filter adds an additional layer to the elevation map and computes a value for every cell of the map.
+
+* *[Surface Normals Filter:](traversability_estimation_filters/src/SurfaceNormalsFilter.cpp)* Computes the surface normal of each cell of an elevation map. Each component of the surface normal is saved separatly.
+
+* *[Slope Filter:](traversability_estimation_filters/src/SlopeFilter.cpp)* Computes the slope traversability value based on an elevation map.
+
+* *[Roughness Filter:](traversability_estimation_filters/src/RoughnessFilter.cpp)* Computes the step traversability value based on an elevation map.
+
+* *[Step Filter:](traversability_estimation_filters/src/StepFilter.cpp)* Compute the roughness traversability value based on an elevation map.
 
 ## Bugs & Feature Requests
 
