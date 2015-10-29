@@ -1,14 +1,20 @@
+# Traversability map parameters
 submap_service: "/elevation_mapping_long_range/get_submap"
-elevation_map_topic: "/image_to_gridmap_demo/grid_map"
+elevation_map/topic: "/image_to_gridmap_demo/grid_map"
 robot_frame_id: "base"
-map_frame_id: "map"
-min_update_rate: 0.0
+min_update_rate: 0.1
 map_center_x: 1.0
 map_center_y: 0.0
 map_length_x: 6.0
 map_length_y: 6.0
-traversability_default: 0.5
+circular_footprint_offset: 0.15
 
+traversability_map:
+  footprint_polygon: [[0.32, 0.29], [0.32, -0.29], [-0.32, -0.29], [-0.32, 0.29]]
+  frame_id: map
+  traversability_default: 0.1
+
+# Traversability map filter parameters
 traversability_map_filters:
  - name: surfaceNormalsFilter
    type: traversabilityFilters/SurfaceNormalsFilter

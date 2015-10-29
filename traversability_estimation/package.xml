@@ -4,9 +4,9 @@
   <version>0.1.0</version>
   <description>ROS package for estimating traversability from elevation maps.</description>
   <maintainer email="pfankhauser@ethz.ch">Peter Fankhauser</maintainer>
-  <author email="ralf.kaestner@gmail.com">Ralf Kaestner</author>
-  <author email="pfankhauser@ethz.ch">Peter Fankhauser</author>
   <author email="martiwer@student.ethz.ch">Martin Wermelinger</author>
+  <author email="pfankhauser@ethz.ch">Peter Fankhauser</author>
+  <author email="ralf.kaestner@gmail.com">Ralf Kaestner</author>
   <license>MIT</license>
   <url type="website">https://github.com/ethz-asl/traversability_estimation</url>
   <url type="bugtracker">https://github.com/ethz-asl/traversability_estimation/issues</url>
@@ -26,7 +26,6 @@
   <build_depend>geometry_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>sm_timing</build_depend>
-  <build_depend>gperftools_21</build_depend>
   
   <run_depend>roscpp</run_depend>
   <run_depend>sensor_msgs</run_depend>
@@ -42,6 +41,5 @@
   <run_depend>geometry_msgs</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>sm_timing</run_depend>
-  <run_depend>gperftools_21</run_depend>
   
 </package>

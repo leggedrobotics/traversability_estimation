@@ -13,8 +13,6 @@
 #include <ros/package.h>
 #include <geometry_msgs/Pose.h>
 
-#include <google/profiler.h>
-
 using namespace std;
 
 namespace traversability_estimation {
@@ -199,7 +197,6 @@ bool TraversabilityEstimation::updateParameter(std_srvs::Empty::Request&, std_sr
   // Load parameters file.
   string path = ros::package::getPath("starleth_traversability_estimation");
   path = path + "/config/filter_parameter.yaml";
-//  path = path + "/config/artor_filter_parameter.yaml";
   string commandString = "rosparam load " + path + " /traversability_estimation";
   const char* command = commandString.c_str();
   if (system(command) != 0)
@@ -273,7 +270,6 @@ bool TraversabilityEstimation::getTraversabilityMap(
     grid_map_msgs::GetGridMap::Request& request,
     grid_map_msgs::GetGridMap::Response& response)
 {
-  ROS_INFO("Get traversability.");
   grid_map::Position requestedSubmapPosition(request.position_x, request.position_y);
   grid_map::Length requestedSubmapLength(request.length_x, request.length_y);
   grid_map_msgs::GridMap msg;

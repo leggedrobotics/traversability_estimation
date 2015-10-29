@@ -6,9 +6,7 @@ Traversability mapping for mobile rough terrain navigation.
 
 The Traversability Estimation package has been tested under [ROS] Indigo and Ubuntu 14.04. This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
 
-The source code is released under a [BSD 3-Clause license](ros_package_template/LICENSE).
-
-**Authors: Peter Fankhauser, Martin Wermelinger, Ralf Kaestner  
+**Authors: Martin Wermelinger, Peter Fankhauser, Ralf Kaestner  
 Contact: Peter Fankhauser, pfankhauser@ethz.ch  
 Affiliation: Autonomous Systems Lab, ETH Zurich**
 
@@ -17,18 +15,13 @@ Affiliation: Autonomous Systems Lab, ETH Zurich**
 
 ### Dependencies
 
+This software is built on the Robotic Operating System ([ROS]), which needs to be [installed](http://wiki.ros.org) first. Additionaly, the Traversability Estimation depends on following software:
+
 - [Robot Operating System (ROS)](http://wiki.ros.org) (middleware for robotics),
 - [Eigen](http://eigen.tuxfamily.org) (linear algebra library),
 - [kindr](http://github.com/ethz-asl/kindr) (kinematics and dynamics library for robotics),
-- [Point Cloud Library (PCL)](http://pointclouds.org/) (point cloud processing),
 - [Grid Map](https://github.com/ethz-asl/grid_map) (grid map library for mobile robots),
 - [Elevation Map](https://github.com/ethz-asl/elevation_mapping) (elevation mapping with a mobile robot),
-- [starleth_ros_common](http://bitbucket.org/ethz-asl-lr/c_starleth_ros_common) (common [ROS] packages for StarlETH robot).
-- [Gazebo](http://gazebosim.org/) (robot simulator)
-
-		sudo apt-get install ros-indigo-gazebo-ros-pkgs
-
-	More information on the installation of [Gazebo] for [ROS] is given [here](http://gazebosim.org/tutorials?tut=ros_installing&cat=connect_ros),
 - [Schweizer-Messer](http://github.com/ethz-asl/Schweizer-Messer) (programming tools for robotics),
 	
 		sudo add-apt-repository ppa:ethz-asl/common
@@ -51,50 +44,81 @@ In order to install, clone the latest version from this repository into your cat
 No unit tests so far.
 
 
-## Usage
+## Basic Usage
 
-In order to get the Traversability estimation to run with your robot, you will need to adapt a few parameters in the config-file. It is the easiest if you duplicate the config-file `starleth.yaml` in `traversability_estimation/config` and adapt all the parameters you need to change. Then, duplicate the launch-file `traversability_estimation/launch/starleth.launch` and change the entries to point at your config-file. You can then launch the traversability map node with
+In order to get the Traversability estimation to run with your robot, you will need to adapt a few parameters in the config-file. It is the easiest if you duplicate the config-file `default.yaml` in `traversability_estimation/config` and adapt all the parameters you need to change. Then, duplicate the launch-file `traversability_estimation/launch/traversability_estimation.launch` and change the entries to point at your config-file. You can then launch the traversability map node with
 
-	roslaunch traversability_estimation your_launch_file.launch
+	roslaunch traversability_estimation traversability_estimation.launch
 
-Use rviz to visualize the traversability map.
+Proceed in the same way for the traversability map visualization by adapting the launch-file `traversability_estimation/launch/visualization.launch`. You can then launch the traversability map visualization node with
+
+     	roslaunch traversability_estimation visualization.launch
+
+Use [rviz] to visualize the traversability map.
 
 
 ## Nodes
 
 ### traversability_estimation
 
-This is the main Traversability Estimation node. It uses the elevation map and the surface normals to generate a traversability map.
+This is the main Traversability Estimation node. It uses the elevation map and the traversability estimation filters to generate a traversability map.
 
 
 #### Subscribed Topics
 
-* 
+* **`/image_elevation`** ([sensor_msgs/Image])
+
+    	It is possible to subscribe to an image. The image is converted into a grayscale image and the values are mapped into an elevation map.
 
 
 #### Published Topics
 
-* **`slope_map`** ([nav_msgs/OccupancyGrid])
+* **`traversability_map`** ([grid_map_msgs/GridMap])
 
-	The traversability map only considering the slope. This topic is only published if the slope filter is activated.
-
-* **`step_map`** ([nav_msgs/OccupancyGrid])
-
-	The traversability map only considering the step heights. This topic is only published if the step filter is activated.
-
-* **`roughness_map`** ([nav_msgs/OccupancyGrid])
-
-	The traversability map only considering the roughness of the surface. This topic is only published if the roughness filter is activated.
-
-* **`traversability_map`** ([nav_msgs/OccupancyGrid])
-
-	The resulting traversability map. The traversability map can be defined with a filter chain and should consist at least of one of the above mentioned topics.
+	The current traversability map. The traversability map can be configured with the traversability filters.
 
 
 #### Services
 
-* 
+* **`load_elevation_map`** ([std_srvs/Empty])
 
+    Trigger the loading of an elevation map from a [rosbag] file. Trigger the loading of the map with
+
+        rosservice call /traversability_estimation/load_elevation_map
+
+* **`update_traversability`** ([grid_map_msgs/GetGridMapInfo])
+
+    Forces an update of the traversability map, using the current elevation map. The update can be triggered with
+
+        rosservice call /traversability_estimation/update_traversability
+
+* **`get_traversability`** ([grid_map_msgs/GetGridMap])
+
+    Request the current traversability map or a submap of it. For example, you can get the traversability submap at position (-1.0, 0.0) and size (2.5, 2.0) and safe it to a text file form the console with
+
+        rosservice call -- /traversability_estimation/get_traversability -1.0 0.0 2.5 2.0 []
+
+* **`check_footprint_path`** ([traversability_msgs/CheckFootprintPath])
+
+    This service is used to check the traversability of a single footprint or a path of several footprints. The current traversability map is used to evaluate the footprints.
+
+* **`update_parameters`** ([std_srvs/Empty])
+
+    Use this service to update the parameters of the traversability estimation filters. It reloads the parameter file and sets the new parameters. Trigger the parameter update with
+
+        rosservice call /traversability_estimation/update_parameters
+
+* **`traversability_footprint`** ([std_srvs/Empty])
+
+    Computes the traversability of a circular footprint at each map position and stores the values in an additional map layer. This service is intended for visualizing the traversability and debugging. Trigger the traversability computation with
+
+        rosservice call /traversability_estimation/traversability_footprint
+
+* **`save_to_bag`** ([std_srvs/Empty])
+
+    Save all layers of the current traversability map to a [rosbag] file. Save the traversability map with
+
+        rosservice call /traversability_estimation/save_to_bag
 
 #### Parameters
 
@@ -126,20 +150,18 @@ This is the main Traversability Estimation node. It uses the elevation map and t
 	
 	Defines the different filters that are used to generate the traversability map.
 
+### Traversability Estimation Filters
+
+The traversability estimation filters can be applied to an elevation map. Each filter adds an additional layer to the elevation map and computes a value for every cell of the map.
+
+* *[Surface Normals Filter:](traversability_estimation_filters/src/SurfaceNormalsFilter.cpp)* Computes the surface normal of each cell of an elevation map. Each component of the surface normal is saved separatly.
+
+* *[Slope Filter:](traversability_estimation_filters/src/SlopeFilter.cpp)* Computes the slope traversability value based on an elevation map.
+
+* *[Roughness Filter:](traversability_estimation_filters/src/RoughnessFilter.cpp)* Computes the step traversability value based on an elevation map.
+
+* *[Step Filter:](traversability_estimation_filters/src/StepFilter.cpp)* Compute the roughness traversability value based on an elevation map.
 
 ## Bugs & Feature Requests
 
 Please report bugs and request features using the [Issue Tracker](https://github.com/ethz-asl/ros_best_practices/issues).
-
-
-[ROS]: http://www.ros.org
-[rviz]: http://wiki.ros.org/rviz
-[Eigen]: http://eigen.tuxfamily.org
-[Gazebo]: http://gazebosim.org/
-[rviz]: http://wiki.ros.org/rviz
-[starleth_msgs/SeActuatorCommands]: https://bitbucket.org/ethz-asl-lr/c_starleth_ros_common/raw/master/starleth_msgs/msg/SeActuatorCommands.msg
-[grid_map_msg/GridMap]: https://github.com/ethz-asl/grid_map/blob/master/grid_map_msg/msg/GridMap.msg
-[sensor_msgs/PointCloud2]: http://docs.ros.org/api/sensor_msgs/html/msg/PointCloud2.html
-[visualization_msgs/Marker]: http://docs.ros.org/api/visualization_msgs/html/msg/Marker.html
-[nav_msgs/OccupancyGrid]: http://docs.ros.org/api/nav_msgs/html/msg/OccupancyGrid.html
-[std_srvs/Empty]: http://docs.ros.org/api/std_srvs/html/srv/Empty.html
