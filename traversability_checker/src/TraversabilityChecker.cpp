@@ -109,9 +109,12 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   angularVelocityInTwistFrame.header = twist_.header;
   angularVelocityInTwistFrame.vector = twist_.twist.angular;
   try {
-    tfListener_.waitForTransform(twist_.header.frame_id, robotPose_.header.frame_id, robotPose_.header.stamp, timerDuration_);
-    tfListener_.transformVector(robotPose_.header.frame_id, linearVelocityInTwistFrame, linearVelocityInBaseFrame);
-    tfListener_.transformVector(robotPose_.header.frame_id, angularVelocityInTwistFrame, angularVelocityInBaseFrame);
+    if (tfListener_.waitForTransform(twist_.header.frame_id, robotPose_.header.frame_id, robotPose_.header.stamp, timerDuration_)) {
+      tfListener_.transformVector(robotPose_.header.frame_id, linearVelocityInTwistFrame, linearVelocityInBaseFrame);
+      tfListener_.transformVector(robotPose_.header.frame_id, angularVelocityInTwistFrame, angularVelocityInBaseFrame);
+    } else {
+      return;
+    }
   } catch (tf::TransformException& ex) {
     ROS_ERROR_STREAM(nodeHandle_.getNamespace() << ": " << ex.what());
     return;
