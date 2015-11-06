@@ -113,6 +113,7 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
       tfListener_.transformVector(robotPose_.header.frame_id, linearVelocityInTwistFrame, linearVelocityInBaseFrame);
       tfListener_.transformVector(robotPose_.header.frame_id, angularVelocityInTwistFrame, angularVelocityInBaseFrame);
     } else {
+      ROS_ERROR_STREAM(nodeHandle_.getNamespace() << ": " << "Waiting for transform has timed out. Footprint is not checked for validity.");
       return;
     }
   } catch (tf::TransformException& ex) {
