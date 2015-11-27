@@ -285,7 +285,6 @@ bool TraversabilityMap::traversabilityFootprint(const double& radius, const doub
 
 bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintPath& path, traversability_msgs::TraversabilityResult& result)
 {
-
   if (!traversabilityMap_.exists(traversabilityType_)) {
     ROS_WARN("Traversability Estimation: Failed to retrieve traversability map.");
     return false;
@@ -304,6 +303,7 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
   result.area = 0.0;
   grid_map::Polygon polygon;
   double traversability = 0.0;
+  double area = 0.0;
   grid_map::Position start, end;
 
   if (path.footprint.polygon.points.size() == 0) {
@@ -347,7 +347,16 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
           }
         }
         traversability = traversabilitySum / (double) nLine;
-        result.traversability += traversability / (arraySize - 1);
+        double lengthSegment, lengthPreviousPath, lengthPath;
+        lengthSegment = (end - start).norm();
+        if (i > 1) {
+          lengthPreviousPath = lengthPath;
+          lengthPath += lengthSegment;
+          result.traversability = (lengthSegment * traversability + lengthPreviousPath * result.traversability) / lengthPath;
+        } else {
+          lengthPath = lengthSegment;
+          result.traversability = traversability;
+        }
       }
     }
   } else {
@@ -419,11 +428,15 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
         if (!isTraversable(polygon, traversability)) {
           return true;
         }
-        result.traversability += traversability / (arraySize - 1);
+        double areaPolygon, areaPrevious;
         if (i > 1) {
-          result.area += polygon.getArea() - polygon1.getArea();
+          areaPrevious = result.area;
+          areaPolygon = polygon.getArea() - polygon1.getArea();
+          result.area += areaPolygon;
+          result.traversability = (areaPolygon * traversability + areaPrevious * result.traversability) / result.area;
         } else {
           result.area = polygon.getArea();
+          result.traversability = traversability;
         }
       }
     }
@@ -437,7 +450,7 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
 
 bool TraversabilityMap::isTraversable(grid_map::Polygon& polygon, double& traversability)
 {
-  int nCells = 0;
+  unsigned int nCells = 0;
   traversability = 0.0;
 
   // Iterate through polygon and check for traversability.
@@ -463,12 +476,26 @@ bool TraversabilityMap::isTraversable(grid_map::Polygon& polygon, double& traver
       traversability += traversabilityMap_.at(traversabilityType_, *polygonIterator);
     }
   }
+  // Handle cases of footprints outside of map.
+  if (nCells == 0) {
+    ROS_DEBUG("TraversabilityMap: isTraversable: No cells within polygon.");
+    traversability = traversabilityDefault_;
+    if (traversabilityDefault_ == 0.0) return false;
+    return true;
+  }
   traversability /= nCells;
   return true;
 }
 
 bool TraversabilityMap::isTraversable(const grid_map::Position& center, const double& radiusMax, double& traversability, const double& radiusMin)
 {
+  // Handle cases of footprints outside of map.
+  if (!traversabilityMap_.isInside(center)) {
+    traversability = traversabilityDefault_;
+    if (traversabilityDefault_ == 0.0) return false;
+    return true;
+  }
+  // Get index of center position.
   grid_map::Index indexCenter;
   traversabilityMap_.getIndex(center, indexCenter);
   if (traversabilityMap_.isValid(indexCenter, "traversability_footprint")) {
@@ -604,12 +631,12 @@ bool TraversabilityMap::checkForStep(const grid_map::Index& indexStep)
       }
       if (indices.empty()) indices.push_back(indexStep);
       for (auto& index : indices) {
-        grid_map::Length subMapLength_(2.5*traversabilityMap_.getResolution(), 2.5*traversabilityMap_.getResolution());
+        grid_map::Length subMapLength(2.5*traversabilityMap_.getResolution(), 2.5*traversabilityMap_.getResolution());
         grid_map::Position subMapPos;
         bool isSuccess;
         traversabilityMap_.getPosition(index, subMapPos);
         grid_map::Vector toCenter = center - subMapPos;
-        grid_map::GridMap subMap = traversabilityMap_.getSubmap(subMapPos, subMapLength_, isSuccess);
+        grid_map::GridMap subMap = traversabilityMap_.getSubmap(subMapPos, subMapLength, isSuccess);
         if (!isSuccess) {
           ROS_WARN("Traversability map: Check for step window could not retrieve submap.");
           traversabilityMap_.at("step_footprint", indexStep) = 0.0;
