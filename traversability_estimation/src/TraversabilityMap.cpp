@@ -285,9 +285,10 @@ bool TraversabilityMap::traversabilityFootprint(const double& radius, const doub
 
 bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintPath& path, traversability_msgs::TraversabilityResult& result)
 {
-  if (!traversabilityMap_.exists(traversabilityType_)) {
-    ROS_WARN("Traversability Estimation: Failed to retrieve traversability map.");
-    return false;
+  if (!traversabilityMapInitialized_) {
+    ROS_DEBUG("Traversability Estimation: check Footprint path: Traversability map not yet initialized.");
+    result.is_safe = false;
+    return true;
   }
 
   const int arraySize = path.poses.poses.size();
