@@ -294,7 +294,7 @@ bool TraversabilityEstimation::saveToBag(std_srvs::Empty::Request& request, std_
   ROS_INFO("Save to bag.");
   string pathToBag = ros::package::getPath("traversability_planner");
   pathToBag += "/global_maps/traversability_map.bag";
-  std::string topic = "traversability_map";
+  std::string topic = "grid_map";
   return grid_map::GridMapRosConverter::saveToBag(traversabilityMap_.getTraversabilityMap(), pathToBag, topic);
 }
 

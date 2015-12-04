@@ -205,6 +205,9 @@ class TraversabilityMap
   //! Publisher of the traversability map.
   ros::Publisher traversabilityMapPublisher_;
 
+  //! Footprint publisher.
+  ros::Publisher footprintPublisher_;
+
   //! Vertices of the footprint polygon in base frame.
   std::vector<geometry_msgs::Point32> footprintPoints_;
 

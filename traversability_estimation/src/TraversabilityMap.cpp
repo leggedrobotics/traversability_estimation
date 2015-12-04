@@ -14,6 +14,7 @@
 // ROS
 #include <ros/package.h>
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PolygonStamped.h>
 
 // kindr
 #include <kindr/rotations/RotationEigen.hpp>
@@ -44,6 +45,7 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
 
   readParameters();
   traversabilityMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>("traversability_map", 1);
+  footprintPublisher_ = nodeHandle_.advertise<geometry_msgs::PolygonStamped>("footprint_polygon", 1, true);
 
   elevationMapLayers_.push_back("elevation");
   elevationMapLayers_.push_back("variance");
@@ -302,7 +304,6 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
   result.is_safe = false;
   result.traversability = 0.0;
   result.area = 0.0;
-  grid_map::Polygon polygon;
   double traversability = 0.0;
   double area = 0.0;
   grid_map::Position start, end;
@@ -361,9 +362,10 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
       }
     }
   } else {
-    grid_map::Polygon polygon1, polygon2;
+    grid_map::Polygon polygon, polygon1, polygon2;
     polygon1.setFrameId(mapFrameId_);
-    polygon2.setFrameId(mapFrameId_);
+    polygon1.setTimestamp(ros::Time::now().toNSec());
+    polygon2 = polygon1;
     for (int i = 0; i < arraySize; i++) {
       polygon1 = polygon2;
       start = end;
@@ -421,7 +423,9 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
       }
 
       if (arraySize > 1 && i > 0) {
-        polygon = polygon.convexHull(polygon1, polygon2);
+        polygon = grid_map::Polygon::convexHull(polygon1, polygon2);
+        polygon.setFrameId(mapFrameId_);
+        polygon.setTimestamp(ros::Time::now().toNSec());
         if (checkRobotInclination_) {
           if (!checkInclination(start, end))
             return true;
@@ -453,6 +457,9 @@ bool TraversabilityMap::isTraversable(grid_map::Polygon& polygon, double& traver
 {
   unsigned int nCells = 0;
   traversability = 0.0;
+  geometry_msgs::PolygonStamped polygonMsg;
+  grid_map::PolygonRosConverter::toMessage(polygon, polygonMsg);
+  footprintPublisher_.publish(polygonMsg);
 
   // Iterate through polygon and check for traversability.
   for (grid_map::PolygonIterator polygonIterator(traversabilityMap_, polygon);

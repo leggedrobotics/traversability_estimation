@@ -163,7 +163,6 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   footprintPath.footprint.header.stamp = robotPose_.header.stamp;
   footprintPath.footprint.header.frame_id = footprintFrameId_;
   check.request.path.push_back(footprintPath);
-
   // Sending service request.
   ROS_DEBUG("Sending request to %s.", checkFootprintPathServiceName_.c_str());
   checkFootprintPathServiceClient_.waitForExistence();
