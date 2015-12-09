@@ -47,26 +47,44 @@ class TraversabilityChecker
    */
   void publishSafetyStatus(const bool safetyStatus, const ros::Time& timeStamp);
 
-
+  //! ROS node handle.
   ros::NodeHandle nodeHandle_;
+
+  //! TF listener.
   tf::TransformListener tfListener_;
+
+  //! Publisher of the safety status.
   ros::Publisher safetyPublisher_;
+
+  //! Check traversability safety timer.
   ros::Timer timer_;
   ros::Duration timerDuration_;
+
+  //! Check footprint path service client.
   ros::ServiceClient checkFootprintPathServiceClient_;
   std::string checkFootprintPathServiceName_;
+
+  //! ROS service server.
   ros::ServiceServer overwriteServiceServer_;
   std::string overwriteServiceName_;
+  bool overwrite_;
+
+  //! Robot pose subscriber.
   ros::Subscriber robotPoseSubscriber_;
   std::string robotPoseTopic_;
+  geometry_msgs::PoseStamped robotPose_;
+
+  //! Robot twist subscriber.
   ros::Subscriber twistSubscriber_;
   std::string twistTopic_;
-  bool useTwistWithCovariance_;
-  double extrapolationDuration_;
-  double footprintRadius_;
-  bool overwrite_;
-  geometry_msgs::PoseStamped robotPose_;
   geometry_msgs::TwistStamped twist_;
+  bool useTwistWithCovariance_;
+
+  //! Extrapolation duration.
+  double extrapolationDuration_;
+
+  //! Footprint radius.
+  double footprintRadius_;
 
   //! Vertices of the footprint polygon in base frame.
   std::vector<geometry_msgs::Point32> footprintPoints_;
