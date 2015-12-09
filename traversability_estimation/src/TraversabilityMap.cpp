@@ -697,7 +697,7 @@ bool TraversabilityMap::checkForSlope(const grid_map::Index& index)
 {
   if (traversabilityMap_.at(slopeType_, index) == 0.0) {
     if (!traversabilityMap_.isValid(index, "slope_footprint")) {
-      double windowRadius = 3.0*traversabilityMap_.getResolution();; // TODO: read this as a parameter?
+      double windowRadius = 3.0*traversabilityMap_.getResolution(); // TODO: read this as a parameter?
       double criticalLength = maxGapWidth_ / 3.0;
       int nSlopesCritical = floor(2 * windowRadius * criticalLength / pow(traversabilityMap_.getResolution(), 2));
 
@@ -726,7 +726,7 @@ bool TraversabilityMap::checkForRoughness(const grid_map::Index& index)
 {
   if (traversabilityMap_.at(roughnessType_, index) == 0.0) {
     if (!traversabilityMap_.isValid(index, "roughness_footprint")) {
-      double windowRadius = 3.0*traversabilityMap_.getResolution();; // TODO: read this as a parameter?
+      double windowRadius = 3.0*traversabilityMap_.getResolution(); // TODO: read this as a parameter?
       double criticalLength = maxGapWidth_ / 3.0;
       int nRoughnessCritical = floor(1.5 * windowRadius * criticalLength / pow(traversabilityMap_.getResolution(), 2));
 
