@@ -89,7 +89,7 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
     return;
   }
 
-  if (ros::Time::now() - twist_.header.stamp >= ros::Duration(10.0)) {
+  if (twist_.header.stamp.isZero() || ros::Time::now() - twist_.header.stamp >= ros::Duration(10.0)) {
     ROS_INFO_STREAM(nodeHandle_.getNamespace() << ": Twist not received yet or too old, checking traversability with zero velocity.");
     twist_.header = robotPose_.header;
     twist_.twist.linear.x = 0.0;
@@ -109,7 +109,7 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   angularVelocityInTwistFrame.header = twist_.header;
   angularVelocityInTwistFrame.vector = twist_.twist.angular;
   try {
-    if (tfListener_.waitForTransform(twist_.header.frame_id, robotPose_.header.frame_id, robotPose_.header.stamp, ros::Duration(2.0))) {
+    if (tfListener_.waitForTransform(twist_.header.frame_id, robotPose_.header.frame_id, twist_.header.stamp, ros::Duration(1.0))) {
       tfListener_.transformVector(robotPose_.header.frame_id, linearVelocityInTwistFrame, linearVelocityInBaseFrame);
       tfListener_.transformVector(robotPose_.header.frame_id, angularVelocityInTwistFrame, angularVelocityInBaseFrame);
     } else {
