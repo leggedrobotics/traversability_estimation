@@ -48,7 +48,7 @@ bool SurfaceNormalsFilter<T>::configure()
     return false;
   }
 
-  ROS_INFO("Surface normals estimation radius = %f", estimationRadius_);
+  ROS_DEBUG("Surface normals estimation radius = %f", estimationRadius_);
 
   std::string surfaceNormalPositiveAxis;
   if (!FilterBase<T>::getParam(std::string("surface_normal_positive_axis"), surfaceNormalPositiveAxis)) {

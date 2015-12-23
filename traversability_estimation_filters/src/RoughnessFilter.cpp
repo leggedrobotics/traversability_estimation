@@ -45,7 +45,7 @@ bool RoughnessFilter<T>::configure()
     return false;
   }
 
-  ROS_INFO("Critical roughness = %f", criticalValue_);
+  ROS_DEBUG("Critical roughness = %f", criticalValue_);
 
   if (!FilterBase<T>::getParam(std::string("estimation_radius"), estimationRadius_)) {
     ROS_ERROR("RoughnessFilter did not find param estimation_radius");
@@ -57,14 +57,14 @@ bool RoughnessFilter<T>::configure()
     return false;
   }
 
-  ROS_INFO("Roughness estimation radius = %f", estimationRadius_);
+  ROS_DEBUG("Roughness estimation radius = %f", estimationRadius_);
 
   if (!FilterBase<T>::getParam(std::string("map_type"), type_)) {
     ROS_ERROR("RoughnessFilter did not find param map_type");
     return false;
   }
 
-  ROS_INFO("Roughness map type = %s", type_.c_str());
+  ROS_DEBUG("Roughness map type = %s", type_.c_str());
 
   return true;
 }

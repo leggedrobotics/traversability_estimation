@@ -36,6 +36,7 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
       roughnessType_("traversability_roughness"),
       robotSlopeType_("robot_slope"),
       filter_chain_("grid_map::GridMap"),
+      zPosition_(0),
       elevationMapInitialized_(false),
       traversabilityMapInitialized_(false),
       checkForRoughness_(false),
@@ -98,6 +99,7 @@ bool TraversabilityMap::setElevationMap(const grid_map_msgs::GridMap& msg)
 {
   grid_map::GridMap elevationMap;
   grid_map::GridMapRosConverter::fromMessage(msg, elevationMap);
+  zPosition_ = msg.info.pose.position.z;
   for (auto& layer : elevationMapLayers_) {
     if (!elevationMap.exists(layer)) {
       ROS_WARN("Traversability Map: Can't set elevation map because there is no layer %s.", layer.c_str());
@@ -114,6 +116,7 @@ bool TraversabilityMap::setTraversabilityMap(const grid_map_msgs::GridMap& msg)
 {
   grid_map::GridMap traversabilityMap;
   grid_map::GridMapRosConverter::fromMessage(msg, traversabilityMap);
+  zPosition_ = msg.info.pose.position.z;
   for (auto& layer : traversabilityMapLayers_) {
     if (!traversabilityMap.exists(layer)) {
       ROS_WARN("Traversability Map: Can't set traversability map because there exists no layer %s.", layer.c_str());
@@ -126,12 +129,6 @@ bool TraversabilityMap::setTraversabilityMap(const grid_map_msgs::GridMap& msg)
   return true;
 }
 
-void TraversabilityMap::setTraversabilityMap(const grid_map::GridMap& map)
-{
-  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
-  traversabilityMap_ = map;
-}
-
 void TraversabilityMap::publishTraversabilityMap()
 {
   if (!traversabilityMapPublisher_.getNumSubscribers() < 1) {
@@ -139,6 +136,7 @@ void TraversabilityMap::publishTraversabilityMap()
     boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
     grid_map::GridMapRosConverter::toMessage(traversabilityMap_, mapMessage);
     scopedLockForTraversabilityMap.unlock();
+    mapMessage.info.pose.position.z = zPosition_;
     traversabilityMapPublisher_.publish(mapMessage);
   }
 }

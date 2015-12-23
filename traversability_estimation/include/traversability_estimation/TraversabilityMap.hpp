@@ -95,7 +95,6 @@ class TraversabilityMap
    * @return true if successful.
    */
   bool setTraversabilityMap(const grid_map_msgs::GridMap& msg);
-  void setTraversabilityMap(const grid_map::GridMap& map);
 
   /*!
    * Set the elevation map from layers of a grid_map_msgs::GridMap.
@@ -248,6 +247,9 @@ class TraversabilityMap
   //! Mutex lock for traversability map.
   boost::recursive_mutex traversabilityMapMutex_;
   boost::recursive_mutex elevationMapMutex_;
+
+  //! Z-position of the robot pose belonging to this map.
+  double zPosition_;
 };
 
 } /* namespace */

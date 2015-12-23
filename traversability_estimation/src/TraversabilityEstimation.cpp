@@ -27,7 +27,7 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
       robotSlopeType_("robot_slope"),
       getImageCallback_(false)
 {
-  ROS_INFO("Traversability estimation node started.");
+  ROS_DEBUG("Traversability estimation node started.");
   readParameters();
   submapClient_ = nodeHandle_.serviceClient<grid_map_msgs::GetGridMap>(submapServiceName_);
 
