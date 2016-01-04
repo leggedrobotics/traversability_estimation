@@ -258,7 +258,7 @@ bool TraversabilityEstimation::checkFootprintPath(
   traversability_msgs::FootprintPath path;
   for (int j = 0; j < nPaths; j++) {
     path = request.path[j];
-    if (!traversabilityMap_.checkFootprintPath(path, result))
+    if (!traversabilityMap_.checkFootprintPath(path, result, true))
       return false;
     response.result.push_back(result);
   }

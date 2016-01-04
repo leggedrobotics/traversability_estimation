@@ -65,7 +65,8 @@ class TraversabilityMap
    * @return true if successful.
    */
   bool checkFootprintPath(const traversability_msgs::FootprintPath& path,
-                          traversability_msgs::TraversabilityResult& result);
+                          traversability_msgs::TraversabilityResult& result,
+                          const bool publishPolygon = false);
 
   /*!
    * Computes the traversability of a footprint at each map cell position twice:
@@ -191,6 +192,11 @@ class TraversabilityMap
    * @return true if traversable regarding roughness, false otherwise.
    */
   bool checkForRoughness(const grid_map::Index& index);
+
+  /*!
+   * Publishes the footprint polygon.
+   */
+  void publishFootprintPolygon(const grid_map::Polygon& polygon);
 
   //! ROS node handle.
   ros::NodeHandle& nodeHandle_;
