@@ -11,11 +11,11 @@
   <author email="pfankhauser@ethz.ch">Peter Fankhauser</author>
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>cmake_modules</build_depend>
-  <build_depend>grid_map</build_depend>
   <build_depend>grid_map_core</build_depend>
+  <build_depend>grid_map_ros</build_depend>
   <build_depend>grid_map_msgs</build_depend>
   <build_depend>filters</build_depend>
-  <run_depend>grid_map</run_depend>
+  <run_depend>grid_map_ros</run_depend>
   <run_depend>grid_map_core</run_depend>
   <run_depend>grid_map_msgs</run_depend>
   <run_depend>filters</run_depend>

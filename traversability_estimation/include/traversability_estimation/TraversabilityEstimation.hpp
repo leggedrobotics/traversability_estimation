@@ -11,7 +11,7 @@
 #include "traversability_estimation/TraversabilityMap.hpp"
 
 // Grid Map
-#include <grid_map/grid_map.hpp>
+#include <grid_map_ros/grid_map_ros.hpp>
 #include <grid_map_msgs/GetGridMapInfo.h>
 #include <grid_map_msgs/GetGridMap.h>
 
