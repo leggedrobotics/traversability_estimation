@@ -10,7 +10,7 @@
 #include <pluginlib/class_list_macros.h>
 
 // Grid Map
-#include <grid_map/grid_map.hpp>
+#include <grid_map_ros/grid_map_ros.hpp>
 
 using namespace Eigen;
 using namespace grid_map;
