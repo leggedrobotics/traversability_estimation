@@ -36,6 +36,7 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
       roughnessType_("traversability_roughness"),
       robotSlopeType_("robot_slope"),
       filter_chain_("grid_map::GridMap"),
+      zPosition_(0),
       elevationMapInitialized_(false),
       traversabilityMapInitialized_(false),
       checkForRoughness_(false),
@@ -98,6 +99,7 @@ bool TraversabilityMap::setElevationMap(const grid_map_msgs::GridMap& msg)
 {
   grid_map::GridMap elevationMap;
   grid_map::GridMapRosConverter::fromMessage(msg, elevationMap);
+  zPosition_ = msg.info.pose.position.z;
   for (auto& layer : elevationMapLayers_) {
     if (!elevationMap.exists(layer)) {
       ROS_WARN("Traversability Map: Can't set elevation map because there is no layer %s.", layer.c_str());
@@ -114,6 +116,7 @@ bool TraversabilityMap::setTraversabilityMap(const grid_map_msgs::GridMap& msg)
 {
   grid_map::GridMap traversabilityMap;
   grid_map::GridMapRosConverter::fromMessage(msg, traversabilityMap);
+  zPosition_ = msg.info.pose.position.z;
   for (auto& layer : traversabilityMapLayers_) {
     if (!traversabilityMap.exists(layer)) {
       ROS_WARN("Traversability Map: Can't set traversability map because there exists no layer %s.", layer.c_str());
@@ -126,12 +129,6 @@ bool TraversabilityMap::setTraversabilityMap(const grid_map_msgs::GridMap& msg)
   return true;
 }
 
-void TraversabilityMap::setTraversabilityMap(const grid_map::GridMap& map)
-{
-  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
-  traversabilityMap_ = map;
-}
-
 void TraversabilityMap::publishTraversabilityMap()
 {
   if (!traversabilityMapPublisher_.getNumSubscribers() < 1) {
@@ -139,6 +136,7 @@ void TraversabilityMap::publishTraversabilityMap()
     boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
     grid_map::GridMapRosConverter::toMessage(traversabilityMap_, mapMessage);
     scopedLockForTraversabilityMap.unlock();
+    mapMessage.info.pose.position.z = zPosition_;
     traversabilityMapPublisher_.publish(mapMessage);
   }
 }
@@ -285,7 +283,10 @@ bool TraversabilityMap::traversabilityFootprint(const double& radius, const doub
   return true;
 }
 
-bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintPath& path, traversability_msgs::TraversabilityResult& result)
+bool TraversabilityMap::checkFootprintPath(
+    const traversability_msgs::FootprintPath& path,
+    traversability_msgs::TraversabilityResult& result,
+    const bool publishPolygon)
 {
   if (!traversabilityMapInitialized_) {
     ROS_DEBUG("Traversability Estimation: check Footprint path: Traversability map not yet initialized.");
@@ -322,6 +323,10 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
         if (!isTraversable(end, radius + offset, traversability, radius)) {
           return true;
         }
+        if (publishPolygon) {
+          grid_map::Polygon polygon = grid_map::Polygon::fromCircle(end, radius + offset);
+          publishFootprintPolygon(polygon);
+        }
         result.traversability = traversability;
       }
 
@@ -341,6 +346,10 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
           traversabilityMap_.getPosition(*lineIterator, center);
           if (!isTraversable(center, radius + offset, traversabilityTemp, radius)) {
             return true;
+          }
+          if (publishPolygon) {
+            grid_map::Polygon polygon = grid_map::Polygon::fromCircle(end, radius + offset);
+            publishFootprintPolygon(polygon);
           }
           traversabilitySum += traversabilityTemp;
           nLine++;
@@ -418,6 +427,9 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
         if (!isTraversable(polygon, traversability)) {
           return true;
         }
+        if (publishPolygon) {
+          publishFootprintPolygon(polygon);
+        }
         result.traversability = traversability;
         result.area = polygon.getArea();
       }
@@ -432,6 +444,9 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
         }
         if (!isTraversable(polygon, traversability)) {
           return true;
+        }
+        if (publishPolygon) {
+          publishFootprintPolygon(polygon);
         }
         double areaPolygon, areaPrevious;
         if (i > 1) {
@@ -457,9 +472,6 @@ bool TraversabilityMap::isTraversable(grid_map::Polygon& polygon, double& traver
 {
   unsigned int nCells = 0;
   traversability = 0.0;
-  geometry_msgs::PolygonStamped polygonMsg;
-  grid_map::PolygonRosConverter::toMessage(polygon, polygonMsg);
-  footprintPublisher_.publish(polygonMsg);
 
   // Iterate through polygon and check for traversability.
   for (grid_map::PolygonIterator polygonIterator(traversabilityMap_, polygon);
@@ -749,6 +761,14 @@ bool TraversabilityMap::checkForRoughness(const grid_map::Index& index)
     }
   }
   return true;
+}
+
+void TraversabilityMap::publishFootprintPolygon(const grid_map::Polygon& polygon)
+{
+  if (footprintPublisher_.getNumSubscribers() < 1) return;
+  geometry_msgs::PolygonStamped polygonMsg;
+  grid_map::PolygonRosConverter::toMessage(polygon, polygonMsg);
+  footprintPublisher_.publish(polygonMsg);
 }
 
 } /* namespace */

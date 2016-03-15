@@ -65,7 +65,8 @@ class TraversabilityMap
    * @return true if successful.
    */
   bool checkFootprintPath(const traversability_msgs::FootprintPath& path,
-                          traversability_msgs::TraversabilityResult& result);
+                          traversability_msgs::TraversabilityResult& result,
+                          const bool publishPolygon = false);
 
   /*!
    * Computes the traversability of a footprint at each map cell position twice:
@@ -95,7 +96,6 @@ class TraversabilityMap
    * @return true if successful.
    */
   bool setTraversabilityMap(const grid_map_msgs::GridMap& msg);
-  void setTraversabilityMap(const grid_map::GridMap& map);
 
   /*!
    * Set the elevation map from layers of a grid_map_msgs::GridMap.
@@ -193,6 +193,11 @@ class TraversabilityMap
    */
   bool checkForRoughness(const grid_map::Index& index);
 
+  /*!
+   * Publishes the footprint polygon.
+   */
+  void publishFootprintPolygon(const grid_map::Polygon& polygon);
+
   //! ROS node handle.
   ros::NodeHandle& nodeHandle_;
 
@@ -248,6 +253,9 @@ class TraversabilityMap
   //! Mutex lock for traversability map.
   boost::recursive_mutex traversabilityMapMutex_;
   boost::recursive_mutex elevationMapMutex_;
+
+  //! Z-position of the robot pose belonging to this map.
+  double zPosition_;
 };
 
 } /* namespace */

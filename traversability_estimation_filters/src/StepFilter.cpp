@@ -47,7 +47,7 @@ bool StepFilter<T>::configure()
     return false;
   }
 
-  ROS_INFO("Critical step height = %f.", criticalValue_);
+  ROS_DEBUG("Critical step height = %f.", criticalValue_);
 
   if (!FilterBase<T>::getParam(std::string("first_window_radius"),
                                firstWindowRadius_)) {
@@ -60,7 +60,7 @@ bool StepFilter<T>::configure()
     return false;
   }
 
-  ROS_INFO("First window radius of step filter = %f.", firstWindowRadius_);
+  ROS_DEBUG("First window radius of step filter = %f.", firstWindowRadius_);
 
   if (!FilterBase<T>::getParam(std::string("second_window_radius"),
                                secondWindowRadius_)) {
@@ -73,7 +73,7 @@ bool StepFilter<T>::configure()
     return false;
   }
 
-  ROS_INFO("Second window radius of step filter = %f.", secondWindowRadius_);
+  ROS_DEBUG("Second window radius of step filter = %f.", secondWindowRadius_);
 
   if (!FilterBase<T>::getParam(std::string("critical_cell_number"),
                                nCellCritical_)) {
@@ -86,14 +86,14 @@ bool StepFilter<T>::configure()
     return false;
   }
 
-  ROS_INFO("Number of critical cells of step filter = %d.", nCellCritical_);
+  ROS_DEBUG("Number of critical cells of step filter = %d.", nCellCritical_);
 
   if (!FilterBase<T>::getParam(std::string("map_type"), type_)) {
     ROS_ERROR("Step filter did not find param map_type.");
     return false;
   }
 
-  ROS_INFO("Step map type = %s.", type_.c_str());
+  ROS_DEBUG("Step map type = %s.", type_.c_str());
 
   return true;
 }

@@ -43,14 +43,14 @@ bool SlopeFilter<T>::configure()
     return false;
   }
 
-  ROS_INFO("critical Slope = %f", criticalValue_);
+  ROS_DEBUG("critical Slope = %f", criticalValue_);
 
   if (!FilterBase<T>::getParam(std::string("map_type"), type_)) {
     ROS_ERROR("SlopeFilter did not find param map_type");
     return false;
   }
 
-  ROS_INFO("Slope map type = %s", type_.c_str());
+  ROS_DEBUG("Slope map type = %s", type_.c_str());
 
   return true;
 }
