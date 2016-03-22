@@ -76,7 +76,7 @@ bool TraversabilityEstimation::readParameters()
   nodeHandle_.param("image_position_x", imagePosition_.x(), 0.0);
   nodeHandle_.param("image_position_y", imagePosition_.y(), 0.0);
 
-  nodeHandle_.param("traversability_map/frame_id", mapFrameId_, string("map"));
+  nodeHandle_.param("map_frame_id", mapFrameId_, string("map"));
   nodeHandle_.param("robot_frame_id", robotFrameId_, string("robot"));
   grid_map::Position mapCenter;
   nodeHandle_.param("map_center_x", mapCenter.x(), 0.0);

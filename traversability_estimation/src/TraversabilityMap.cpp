@@ -66,8 +66,8 @@ bool TraversabilityMap::readParameters()
 {
   // Read footprint polygon.
   XmlRpc::XmlRpcValue footprint;
-  nodeHandle_.getParam("traversability_map/footprint_polygon", footprint);
-  if (footprint.size() < 2) {
+  nodeHandle_.getParam("footprint/footprint_polygon", footprint);
+  if (footprint.size() < 3) {
     ROS_WARN("Footprint polygon must consist of at least 3 points. Only %i points found.", footprint.size());
     footprintPoints_.clear();
   } else {
@@ -80,12 +80,11 @@ bool TraversabilityMap::readParameters()
     }
   }
 
-  nodeHandle_.param("traversability_map/frame_id", mapFrameId_, string("map"));
-  nodeHandle_.param("traversability_map/traversability_default", traversabilityDefault_, 0.5);
-  nodeHandle_.param("traversability_map/verify_roughness_footprint", checkForRoughness_, false);
-  nodeHandle_.param("traversability_map/check_robot_inclination", checkRobotInclination_, false);
+  nodeHandle_.param("map_frame_id", mapFrameId_, string("map"));
+  nodeHandle_.param("footprint/traversability_default", traversabilityDefault_, 0.5);
+  nodeHandle_.param("footprint/verify_roughness_footprint", checkForRoughness_, false);
+  nodeHandle_.param("footprint/check_robot_inclination", checkRobotInclination_, false);
   nodeHandle_.param("max_gap_width", maxGapWidth_, 0.3);
-  nodeHandle_.param("circular_footprint_offset", circularFootprintOffset_, 0.15);
   nodeHandle_.param("traversability_map_filters/stepFilter/critical_value", criticalStepHeight_, 0.12);
 
   // Configure filter chain
