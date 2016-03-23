@@ -27,6 +27,7 @@ TraversabilityChecker::TraversabilityChecker(const ros::NodeHandle& nodeHandle)
   safetyPublisher_ = nodeHandle_.advertise<any_msgs::State>("safety_status", 1);
   timer_ = nodeHandle_.createTimer(timerDuration_, &TraversabilityChecker::check, this);
   checkFootprintPathServiceClient_ = nodeHandle_.serviceClient<traversability_msgs::CheckFootprintPath>(checkFootprintPathServiceName_);
+  toggleCheckingServer_ = nodeHandle_.advertiseService(toggleCheckingName_, &TraversabilityChecker::toggleTraversabilityChecking, this);
   overwriteServiceServer_ = nodeHandle_.advertiseService(overwriteServiceName_, &TraversabilityChecker::overwriteService, this);
   robotPoseSubscriber_ = nodeHandle_.subscribe(robotPoseTopic_, 1, &TraversabilityChecker::updateRobotPose, this);
   if (useTwistWithCovariance_) twistSubscriber_ = nodeHandle_.subscribe(twistTopic_, 1, &TraversabilityChecker::updateRobotTwistWithCovariance, this);
@@ -66,6 +67,11 @@ bool TraversabilityChecker::readParameters()
       footprintPoints_.push_back(pt);
     }
   }
+  return true;
+}
+
+bool TraversabilityChecker::toggleTraversabilityChecking(any_msgs::Toggle::Request& request, any_msgs::Toggle::Response& response)
+{
   return true;
 }
 
