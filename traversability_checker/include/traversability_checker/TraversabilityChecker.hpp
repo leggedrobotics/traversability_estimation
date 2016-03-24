@@ -41,7 +41,7 @@ class TraversabilityChecker
 
   bool overwriteService(traversability_msgs::Overwrite::Request& request, traversability_msgs::Overwrite::Response& response);
 
-  bool toogleTraversabilityChecking(any_msgs::Toggle::Request& request, any_msgs::Toggle::Response& response);
+  bool toggleTraversabilityChecking(any_msgs::Toggle::Request& request, any_msgs::Toggle::Response& response);
 
   /*!
    * Publish the status of the traversability safety.
