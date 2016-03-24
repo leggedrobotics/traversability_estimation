@@ -21,12 +21,14 @@ namespace traversability_checker {
 TraversabilityChecker::TraversabilityChecker(const ros::NodeHandle& nodeHandle)
     : nodeHandle_(nodeHandle),
       useTwistWithCovariance_(false),
-      overwrite_(false)
+      overwrite_(false),
+      isChecking_(false)
 {
   readParameters();
   safetyPublisher_ = nodeHandle_.advertise<any_msgs::State>("safety_status", 1);
-  timer_ = nodeHandle_.createTimer(timerDuration_, &TraversabilityChecker::check, this);
+  timer_ = nodeHandle_.createTimer(timerDuration_, &TraversabilityChecker::check, this, false, false);
   checkFootprintPathServiceClient_ = nodeHandle_.serviceClient<traversability_msgs::CheckFootprintPath>(checkFootprintPathServiceName_);
+  toggleCheckingServer_ = nodeHandle_.advertiseService(toggleCheckingName_, &TraversabilityChecker::toggleTraversabilityChecking, this);
   overwriteServiceServer_ = nodeHandle_.advertiseService(overwriteServiceName_, &TraversabilityChecker::overwriteService, this);
   robotPoseSubscriber_ = nodeHandle_.subscribe(robotPoseTopic_, 1, &TraversabilityChecker::updateRobotPose, this);
   if (useTwistWithCovariance_) twistSubscriber_ = nodeHandle_.subscribe(twistTopic_, 1, &TraversabilityChecker::updateRobotTwistWithCovariance, this);
@@ -41,6 +43,7 @@ bool TraversabilityChecker::readParameters()
 {
   nodeHandle_.param("check_footprint_path_service_name", checkFootprintPathServiceName_, std::string("/traversability_estimation/check_footprint_path"));
   nodeHandle_.param("overwrite_service_name", overwriteServiceName_, std::string("overwrite"));
+  nodeHandle_.param("toggle_checking_service_name", toggleCheckingName_, std::string("toggle"));
   nodeHandle_.param("robot_pose_topic", robotPoseTopic_, std::string("pose"));
   nodeHandle_.param("twist_topic", twistTopic_, std::string("twist"));
   nodeHandle_.param("use_twist_with_covariance", useTwistWithCovariance_, false);
@@ -66,6 +69,29 @@ bool TraversabilityChecker::readParameters()
       footprintPoints_.push_back(pt);
     }
   }
+  return true;
+}
+
+bool TraversabilityChecker::toggleTraversabilityChecking(any_msgs::Toggle::Request& request, any_msgs::Toggle::Response& response)
+{
+  if (request.enable) {
+    if (isChecking_) {
+      ROS_INFO_STREAM("TraversabilityChecker: Traversability Checking already active.");
+    } else {
+      ROS_INFO_STREAM("TraversabilityChecker: Start Traversability Checking.");
+      timer_.start();
+      isChecking_ = true;
+    }
+  } else {
+    if (isChecking_) {
+      ROS_INFO_STREAM("TraversabilityChecker: Stop Traversability Checking.");
+      timer_.stop();
+      isChecking_ = false;
+    } else {
+      ROS_INFO_STREAM("TraversabilityChecker: Traversability Checking already inactive.");
+    }
+  }
+  response.success = true;
   return true;
 }
 
