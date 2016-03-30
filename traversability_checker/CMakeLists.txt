@@ -17,11 +17,12 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
+  any_msgs
+  elevation_change_msgs
+  geometry_msgs
   roscpp
   tf
   traversability_msgs
-  geometry_msgs
-  any_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -47,11 +48,12 @@ catkin_package(
     include
 #  LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS
+    any_msgs
+    geometry_msgs
+    elevation_change_msgs
     roscpp
     tf
     traversability_msgs
-    geometry_msgs
-    any_msgs
   DEPENDS
     Eigen
 )

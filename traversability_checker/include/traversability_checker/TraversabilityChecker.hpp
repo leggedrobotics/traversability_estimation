@@ -63,9 +63,14 @@ class TraversabilityChecker
   ros::Timer timer_;
   ros::Duration timerDuration_;
 
-  //! Check footprint path service client.
+  //! Check traversability of footprint path service client.
   ros::ServiceClient checkFootprintPathServiceClient_;
   std::string checkFootprintPathServiceName_;
+
+  //! Check for obstacles on footprint path service client.
+  ros::ServiceClient checkObstaclesServiceClient_;
+  std::string checkObstacleServiceName_;
+  bool isCheckingForObstacle_;
 
   //! ROS service server.
   ros::ServiceServer overwriteServiceServer_;
