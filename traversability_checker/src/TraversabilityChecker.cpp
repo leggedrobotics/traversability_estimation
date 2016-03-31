@@ -32,6 +32,7 @@ TraversabilityChecker::TraversabilityChecker(const ros::NodeHandle& nodeHandle)
   checkFootprintPathServiceClient_ = nodeHandle_.serviceClient<traversability_msgs::CheckFootprintPath>(checkFootprintPathServiceName_);
   checkObstaclesServiceClient_ = nodeHandle_.serviceClient<elevation_change_msgs::DetectObstacle>(checkObstacleServiceName_);
   toggleCheckingServer_ = nodeHandle_.advertiseService(toggleCheckingName_, &TraversabilityChecker::toggleTraversabilityChecking, this);
+  toggleDetectObstacleServer_ = nodeHandle_.advertiseService(toggleDetectObstacleName_, &TraversabilityChecker::toggleObstacleDetection, this);
   overwriteServiceServer_ = nodeHandle_.advertiseService(overwriteServiceName_, &TraversabilityChecker::overwriteService, this);
   robotPoseSubscriber_ = nodeHandle_.subscribe(robotPoseTopic_, 1, &TraversabilityChecker::updateRobotPose, this);
   if (useTwistWithCovariance_) twistSubscriber_ = nodeHandle_.subscribe(twistTopic_, 1, &TraversabilityChecker::updateRobotTwistWithCovariance, this);
@@ -49,6 +50,7 @@ bool TraversabilityChecker::readParameters()
   nodeHandle_.param("is_checking_for_obstacle", isCheckingForObstacle_, false);
   nodeHandle_.param("overwrite_service_name", overwriteServiceName_, std::string("overwrite"));
   nodeHandle_.param("toggle_checking_service_name", toggleCheckingName_, std::string("toggle"));
+  nodeHandle_.param("toggle_detect_obstacle_service_name", toggleDetectObstacleName_, std::string("detect_obstacle"));
   nodeHandle_.param("robot_pose_topic", robotPoseTopic_, std::string("pose"));
   nodeHandle_.param("twist_topic", twistTopic_, std::string("twist"));
   nodeHandle_.param("use_twist_with_covariance", useTwistWithCovariance_, false);
@@ -97,6 +99,16 @@ bool TraversabilityChecker::toggleTraversabilityChecking(any_msgs::Toggle::Reque
     }
   }
   response.success = true;
+  return true;
+}
+
+bool TraversabilityChecker::toggleObstacleDetection(any_msgs::Toggle::Request& request, any_msgs::Toggle::Response& response)
+{
+  if (request.enable == isCheckingForObstacle_)
+  {
+    ROS_INFO_STREAM("TraversabilityChecker: toggleObstacleDetection: Checking is already " << (isCheckingForObstacle_ ? "enabled." : "disabled."));
+  }
+  isCheckingForObstacle_ = request.enable;
   return true;
 }
 

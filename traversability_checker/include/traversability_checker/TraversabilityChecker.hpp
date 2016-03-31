@@ -43,6 +43,8 @@ class TraversabilityChecker
 
   bool toggleTraversabilityChecking(any_msgs::Toggle::Request& request, any_msgs::Toggle::Response& response);
 
+  bool toggleObstacleDetection(any_msgs::Toggle::Request& request, any_msgs::Toggle::Response& response);
+
   /*!
    * Publish the status of the traversability safety.
    * @param safetyStatus the status of the traversability
@@ -77,6 +79,8 @@ class TraversabilityChecker
   std::string overwriteServiceName_;
   ros::ServiceServer toggleCheckingServer_;
   std::string toggleCheckingName_;
+  ros::ServiceServer toggleDetectObstacleServer_;
+  std::string toggleDetectObstacleName_;
   bool overwrite_;
   bool isChecking_;
 
