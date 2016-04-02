@@ -109,6 +109,7 @@ bool TraversabilityChecker::toggleObstacleDetection(any_msgs::Toggle::Request& r
     ROS_INFO_STREAM("TraversabilityChecker: toggleObstacleDetection: Checking is already " << (isCheckingForObstacle_ ? "enabled." : "disabled."));
   }
   isCheckingForObstacle_ = request.enable;
+  response.success = true;
   return true;
 }
 
