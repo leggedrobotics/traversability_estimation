@@ -17,8 +17,7 @@
 #include <geometry_msgs/PolygonStamped.h>
 
 // kindr
-#include <kindr/rotations/RotationEigen.hpp>
-#include <kindr/poses/PoseEigen.hpp>
+#include <kindr/Core>
 
 // Eigen
 #include <Eigen/Core>
@@ -219,9 +218,9 @@ bool TraversabilityMap::traversabilityFootprint(double footprintYaw)
 
   ROS_DEBUG_STREAM("footprint yaw: " << footprintYaw);
   // Compute Orientation
-  kindr::rotations::eigen_impl::RotationQuaternionPD xquat, rquat;
-  kindr::rotations::eigen_impl::AngleAxisPD rotationAxis(footprintYaw, 0.0,
-                                                         0.0, 1.0);
+  kindr::RotationQuaternionD xquat, rquat;
+  kindr::AngleAxisD rotationAxis(footprintYaw, 0.0,
+                                 0.0, 1.0);
   rquat = rotationAxis * xquat;
   Eigen::Quaterniond orientationX = xquat.toImplementation();
   Eigen::Quaterniond orientationRot = rquat.toImplementation();
