@@ -66,7 +66,6 @@ bool TraversabilityMap::readParameters()
   // Read footprint polygon.
   XmlRpc::XmlRpcValue footprint;
   if (nodeHandle_.getParam("footprint/footprint_polygon", footprint)) {
-    ROS_INFO("TraversabilityMap: read footpring polygon.");
     if (footprint.size() < 3) {
       ROS_WARN("Footprint polygon must consist of at least 3 points. Only %i points found.", footprint.size());
       footprintPoints_.clear();
