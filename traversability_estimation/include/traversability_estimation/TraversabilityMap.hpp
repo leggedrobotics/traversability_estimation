@@ -20,9 +20,6 @@
 #include <std_srvs/Empty.h>
 #include <sensor_msgs/Image.h>
 
-// Schweizer-Messer
-#include <sm/timing/Timer.hpp>
-
 // STD
 #include <vector>
 #include <string>
