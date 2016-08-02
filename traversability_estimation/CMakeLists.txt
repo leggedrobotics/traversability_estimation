@@ -36,7 +36,6 @@ if(NOT kindr_FOUND)
   # Attempt to find package-based kindr
   pkg_check_modules(kindr kindr REQUIRED)
 endif()
-pkg_check_modules(SM_TIMING schweizer-messer-timing REQUIRED)
 
 
 ###################################
@@ -79,7 +78,6 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${Eigen3_INCLUDE_DIRS}
-  ${SM_TIMING_INCLUDE_DIRS}
   ${kindr_INCLUDE_DIRS}
 )
 
@@ -92,7 +90,6 @@ add_library(
 target_link_libraries(
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
-  ${SM_TIMING_LIBRARIES}
 )
 
 ## Declare a cpp executable
@@ -107,5 +104,4 @@ target_link_libraries(
   ${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}
-  ${SM_TIMING_LIBRARIES}
 )

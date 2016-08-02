@@ -167,10 +167,8 @@ bool TraversabilityMap::computeTraversability()
   grid_map::GridMap elevationMapCopy = elevationMap_;
   scopedLockForElevationMap.unlock();
 
-  string timerId = "traversability";
-  sm::timing::Timer timer(timerId, true);
-  if (timer.isTiming()) timer.stop();
-  timer.start();
+  // Initialize timer.
+  ros::WallTime start = ros::WallTime::now();
 
   if (elevationMapInitialized_) {
     if (!filter_chain_.update(elevationMapCopy, traversabilityMapCopy)) {
@@ -194,9 +192,7 @@ bool TraversabilityMap::computeTraversability()
   scopedLockForTraversabilityMap.unlock();
   publishTraversabilityMap();
 
-  timer.stop();
-  ROS_DEBUG("Traversability map has been updated in %f s.", sm::timing::Timing::getTotalSeconds(timerId));
-  sm::timing::Timing::reset(timerId);
+  ROS_DEBUG("Traversability map has been updated in %f s.", (ros::WallTime::now() - start).toSec());
   return true;
 }
 
@@ -205,10 +201,7 @@ bool TraversabilityMap::traversabilityFootprint(double footprintYaw)
   if (!traversabilityMapInitialized_) return false;
 
   // Initialize timer.
-  string timerId = "traversability_footprint";
-  sm::timing::Timer timer(timerId, true);
-  if (timer.isTiming()) timer.stop();
-  timer.start();
+  ros::WallTime start = ros::WallTime::now();
 
   traversabilityMap_.add("traversability_x");
   traversabilityMap_.add("traversability_rot");
@@ -263,9 +256,7 @@ bool TraversabilityMap::traversabilityFootprint(double footprintYaw)
 
   publishTraversabilityMap();
 
-  timer.stop();
-  ROS_INFO("Traversability of footprint has been computed in %f s.", sm::timing::Timing::getTotalSeconds(timerId));
-  sm::timing::Timing::reset(timerId);
+  ROS_INFO("Traversability of footprint has been computed in %f s.", (ros::WallTime::now() - start).toSec());
   return true;
 }
 
