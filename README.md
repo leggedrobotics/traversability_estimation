@@ -22,12 +22,6 @@ This software is built on the Robotic Operating System ([ROS]), which needs to b
 - [kindr](http://github.com/ethz-asl/kindr) (kinematics and dynamics library for robotics),
 - [Grid Map](https://github.com/ethz-asl/grid_map) (grid map library for mobile robots),
 - [Elevation Map](https://github.com/ethz-asl/elevation_mapping) (elevation mapping with a mobile robot),
-- [Schweizer-Messer](http://github.com/ethz-asl/Schweizer-Messer) (programming tools for robotics),
-	
-		sudo add-apt-repository ppa:ethz-asl/common
-		sudo apt-get update
-		sudo apt-get install schweizer-messer-common-dev schweizer-messer-timing-dev
-
 
 ### Building
 
@@ -36,7 +30,7 @@ In order to install, clone the latest version from this repository into your cat
 	cd catkin_ws/src
 	git clone https://github.com/ethz-asl/traversability_estimation.git
 	cd ../
-	catkin_make
+	catkin build traversability_estimation
 
 
 ### Unit Tests
@@ -46,7 +40,7 @@ No unit tests so far.
 
 ## Basic Usage
 
-In order to get the Traversability estimation to run with your robot, you will need to adapt a few parameters in the config-file. It is the easiest if you duplicate the config-file `default.yaml` in `traversability_estimation/config` and adapt all the parameters you need to change. Then, duplicate the launch-file `traversability_estimation/launch/traversability_estimation.launch` and change the entries to point at your config-file. You can then launch the traversability map node with
+In order to get the Traversability estimation to run with your robot, you will need to adapt a few parameters in the config-files. It is the easiest if you duplicate the file `robot.yaml`, `robot_footprint.yaml`, and `filter_parameter` in [`traversability_estimation/config`](https://github.com/ethz-asl/traversability_estimation/tree/master/traversability_estimation/config) and adapt all the parameters you need to change. Then, duplicate the launch-file `traversability_estimation/launch/traversability_estimation.launch` and change the entries to point at your files. You can then launch the traversability map node with
 
 	roslaunch traversability_estimation traversability_estimation.launch
 
@@ -54,7 +48,7 @@ Proceed in the same way for the traversability map visualization by adapting the
 
      	roslaunch traversability_estimation visualization.launch
 
-Use [rviz] to visualize the traversability map.
+Use [rviz](http://wiki.ros.org/rviz) to visualize the traversability map.
 
 
 ## Nodes
