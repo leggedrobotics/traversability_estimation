@@ -1,0 +1,8 @@
+# Footprint parameters
+footprint:
+  footprint_polygon: [[0.45, 0.30], [0.45, -0.30], [-0.45, -0.30], [-0.45, 0.30]]
+  circular_footprint_radius: 0.541
+  circular_footprint_radius_inscribed: 0.30
+  circular_footprint_offset: 0.15
+  footprint_frame_id: base
+  traversability_default: 0.3
