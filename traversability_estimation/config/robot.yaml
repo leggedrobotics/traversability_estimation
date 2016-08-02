@@ -1,0 +1,10 @@
+submap_service: "/elevation_mapping_long_range/get_submap"
+map_frame_id: "map"
+robot_frame_id: "base"
+min_update_rate: 0.2
+map_center_x: 0.0
+map_center_y: 0.0
+map_length_x: 4.0
+map_length_y: 4.0
+footprint_yaw: 0.7854
+max_gap_width: 0.3

@@ -65,18 +65,22 @@ bool TraversabilityMap::readParameters()
 {
   // Read footprint polygon.
   XmlRpc::XmlRpcValue footprint;
-  nodeHandle_.getParam("footprint/footprint_polygon", footprint);
-  if (footprint.size() < 3) {
-    ROS_WARN("Footprint polygon must consist of at least 3 points. Only %i points found.", footprint.size());
-    footprintPoints_.clear();
-  } else {
-    geometry_msgs::Point32 pt;
-    pt.z = 0.0;
-    for (int i = 0; i < footprint.size(); i++) {
-      pt.x = (double) footprint[i][0];
-      pt.y = (double) footprint[i][1];
-      footprintPoints_.push_back(pt);
+  if (nodeHandle_.getParam("footprint/footprint_polygon", footprint)) {
+    ROS_INFO("TraversabilityMap: read footpring polygon.");
+    if (footprint.size() < 3) {
+      ROS_WARN("Footprint polygon must consist of at least 3 points. Only %i points found.", footprint.size());
+      footprintPoints_.clear();
+    } else {
+      geometry_msgs::Point32 pt;
+      pt.z = 0.0;
+      for (int i = 0; i < footprint.size(); i++) {
+        pt.x = (double) footprint[i][0];
+        pt.y = (double) footprint[i][1];
+        footprintPoints_.push_back(pt);
+      }
     }
+  } else {
+    ROS_WARN("Traversability Map: No footprint polygon defined.");
   }
 
   nodeHandle_.param("map_frame_id", mapFrameId_, string("map"));
