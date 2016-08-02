@@ -24,6 +24,23 @@ traversability_map_filters:
       map_type: traversability_roughness
       critical_value: 0.05
       estimation_radius: 0.05
+# - name: minFilter
+#   type: gridMapFilters/MinFilter
+#   params:
+#    layers: [traversability_slope, traversability_step, traversability_roughness]
+#    layer_out: traversability
+# - name: lowerThresholdFilter
+#   type: gridMapFilters/ThresholdFilter
+#   params:
+#    lower_threshold: 0.2
+#    set_to: 0.0
+#    layers: [traversability]
+# - name: upperThresholdFilter
+#   type: gridMapFilters/ThresholdFilter
+#   params:
+#    upper_threshold: 0.9
+#    set_to: 1.0
+#    layers: [traversability]
   - name: weightedSumFilter
     type: gridMapFilters/WeightedSumFilter
     params:
