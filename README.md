@@ -40,7 +40,7 @@ No unit tests so far.
 
 ## Basic Usage
 
-In order to get the Traversability estimation to run with your robot, you will need to adapt a few parameters in the config-files. It is the easiest if you duplicate the file `robot.yaml`, `robot_footprint.yaml`, and `filter_parameter` in [`traversability_estimation/config`](https://github.com/ethz-asl/traversability_estimation/tree/master/traversability_estimation/config) and adapt all the parameters you need to change. Then, duplicate the launch-file `traversability_estimation/launch/traversability_estimation.launch` and change the entries to point at your files. You can then launch the traversability map node with
+In order to get the Traversability estimation to run with your robot, you will need to adapt a few parameters in the config-files. It is the easiest if you duplicate the file `robot.yaml`, `robot_footprint.yaml`, and `filter_parameter.yaml` in [`traversability_estimation/config`](https://github.com/ethz-asl/traversability_estimation/tree/master/traversability_estimation/config) and adapt all the parameters you need to change. Then, duplicate the launch-file `traversability_estimation/launch/traversability_estimation.launch` and change the entries to point at your files. You can then launch the traversability map node with
 
 	roslaunch traversability_estimation traversability_estimation.launch
 
