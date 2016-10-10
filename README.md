@@ -7,7 +7,7 @@ Traversability mapping for mobile rough terrain navigation.
 The Traversability Estimation package has been tested under [ROS] Indigo and Ubuntu 14.04. This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
 
 **Authors: Martin Wermelinger, Peter Fankhauser, Ralf Kaestner  
-Contact: Peter Fankhauser, pfankhauser@ethz.ch  
+Contact: Martin Wermelinger, martiwer@mavt.ethz.ch  
 Affiliation: Autonomous Systems Lab, ETH Zurich**
 
 
