@@ -49,6 +49,7 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
 
   elevationMapLayers_.push_back("elevation");
   elevationMapLayers_.push_back("upper_bound");
+  elevationMapLayers_.push_back("lower_bound");
 }
 
 TraversabilityEstimation::~TraversabilityEstimation()
