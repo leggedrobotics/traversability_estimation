@@ -48,7 +48,7 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
   imageSubscriber_ = nodeHandle_.subscribe(imageTopic_,1,&TraversabilityEstimation::imageCallback, this);
 
   elevationMapLayers_.push_back("elevation");
-  elevationMapLayers_.push_back("variance");
+  elevationMapLayers_.push_back("upper_bound");
 }
 
 TraversabilityEstimation::~TraversabilityEstimation()
@@ -127,7 +127,7 @@ void TraversabilityEstimation::imageCallback(const sensor_msgs::Image& image)
   if (!getImageCallback_) {
     grid_map::GridMapRosConverter::initializeFromImage(image, imageResolution_, imageGridMap_, imagePosition_);
     ROS_INFO("Initialized map with size %f x %f m (%i x %i cells).", imageGridMap_.getLength().x(), imageGridMap_.getLength().y(), imageGridMap_.getSize()(0), imageGridMap_.getSize()(1));
-    imageGridMap_.add("variance", 0.0); // TODO: Add value for variance.
+    imageGridMap_.add("variance_test_test", 0.0); // TODO: Add value for variance.
     getImageCallback_ = true;
   }
   grid_map::GridMapRosConverter::addLayerFromImage(image, "elevation", imageGridMap_, imageMinHeight_, imageMaxHeight_);
