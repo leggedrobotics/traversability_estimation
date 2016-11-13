@@ -136,8 +136,10 @@ void TraversabilityMap::publishTraversabilityMap()
   if (!traversabilityMapPublisher_.getNumSubscribers() < 1) {
     grid_map_msgs::GridMap mapMessage;
     boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
-    grid_map::GridMapRosConverter::toMessage(traversabilityMap_, mapMessage);
+    grid_map::GridMap traversabilityMapCopy = traversabilityMap_;
     scopedLockForTraversabilityMap.unlock();
+    traversabilityMapCopy.add("uncertainty_range", traversabilityMapCopy.get("upper_bound") - traversabilityMapCopy.get("lower_bound"));
+    grid_map::GridMapRosConverter::toMessage(traversabilityMapCopy, mapMessage);
     mapMessage.info.pose.position.z = zPosition_;
     traversabilityMapPublisher_.publish(mapMessage);
   }
