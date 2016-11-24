@@ -48,7 +48,8 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
   footprintPublisher_ = nodeHandle_.advertise<geometry_msgs::PolygonStamped>("footprint_polygon", 1, true);
 
   elevationMapLayers_.push_back("elevation");
-  elevationMapLayers_.push_back("variance");
+  elevationMapLayers_.push_back("upper_bound");
+  elevationMapLayers_.push_back("lower_bound");
   // TODO: Adapt map layers to traversability filters.
   traversabilityMapLayers_.push_back(traversabilityType_);
   traversabilityMapLayers_.push_back(slopeType_);
@@ -135,8 +136,10 @@ void TraversabilityMap::publishTraversabilityMap()
   if (!traversabilityMapPublisher_.getNumSubscribers() < 1) {
     grid_map_msgs::GridMap mapMessage;
     boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
-    grid_map::GridMapRosConverter::toMessage(traversabilityMap_, mapMessage);
+    grid_map::GridMap traversabilityMapCopy = traversabilityMap_;
     scopedLockForTraversabilityMap.unlock();
+    traversabilityMapCopy.add("uncertainty_range", traversabilityMapCopy.get("upper_bound") - traversabilityMapCopy.get("lower_bound"));
+    grid_map::GridMapRosConverter::toMessage(traversabilityMapCopy, mapMessage);
     mapMessage.info.pose.position.z = zPosition_;
     traversabilityMapPublisher_.publish(mapMessage);
   }
