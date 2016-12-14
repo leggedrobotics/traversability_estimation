@@ -13,14 +13,14 @@
   
   <build_depend>any_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>
-  <build_depend>elevation_change_msgs</build_depend>
+  <build_depend>elevation_obstacle_msgs</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>traversability_msgs</build_depend>
   
   <run_depend>any_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>
-  <run_depend>elevation_change_msgs</run_depend>
+  <run_depend>elevation_obstacle_msgs</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>tf</run_depend>
   <run_depend>traversability_msgs</run_depend>
