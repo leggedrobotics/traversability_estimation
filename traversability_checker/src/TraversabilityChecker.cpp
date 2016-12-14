@@ -10,7 +10,7 @@
 
 #include <traversability_msgs/CheckFootprintPath.h>
 #include <traversability_msgs/FootprintPath.h>
-#include <elevation_obstacle_msgs/DetectObstacle.h>
+#include <navigation_msgs/DetectObstacle.h>
 #include <any_msgs/State.h>
 
 #include <Eigen/Dense>
@@ -30,7 +30,7 @@ TraversabilityChecker::TraversabilityChecker(const ros::NodeHandle& nodeHandle)
   safetyPublisher_ = nodeHandle_.advertise<any_msgs::State>("safety_status", 1);
   timer_ = nodeHandle_.createTimer(timerDuration_, &TraversabilityChecker::check, this, false, false);
   checkFootprintPathServiceClient_ = nodeHandle_.serviceClient<traversability_msgs::CheckFootprintPath>(checkFootprintPathServiceName_);
-  checkObstaclesServiceClient_ = nodeHandle_.serviceClient<elevation_obstacle_msgs::DetectObstacle>(checkObstacleServiceName_);
+  checkObstaclesServiceClient_ = nodeHandle_.serviceClient<navigation_msgs::DetectObstacle>(checkObstacleServiceName_);
   toggleCheckingServer_ = nodeHandle_.advertiseService(toggleCheckingName_, &TraversabilityChecker::toggleTraversabilityChecking, this);
   toggleDetectObstacleServer_ = nodeHandle_.advertiseService(toggleDetectObstacleName_, &TraversabilityChecker::toggleObstacleDetection, this);
   overwriteServiceServer_ = nodeHandle_.advertiseService(overwriteServiceName_, &TraversabilityChecker::overwriteService, this);
@@ -220,7 +220,7 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   // Sending service request to check for obstacle.
   bool hasObstacle = false;
   if (isCheckingForObstacle_) {
-    elevation_obstacle_msgs::DetectObstacle checkObstacle;
+    navigation_msgs::DetectObstacle checkObstacle;
     checkObstacle.request.path.push_back(footprintPath);
     ROS_DEBUG("Sending request to %s.", checkObstacleServiceName_.c_str());
     checkObstaclesServiceClient_.waitForExistence();
