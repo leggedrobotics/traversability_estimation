@@ -198,8 +198,8 @@ bool TraversabilityEstimation::updateTraversability()
 bool TraversabilityEstimation::updateParameter(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
 {
   // Load parameters file.
-  string path = ros::package::getPath("starleth_traversability_estimation");
-  path = path + "/config/filter_parameter.yaml";
+  string path = ros::package::getPath("anymal_traversability_estimation");
+  path = path + "/config/anymal_filter_parameter.yaml";
   string commandString = "rosparam load " + path + " /traversability_estimation";
   const char* command = commandString.c_str();
   if (system(command) != 0)
