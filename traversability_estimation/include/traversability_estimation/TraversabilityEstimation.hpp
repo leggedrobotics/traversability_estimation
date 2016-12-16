@@ -195,6 +195,9 @@ class TraversabilityEstimation
   //! Id of the frame of the robot.
   std::string robotFrameId_;
 
+  //! Robot name.
+  std::string robot_;
+
   //! Vertices of the footprint polygon in base frame.
   double footprintYaw_;
 
@@ -223,6 +226,9 @@ class TraversabilityEstimation
   //! Path and topic to load elevation map.
   std::string pathToBag_;
   std::string bagTopicName_;
+
+  //! Package name where the parameters are defined.
+  std::string package_;
 };
 
 } /* namespace */
