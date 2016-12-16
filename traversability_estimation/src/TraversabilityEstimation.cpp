@@ -179,7 +179,9 @@ bool TraversabilityEstimation::updateTraversability()
   grid_map_msgs::GridMap elevationMap;
   if (!getImageCallback_) {
     ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
-    submapClient_.waitForExistence();
+    if (!submapClient_.waitForExistence(ros::Duration(2.0))) {
+      return false;
+    }
     ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
     if (requestElevationMap(elevationMap)) {
       traversabilityMap_.setElevationMap(elevationMap);
@@ -222,6 +224,7 @@ bool TraversabilityEstimation::requestElevationMap(grid_map_msgs::GridMap& map)
                                       submapPointTransformed);
   } catch (tf::TransformException &ex) {
     ROS_ERROR("%s", ex.what());
+    return false;
   }
 
   grid_map_msgs::GetGridMap submapService;
