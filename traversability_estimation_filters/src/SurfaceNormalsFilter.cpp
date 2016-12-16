@@ -94,7 +94,7 @@ bool SurfaceNormalsFilter<T>::update(const T& mapIn, T& mapOut)
     mapOut.getPosition(*iterator, center);
 
     // Prepare data computation.
-    const int maxNumberOfCells = ceil(pow(2*estimationRadius_/mapOut.getResolution(),2));
+    const int maxNumberOfCells = pow(ceil(2*estimationRadius_/mapOut.getResolution()),2);
     Eigen::MatrixXd points(3, maxNumberOfCells);
 
     // Gather surrounding data.

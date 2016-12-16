@@ -79,6 +79,8 @@ bool TraversabilityEstimation::readParameters()
 
   nodeHandle_.param("map_frame_id", mapFrameId_, string("map"));
   nodeHandle_.param("robot_frame_id", robotFrameId_, string("robot"));
+  nodeHandle_.param("robot", robot_, string("robot"));
+  nodeHandle_.param("package", package_, string("traversability_estimation"));
   grid_map::Position mapCenter;
   nodeHandle_.param("map_center_x", mapCenter.x(), 0.0);
   nodeHandle_.param("map_center_y", mapCenter.y(), 0.0);
@@ -179,7 +181,9 @@ bool TraversabilityEstimation::updateTraversability()
   grid_map_msgs::GridMap elevationMap;
   if (!getImageCallback_) {
     ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
-    submapClient_.waitForExistence();
+    if (!submapClient_.waitForExistence(ros::Duration(2.0))) {
+      return false;
+    }
     ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
     if (requestElevationMap(elevationMap)) {
       traversabilityMap_.setElevationMap(elevationMap);
@@ -198,11 +202,21 @@ bool TraversabilityEstimation::updateTraversability()
 bool TraversabilityEstimation::updateParameter(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
 {
   // Load parameters file.
-  string path = ros::package::getPath("starleth_traversability_estimation");
-  path = path + "/config/filter_parameter.yaml";
-  string commandString = "rosparam load " + path + " /traversability_estimation";
-  const char* command = commandString.c_str();
-  if (system(command) != 0)
+  string path = ros::package::getPath(package_);
+  string path_filter_parameter = path + "/config/" + robot_ + "_filter_parameter.yaml";
+  string path_footprint_parameter = path + "/config/" + robot_ + "_footprint_parameter.yaml";
+  // Filter parameters
+  string commandString = "rosparam load " + path_filter_parameter + " /traversability_estimation";
+  const char* command_filter = commandString.c_str();
+  if (system(command_filter) != 0)
+  {
+    ROS_ERROR("Can't update parameter.");
+    return false;
+  }
+  // Footprint parameters.
+  commandString = "rosparam load " + path_footprint_parameter + " /traversability_estimation";
+  const char* command_footprint = commandString.c_str();
+  if (system(command_footprint) != 0)
   {
     ROS_ERROR("Can't update parameter.");
     return false;
@@ -222,6 +236,7 @@ bool TraversabilityEstimation::requestElevationMap(grid_map_msgs::GridMap& map)
                                       submapPointTransformed);
   } catch (tf::TransformException &ex) {
     ROS_ERROR("%s", ex.what());
+    return false;
   }
 
   grid_map_msgs::GetGridMap submapService;

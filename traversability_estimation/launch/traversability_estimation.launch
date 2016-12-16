@@ -2,8 +2,8 @@
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find traversability_estimation)/config/rosconsole.conf"/>
   <node pkg="traversability_estimation" type="traversability_estimation_node" name="traversability_estimation" output="screen">
     <rosparam command="load" file="$(find traversability_estimation)/config/robot.yaml"/>
-    <rosparam command="load" file="$(find traversability_estimation)/config/robot_footprint.yaml"/>
-    <rosparam command="load" file="$(find traversability_estimation)/config/filter_parameter.yaml"/>
+    <rosparam command="load" file="$(find traversability_estimation)/config/robot_footprint_parameter.yaml"/>
+    <rosparam command="load" file="$(find traversability_estimation)/config/robot_filter_parameter.yaml"/>
     <param name="elevation_map/path_to_bag" value="$(find traversability_estimation)/data/map.bag"/>
   </node>
 </launch>

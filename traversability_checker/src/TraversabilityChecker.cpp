@@ -10,7 +10,7 @@
 
 #include <traversability_msgs/CheckFootprintPath.h>
 #include <traversability_msgs/FootprintPath.h>
-#include <elevation_change_msgs/DetectObstacle.h>
+#include <navigation_msgs/DetectObstacle.h>
 #include <any_msgs/State.h>
 
 #include <Eigen/Dense>
@@ -30,7 +30,7 @@ TraversabilityChecker::TraversabilityChecker(const ros::NodeHandle& nodeHandle)
   safetyPublisher_ = nodeHandle_.advertise<any_msgs::State>("safety_status", 1);
   timer_ = nodeHandle_.createTimer(timerDuration_, &TraversabilityChecker::check, this, false, false);
   checkFootprintPathServiceClient_ = nodeHandle_.serviceClient<traversability_msgs::CheckFootprintPath>(checkFootprintPathServiceName_);
-  checkObstaclesServiceClient_ = nodeHandle_.serviceClient<elevation_change_msgs::DetectObstacle>(checkObstacleServiceName_);
+  checkObstaclesServiceClient_ = nodeHandle_.serviceClient<navigation_msgs::DetectObstacle>(checkObstacleServiceName_);
   toggleCheckingServer_ = nodeHandle_.advertiseService(toggleCheckingName_, &TraversabilityChecker::toggleTraversabilityChecking, this);
   toggleDetectObstacleServer_ = nodeHandle_.advertiseService(toggleDetectObstacleName_, &TraversabilityChecker::toggleObstacleDetection, this);
   overwriteServiceServer_ = nodeHandle_.advertiseService(overwriteServiceName_, &TraversabilityChecker::overwriteService, this);
@@ -46,7 +46,7 @@ TraversabilityChecker::~TraversabilityChecker()
 bool TraversabilityChecker::readParameters()
 {
   nodeHandle_.param("check_traversability_service_name", checkFootprintPathServiceName_, std::string("/traversability_estimation/check_footprint_path"));
-  nodeHandle_.param("check_obstacle_service_name", checkObstacleServiceName_, std::string("/elevation_change_detection/detect_obstacle"));
+  nodeHandle_.param("check_obstacle_service_name", checkObstacleServiceName_, std::string("/elevation_obstacle_detection/detect_obstacle"));
   nodeHandle_.param("is_checking_for_obstacle", isCheckingForObstacle_, false);
   nodeHandle_.param("overwrite_service_name", overwriteServiceName_, std::string("overwrite"));
   nodeHandle_.param("toggle_checking_service_name", toggleCheckingName_, std::string("toggle"));
@@ -220,7 +220,7 @@ void TraversabilityChecker::check(const ros::TimerEvent&)
   // Sending service request to check for obstacle.
   bool hasObstacle = false;
   if (isCheckingForObstacle_) {
-    elevation_change_msgs::DetectObstacle checkObstacle;
+    navigation_msgs::DetectObstacle checkObstacle;
     checkObstacle.request.path.push_back(footprintPath);
     ROS_DEBUG("Sending request to %s.", checkObstacleServiceName_.c_str());
     checkObstaclesServiceClient_.waitForExistence();

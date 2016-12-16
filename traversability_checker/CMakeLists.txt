@@ -18,7 +18,7 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   any_msgs
-  elevation_change_msgs
+  navigation_msgs
   geometry_msgs
   roscpp
   tf
@@ -50,7 +50,7 @@ catkin_package(
   CATKIN_DEPENDS
     any_msgs
     geometry_msgs
-    elevation_change_msgs
+    navigation_msgs
     roscpp
     tf
     traversability_msgs
