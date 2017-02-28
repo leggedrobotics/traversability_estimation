@@ -1,8 +1,0 @@
-rate: 1.0
-extrapolation_duration: 1.0
-footprint_radius: 0.35
-check_footprint_path_service_name: /traversability_estimation/check_footprint_path
-overwrite_service_name: overwrite
-robot_pose_topic: pose
-twist_topic: twist
-use_twist_with_covariance: false
