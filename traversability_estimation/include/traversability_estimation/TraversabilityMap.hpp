@@ -229,10 +229,10 @@ class TraversabilityMap
   bool checkRobotInclination_;
 
   //! Traversability map types.
-  const std::string traversabilityType_;
-  const std::string slopeType_;
-  const std::string stepType_;
-  const std::string roughnessType_;
+  std::string traversabilityType_;
+  std::string slopeType_;
+  std::string stepType_;
+  std::string roughnessType_;
   const std::string robotSlopeType_;
 
   //! Filter Chain

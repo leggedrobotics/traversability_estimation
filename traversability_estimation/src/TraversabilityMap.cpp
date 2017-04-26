@@ -29,10 +29,10 @@ namespace traversability_estimation {
 
 TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
     : nodeHandle_(nodeHandle),
-      traversabilityType_("traversability"),
-      slopeType_("traversability_slope"),
-      stepType_("traversability_step"),
-      roughnessType_("traversability_roughness"),
+      //traversabilityType_("traversability"),
+      //slopeType_("traversability_slope"),
+      //stepType_("traversability_step"),
+      //roughnessType_("traversability_roughness"),
       robotSlopeType_("robot_slope"),
       filter_chain_("grid_map::GridMap"),
       zPosition_(0),
@@ -83,8 +83,16 @@ bool TraversabilityMap::readParameters()
     ROS_WARN("Traversability Map: No footprint polygon defined.");
   }
 
-  nodeHandle_.param("map_frame_id", mapFrameId_, string("map"));
   nodeHandle_.param("traversability_map_publisher_topic", traversabilityMapPublisherTopic_, string("traversability_map"));
+  nodeHandle_.param("traversability_type", traversabilityType_, string("traversability"));
+  slopeType_= traversabilityType_;
+  slopeType_.append("_slope");
+  stepType_= traversabilityType_;
+  stepType_.append("_step");
+  roughnessType_= traversabilityType_;
+  roughnessType_.append("_roughness");
+
+  nodeHandle_.param("map_frame_id", mapFrameId_, string("map"));
   nodeHandle_.param("footprint/traversability_default", traversabilityDefault_, 0.5);
   nodeHandle_.param("footprint/verify_roughness_footprint", checkForRoughness_, false);
   nodeHandle_.param("footprint/check_robot_inclination", checkRobotInclination_, false);
