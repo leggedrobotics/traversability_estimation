@@ -206,6 +206,7 @@ class TraversabilityMap
 
   //! Publisher of the traversability map.
   ros::Publisher traversabilityMapPublisher_;
+  std::string traversabilityMapPublisherTopic_;
 
   //! Footprint publisher.
   ros::Publisher footprintPublisher_;

@@ -44,7 +44,7 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
   ROS_INFO("Traversability Map started.");
 
   readParameters();
-  traversabilityMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>("traversability_map", 1);
+  traversabilityMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>(traversabilityMapPublisherTopic_, 1);
   footprintPublisher_ = nodeHandle_.advertise<geometry_msgs::PolygonStamped>("footprint_polygon", 1, true);
 
   elevationMapLayers_.push_back("elevation");
@@ -84,6 +84,7 @@ bool TraversabilityMap::readParameters()
   }
 
   nodeHandle_.param("map_frame_id", mapFrameId_, string("map"));
+  nodeHandle_.param("traversability_map_publisher_topic", traversabilityMapPublisherTopic_, string("traversability_map"));
   nodeHandle_.param("footprint/traversability_default", traversabilityDefault_, 0.5);
   nodeHandle_.param("footprint/verify_roughness_footprint", checkForRoughness_, false);
   nodeHandle_.param("footprint/check_robot_inclination", checkRobotInclination_, false);
