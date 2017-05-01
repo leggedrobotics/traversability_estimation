@@ -20,11 +20,11 @@ namespace traversability_estimation {
 TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
     : nodeHandle_(nodeHandle),
       traversabilityMap_(nodeHandle),
-      traversabilityType_("traversability"),
-      slopeType_("traversability_slope"),
-      stepType_("traversability_step"),
-      roughnessType_("traversability_roughness"),
-      robotSlopeType_("robot_slope"),
+//      traversabilityType_("traversability"),
+//      slopeType_("traversability_slope"),
+//      stepType_("traversability_step"),
+//      roughnessType_("traversability_roughness"),
+//      robotSlopeType_("robot_slope"),
       getImageCallback_(false)
 {
   ROS_DEBUG("Traversability estimation node started.");
@@ -293,6 +293,7 @@ bool TraversabilityEstimation::getTraversabilityMap(
   grid_map_msgs::GridMap msg;
   grid_map::GridMap map, subMap;
   map = traversabilityMap_.getTraversabilityMap();
+
   bool isSuccess;
   subMap = map.getSubmap(requestedSubmapPosition, requestedSubmapLength, isSuccess);
   if (request.layers.empty()) {
