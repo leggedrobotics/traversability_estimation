@@ -48,6 +48,18 @@ traversability_map_filters:
       weights: [1, 1, 1]
       layer_out: traversability
       normalize: 1
+  - name: meanInRadiusFilter
+    type: gridMapFilters/MeanInRadiusFilter
+    params:
+      map_type: elevation_meanInRadius
+      radius: 0.05
+      input_layer: elevation
+ - name: minInRadiusFilter
+   type: gridMapFilters/MinInRadiusFilter
+   params:
+      map_type: minInRadius
+      radius: 0.02
+      input_layer: footscore
   - name: deletionFilter
     type: gridMapFilters/DeletionFilter
     params:
