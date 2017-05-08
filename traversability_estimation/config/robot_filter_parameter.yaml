@@ -51,14 +51,26 @@ traversability_map_filters:
   - name: meanInRadiusFilter
     type: gridMapFilters/MeanInRadiusFilter
     params:
-      map_type: elevation_meanInRadius
+      map_type: elevation_mean_in_radius
       radius: 0.05
       input_layer: elevation
  - name: minInRadiusFilter
    type: gridMapFilters/MinInRadiusFilter
    params:
-      map_type: minInRadius
+      map_type: footscore_min_in_radius
       radius: 0.02
+      input_layer: footscore
+ - name: inpaintFilter
+   type: gridMapFilters/InpaintFilter
+   params:
+      map_type: elevation_inpaint
+      radius: 5.0
+      input_layer: elevation
+- name: zeroOneFilter
+   type: gridMapFilters/ZeroOneFilter
+   params:
+      map_type: zero_one
+      threshold: 0.8
       input_layer: footscore
   - name: deletionFilter
     type: gridMapFilters/DeletionFilter
