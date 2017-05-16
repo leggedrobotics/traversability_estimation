@@ -1,8 +1,15 @@
 # Traversability map filter parameters
 traversability_map_filters:
+ - name: inpaintFilter
+   type: gridMapFilters/InpaintFilter
+   params:
+      map_type: elevation_inpaint
+      radius: 5.0
+      input_layer: elevation
   - name: surfaceNormalsFilter
     type: traversabilityFilters/SurfaceNormalsFilter
     params:
+      input_layer: elevation
       estimation_radius: 0.05
       surface_normal_positive_axis: "z"
   - name: slopeFilter
@@ -13,6 +20,7 @@ traversability_map_filters:
   - name: stepFilter
     type: traversabilityFilters/StepFilter
     params:
+      input_layer: elevation
       map_type: traversability_step
       critical_value: 0.12
       first_window_radius: 0.04
@@ -21,6 +29,7 @@ traversability_map_filters:
   - name: roughnessFilter
     type: traversabilityFilters/RoughnessFilter
     params:
+      input_layer: elevation
       map_type: traversability_roughness
       critical_value: 0.05
       estimation_radius: 0.05
@@ -48,24 +57,18 @@ traversability_map_filters:
       weights: [1, 1, 1]
       layer_out: traversability
       normalize: 1
-  - name: meanInRadiusFilter
-    type: gridMapFilters/MeanInRadiusFilter
-    params:
-      map_type: elevation_mean_in_radius
-      radius: 0.05
-      input_layer: elevation
- - name: minInRadiusFilter
-   type: gridMapFilters/MinInRadiusFilter
-   params:
-      map_type: footscore_min_in_radius
-      radius: 0.02
-      input_layer: footscore
- - name: inpaintFilter
-   type: gridMapFilters/InpaintFilter
-   params:
-      map_type: elevation_inpaint
-      radius: 5.0
-      input_layer: elevation
+# - name: meanInRadiusFilter
+#    type: gridMapFilters/MeanInRadiusFilter
+#    params:
+#      map_type: elevation_mean_in_radius
+#      radius: 0.05
+#      input_layer: elevation
+# - name: minInRadiusFilter
+#   type: gridMapFilters/MinInRadiusFilter
+#   params:
+#      map_type: footscore_min_in_radius
+#      radius: 0.02
+#      input_layer: footscore
 - name: zeroOneFilter
    type: gridMapFilters/ZeroOneFilter
    params:

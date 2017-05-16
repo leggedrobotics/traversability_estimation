@@ -23,7 +23,8 @@ StepFilter<T>::StepFilter()
       firstWindowRadius_(0.08),
       secondWindowRadius_(0.08),
       nCellCritical_(5),
-      type_("traversability_step")
+      type_("traversability_step"),
+      inputLayer_("elevation")
 {
 
 }
@@ -95,6 +96,13 @@ bool StepFilter<T>::configure()
 
   ROS_DEBUG("Step map type = %s.", type_.c_str());
 
+  if (!FilterBase<T>::getParam(std::string("input_layer"), inputLayer_)) {
+    ROS_ERROR("Step filter did not find param input_layer.");
+    return false;
+  }
+
+  ROS_DEBUG("Step map input layer = %s.", inputLayer_.c_str());
+
   return true;
 }
 
@@ -110,9 +118,9 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
 
   // First iteration through the elevation map.
   for (GridMapIterator iterator(mapOut); !iterator.isPastEnd(); ++iterator) {
-    if (!mapOut.isValid(*iterator, "elevation"))
+    if (!mapOut.isValid(*iterator, inputLayer_))
       continue;
-    height = mapOut.at("elevation", *iterator);
+    height = mapOut.at(inputLayer_, *iterator);
     double heightMax, heightMin;
 
     // Requested position (center) of circle in map.
@@ -123,9 +131,9 @@ bool StepFilter<T>::update(const T& mapIn, T& mapOut)
     bool init = false;
     for (CircleIterator submapIterator(mapOut, center, firstWindowRadius_);
         !submapIterator.isPastEnd(); ++submapIterator) {
-      if (!mapOut.isValid(*submapIterator, "elevation"))
+      if (!mapOut.isValid(*submapIterator, inputLayer_))
         continue;
-      height = mapOut.at("elevation", *submapIterator);
+      height = mapOut.at(inputLayer_, *submapIterator);
       // Init heightMax and heightMin
       if (!init) {
         heightMax = height;

@@ -61,6 +61,9 @@ class StepFilter : public FilterBase<T>
 
   //! Step map type.
   std::string type_;
+
+  //! Step map input layer name
+  std::string inputLayer_;
 };
 
 } /* namespace */

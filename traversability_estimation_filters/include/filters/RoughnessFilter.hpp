@@ -57,6 +57,9 @@ class RoughnessFilter : public FilterBase<T>
 
   //! Roughness map type.
   std::string type_;
+
+  //! Roughness map input layer name
+  std::string inputLayer_;
 };
 
 } /* namespace */

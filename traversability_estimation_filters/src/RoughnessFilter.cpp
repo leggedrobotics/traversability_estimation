@@ -21,7 +21,8 @@ template<typename T>
 RoughnessFilter<T>::RoughnessFilter()
     : criticalValue_(0.3),
       estimationRadius_(0.3),
-      type_("traversability_roughness")
+      type_("traversability_roughness"),
+      inputLayer_("elevation")
 {
 
 }
@@ -66,6 +67,13 @@ bool RoughnessFilter<T>::configure()
 
   ROS_DEBUG("Roughness map type = %s", type_.c_str());
 
+  if (!FilterBase<T>::getParam(std::string("input_layer"), inputLayer_)) {
+      ROS_ERROR("RoughnessFilter did not find param input_layer");
+      return false;
+    }
+
+    ROS_DEBUG("Roughness map input layer = %s", inputLayer_.c_str());
+
   return true;
 }
 
@@ -95,9 +103,9 @@ bool RoughnessFilter<T>::update(const T& mapIn, T& mapOut)
     size_t nPoints = 0;
     for (CircleIterator submapIterator(mapOut, center, estimationRadius_);
         !submapIterator.isPastEnd(); ++submapIterator) {
-      if (!mapOut.isValid(*submapIterator, "elevation")) continue;
+      if (!mapOut.isValid(*submapIterator, inputLayer_)) continue;
       Vector3d point;
-      mapOut.getPosition3("elevation", *submapIterator, point);
+      mapOut.getPosition3(inputLayer_, *submapIterator, point);
       points.col(nPoints) = point;
       nPoints++;
     }

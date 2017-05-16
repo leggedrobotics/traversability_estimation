@@ -59,6 +59,9 @@ class SurfaceNormalsFilter : public FilterBase<T>
 
   //! Surface normal positive axis.
   Eigen::Vector3d surfaceNormalPositiveAxis_;
+
+  //! Surface normals input layer name
+   std::string inputLayer_;
 };
 
 } /* namespace */

@@ -24,7 +24,8 @@ namespace filters {
 
 template<typename T>
 SurfaceNormalsFilter<T>::SurfaceNormalsFilter()
-    : estimationRadius_(0.05)
+    : estimationRadius_(0.05),
+      inputLayer_("elevation")
 {
 
 }
@@ -49,6 +50,13 @@ bool SurfaceNormalsFilter<T>::configure()
   }
 
   ROS_DEBUG("Surface normals estimation radius = %f", estimationRadius_);
+
+  if (!FilterBase<T>::getParam(std::string("input_layer"), inputLayer_)) {
+    ROS_ERROR("Surface normals filter did not find param input_layer");
+    return false;
+  }
+
+  ROS_DEBUG("Surface normals input layer = %f", inputLayer_);
 
   std::string surfaceNormalPositiveAxis;
   if (!FilterBase<T>::getParam(std::string("surface_normal_positive_axis"), surfaceNormalPositiveAxis)) {
@@ -85,7 +93,7 @@ bool SurfaceNormalsFilter<T>::update(const T& mapIn, T& mapOut)
   for (GridMapIterator iterator(mapOut);
       !iterator.isPastEnd(); ++iterator) {
     // Check if this is an empty cell (hole in the map).
-    if (!mapOut.isValid(*iterator, "elevation")) continue;
+    if (!mapOut.isValid(*iterator, inputLayer_)) continue;
     // Check if surface normal for this cell has already been computed earlier.
     if (mapOut.isValid(*iterator, surfaceNormalTypes)) continue;
 
@@ -101,9 +109,9 @@ bool SurfaceNormalsFilter<T>::update(const T& mapIn, T& mapOut)
     size_t nPoints = 0;
     for (CircleIterator submapIterator(mapOut, center, estimationRadius_);
         !submapIterator.isPastEnd(); ++submapIterator) {
-      if (!mapOut.isValid(*submapIterator, "elevation")) continue;
+      if (!mapOut.isValid(*submapIterator, inputLayer_)) continue;
       Position3 point;
-      mapOut.getPosition3("elevation", *submapIterator, point);
+      mapOut.getPosition3(inputLayer_, *submapIterator, point);
       points.col(nPoints) = point;
       nPoints++;
     }
