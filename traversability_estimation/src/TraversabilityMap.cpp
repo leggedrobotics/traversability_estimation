@@ -84,7 +84,6 @@ bool TraversabilityMap::readParameters()
   }
 
   nodeHandle_.param("traversability_map_publisher_topic", traversabilityMapPublisherTopic_, string("traversability_map"));
-
   nodeHandle_.param("map_frame_id", mapFrameId_, string("map"));
   nodeHandle_.param("footprint/traversability_default", traversabilityDefault_, 0.5);
   nodeHandle_.param("footprint/verify_roughness_footprint", checkForRoughness_, false);
@@ -130,7 +129,6 @@ bool TraversabilityMap::setTraversabilityMap(const grid_map_msgs::GridMap& msg)
   boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   traversabilityMap_ = traversabilityMap;
   traversabilityMapInitialized_ = true;
-
   return true;
 }
 

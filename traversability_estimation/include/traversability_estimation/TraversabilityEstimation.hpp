@@ -213,13 +213,6 @@ class TraversabilityEstimation
   //! Requested map length in [m].
   grid_map::Length mapLength_;
 
-  //! Traversability map types.
-//  const std::string traversabilityType_;
-//  const std::string slopeType_;
-//  const std::string stepType_;
-//  const std::string roughnessType_;
-//  const std::string robotSlopeType_;
-
   //! Traversability map
   TraversabilityMap traversabilityMap_;
 

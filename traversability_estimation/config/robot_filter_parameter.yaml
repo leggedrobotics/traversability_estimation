@@ -69,10 +69,10 @@ traversability_map_filters:
 #      map_type: footscore_min_in_radius
 #      radius: 0.02
 #      input_layer: footscore
-- name: zeroOneFilter
-   type: gridMapFilters/ZeroOneFilter
+- name: binaryFilter
+   type: gridMapFilters/BinaryFilter
    params:
-      map_type: zero_one
+      map_type: binary
       threshold: 0.8
       input_layer: footscore
   - name: deletionFilter

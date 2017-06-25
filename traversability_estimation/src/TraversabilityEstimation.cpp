@@ -20,11 +20,6 @@ namespace traversability_estimation {
 TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
     : nodeHandle_(nodeHandle),
       traversabilityMap_(nodeHandle),
-//      traversabilityType_("traversability"),
-//      slopeType_("traversability_slope"),
-//      stepType_("traversability_step"),
-//      roughnessType_("traversability_roughness"),
-//      robotSlopeType_("robot_slope"),
       getImageCallback_(false)
 {
   ROS_DEBUG("Traversability estimation node started.");

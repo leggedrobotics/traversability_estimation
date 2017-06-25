@@ -67,12 +67,12 @@ bool RoughnessFilter<T>::configure()
 
   ROS_DEBUG("Roughness map type = %s", type_.c_str());
 
-  if (!FilterBase<T>::getParam(std::string("input_layer"), inputLayer_)) {
-      ROS_ERROR("RoughnessFilter did not find param input_layer");
-      return false;
-    }
+  if (!FilterBase < T > ::getParam(std::string("input_layer"), inputLayer_)) {
+    ROS_ERROR("RoughnessFilter did not find param input_layer");
+    return false;
+  }
 
-    ROS_DEBUG("Roughness map input layer = %s", inputLayer_.c_str());
+  ROS_DEBUG("Roughness map input layer = %s", inputLayer_.c_str());
 
   return true;
 }

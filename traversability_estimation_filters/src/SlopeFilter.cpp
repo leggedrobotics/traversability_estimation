@@ -59,7 +59,6 @@ template<typename T>
 bool SlopeFilter<T>::update(const T& mapIn, T& mapOut)
 {
   // Add new layer to the elevation map.
-
   mapOut = mapIn;
   mapOut.add(type_);
 
