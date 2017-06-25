@@ -64,8 +64,7 @@ catkin_package(
     std_msgs
     geometry_msgs
     sensor_msgs
-  DEPENDS
-    Eigen
+#  DEPENDS Eigen
 )
 
 ###########
@@ -77,7 +76,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${Eigen3_INCLUDE_DIRS}
+  ${Eigen_INCLUDE_DIRS}
   ${kindr_INCLUDE_DIRS}
 )
 
