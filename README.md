@@ -10,6 +10,7 @@ The Traversability Estimation package has been tested under [ROS] Indigo and Ubu
 Contact: Martin Wermelinger, martiwer@mavt.ethz.ch  
 Affiliation: Autonomous Systems Lab, ETH Zurich**
 
+[![Build Status](http://rsl-ci.ethz.ch/buildStatus/icon?job=traversability_estimation)](http://rsl-ci.ethz.ch/job/traversability_estimation/)
 
 ## Installation
 
