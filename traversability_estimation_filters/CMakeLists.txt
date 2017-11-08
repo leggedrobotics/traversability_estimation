@@ -61,7 +61,6 @@ add_library(${PROJECT_NAME}
    src/SlopeFilter.cpp
    src/StepFilter.cpp
    src/RoughnessFilter.cpp
-   src/SurfaceNormalsFilter.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
