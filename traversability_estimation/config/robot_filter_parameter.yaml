@@ -42,12 +42,10 @@ traversability_map_filters:
 #    set_to: 1.0
 #    layers: [traversability]
   - name: weightedSumFilter
-    type: gridMapFilters/WeightedSumFilter
+    type: gridMapFilters/MathExpressionFilter
     params:
-      layers: [traversability_slope, traversability_step, traversability_roughness]
-      weights: [1, 1, 1]
-      layer_out: traversability
-      normalize: 1
+      output_layer: traversability
+      expression: (1.0 / 3.0) * (traversability_slope + traversability_step + traversability_roughness)
   - name: deletionFilter
     type: gridMapFilters/DeletionFilter
     params:
