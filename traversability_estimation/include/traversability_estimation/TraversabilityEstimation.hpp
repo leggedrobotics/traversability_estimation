@@ -224,7 +224,8 @@ class TraversabilityEstimation
   TraversabilityMap traversabilityMap_;
 
   //! Path and topic to load elevation map.
-  std::string pathToBag_;
+  std::string pathToLoadBag_;
+  std::string pathToSaveBag_;
   std::string bagTopicName_;
 
   //! Package name where the parameters are defined.
