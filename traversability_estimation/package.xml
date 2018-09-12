@@ -3,9 +3,9 @@
   <name>traversability_estimation</name>
   <version>0.1.0</version>
   <description>ROS package for estimating traversability from elevation maps.</description>
-  <maintainer email="pfankhauser@ethz.ch">Peter Fankhauser</maintainer>
+  <maintainer email="pfankhauser@anybotics.com">Peter Fankhauser</maintainer>
   <author email="martiwer@student.ethz.ch">Martin Wermelinger</author>
-  <author email="pfankhauser@ethz.ch">Peter Fankhauser</author>
+  <author email="pfankhauser@anybotics.com">Peter Fankhauser</author>
   <author email="ralf.kaestner@gmail.com">Ralf Kaestner</author>
   <license>MIT</license>
   <url type="website">https://github.com/ethz-asl/traversability_estimation</url>

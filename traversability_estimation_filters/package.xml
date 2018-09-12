@@ -3,12 +3,12 @@
   <name>traversability_estimation_filters</name>
   <version>0.1.0</version>
   <description>library for filtering elevation maps.</description>
-  <maintainer email="pfankhauser@ethz.ch">Peter Fankhauser</maintainer>
+  <maintainer email="pfankhauser@anybotics.com">Peter Fankhauser</maintainer>
   <license>MIT</license>
   <url type="website">https://github.com/ethz-asl/traversability_estimation</url>
   <url type="bugtracker">https://github.com/ethz-asl/traversability_estimation/issues</url>
   <author email="martiwer@student.ethz.ch">Martin Wermelinger</author>
-  <author email="pfankhauser@ethz.ch">Peter Fankhauser</author>
+  <author email="pfankhauser@anybotics.com">Peter Fankhauser</author>
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>cmake_modules</build_depend>
   <build_depend>grid_map_core</build_depend>
