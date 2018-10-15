@@ -1,11 +1,19 @@
 <launch>
+  <arg name="robot_parameter_file"                default="$(find traversability_estimation)/config/robot.yaml"/>
+  <arg name="robot_footprint_parameter_file"      default="$(find traversability_estimation)/config/robot_footprint_parameter.yaml"/>
+  <arg name="robot_filter_parameter_file"         default="$(find traversability_estimation)/config/robot_filter_parameter.yaml"/>
+  <arg name="elevation_map/topic"                 default="grid_map"/>
+  <arg name="elevation_map/load/path_to_bag"      default="$(find traversability_estimation)/maps/elevation_map.bag"/>
+  <arg name="traversability_map/save/path_to_bag" default="$(find traversability_estimation)/maps/traversability_map.bag"/>
+  <arg name="respawn"                             default="false"/>
+
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find traversability_estimation)/config/rosconsole.conf"/>
-  <node pkg="traversability_estimation" type="traversability_estimation_node" name="traversability_estimation" output="screen">
-    <rosparam command="load" file="$(find traversability_estimation)/config/robot.yaml"/>
-    <rosparam command="load" file="$(find traversability_estimation)/config/robot_footprint_parameter.yaml"/>
-    <rosparam command="load" file="$(find traversability_estimation)/config/robot_filter_parameter.yaml"/>
-    <param name="elevation_map/topic" value="grid_map"/>
-    <param name="elevation_map/load/path_to_bag" value="$(find traversability_estimation)/maps/elevation_map.bag"/>
-    <param name="traversability_map/save/path_to_bag" value="$(find traversability_estimation)/maps/traversability_map.bag"/>
+  <node pkg="traversability_estimation" type="traversability_estimation_node" name="traversability_estimation" output="screen" respawn="$(arg respawn)">
+    <rosparam command="load" file="$(arg robot_parameter_file)"/>
+    <rosparam command="load" file="$(arg robot_footprint_parameter_file)"/>
+    <rosparam command="load" file="$(arg robot_filter_parameter_file)"/>
+    <param name="elevation_map/topic"                 value="$(arg elevation_map/topic)"/>
+    <param name="elevation_map/load/path_to_bag"      value="$(arg elevation_map/load/path_to_bag)"/>
+    <param name="traversability_map/save/path_to_bag" value="$(arg traversability_map/save/path_to_bag)"/>
   </node>
 </launch>
