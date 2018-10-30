@@ -766,4 +766,8 @@ void TraversabilityMap::publishFootprintPolygon(const grid_map::Polygon& polygon
   footprintPublisher_.publish(polygonMsg);
 }
 
+std::string TraversabilityMap::getMapFrameId() const {
+  return mapFrameId_;
+}
+
 } /* namespace */
