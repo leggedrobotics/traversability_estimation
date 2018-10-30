@@ -123,6 +123,12 @@ class TraversabilityMap
    */
   bool traversabilityMapInitialized();
 
+  /*!
+   * Gets the frame id of the traversability map.
+   * @return frame id of the traversability map.
+   */
+  std::string getMapFrameId() const;
+
  private:
 
   /*!
