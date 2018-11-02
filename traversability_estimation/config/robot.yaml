@@ -1,5 +1,5 @@
 submap_service: "/elevation_mapping_long_range/get_submap"
-map_frame_id: "map"
+map_frame_id: "map"     # Must be the same as the input elevation submap.
 robot_frame_id: "base"
 min_update_rate: 0.2
 map_center_x: 0.0

@@ -99,6 +99,11 @@ bool TraversabilityMap::readParameters()
 
 bool TraversabilityMap::setElevationMap(const grid_map_msgs::GridMap& msg)
 {
+  if (getMapFrameId() != msg.info.header.frame_id) {
+    ROS_ERROR("Received elevation map has frame_id = '%s', but an elevation map with frame_id = '%s' is expected.",
+              msg.info.header.frame_id.c_str(), getMapFrameId().c_str());
+    return false;
+  }
   grid_map::GridMap elevationMap;
   grid_map::GridMapRosConverter::fromMessage(msg, elevationMap);
   zPosition_ = msg.info.pose.position.z;
@@ -367,7 +372,7 @@ bool TraversabilityMap::checkFootprintPath(
     }
   } else {
     grid_map::Polygon polygon, polygon1, polygon2;
-    polygon1.setFrameId(mapFrameId_);
+    polygon1.setFrameId(getMapFrameId());
     polygon1.setTimestamp(ros::Time::now().toNSec());
     polygon2 = polygon1;
     for (int i = 0; i < arraySize; i++) {
@@ -431,7 +436,7 @@ bool TraversabilityMap::checkFootprintPath(
 
       if (arraySize > 1 && i > 0) {
         polygon = grid_map::Polygon::convexHull(polygon1, polygon2);
-        polygon.setFrameId(mapFrameId_);
+        polygon.setFrameId(getMapFrameId());
         polygon.setTimestamp(ros::Time::now().toNSec());
         if (checkRobotInclination_) {
           if (!checkInclination(start, end))

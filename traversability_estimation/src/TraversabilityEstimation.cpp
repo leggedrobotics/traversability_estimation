@@ -77,7 +77,6 @@ bool TraversabilityEstimation::readParameters()
   nodeHandle_.param("image_position_x", imagePosition_.x(), 0.0);
   nodeHandle_.param("image_position_y", imagePosition_.y(), 0.0);
 
-  nodeHandle_.param("map_frame_id", mapFrameId_, string("map"));
   nodeHandle_.param("robot_frame_id", robotFrameId_, string("robot"));
   nodeHandle_.param("robot", robot_, string("robot"));
   nodeHandle_.param("package", package_, string("traversability_estimation"));
@@ -168,7 +167,7 @@ bool TraversabilityEstimation::updateServiceCallback(grid_map_msgs::GetGridMapIn
   grid_map_msgs::GridMap msg;
   grid_map::GridMap traversabilityMap = traversabilityMap_.getTraversabilityMap();
 
-  response.info.header.frame_id = mapFrameId_;
+  response.info.header.frame_id = traversabilityMap_.getMapFrameId();
   response.info.header.stamp = ros::Time::now();
   response.info.resolution = traversabilityMap.getResolution();
   response.info.length_x = traversabilityMap.getLength()[0];
@@ -239,7 +238,7 @@ bool TraversabilityEstimation::requestElevationMap(grid_map_msgs::GridMap& map)
   geometry_msgs::PointStamped submapPointTransformed;
 
   try {
-    transformListener_.transformPoint(mapFrameId_, submapPoint_,
+    transformListener_.transformPoint(traversabilityMap_.getMapFrameId(), submapPoint_,
                                       submapPointTransformed);
   } catch (tf::TransformException &ex) {
     ROS_ERROR("%s", ex.what());

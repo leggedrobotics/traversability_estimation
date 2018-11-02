@@ -127,7 +127,7 @@ This is the main Traversability Estimation node. It uses the elevation map and t
 
 * **`map_frame_id`** (string, default: "map")
 	
-	The id of the tf frame of the traversability map.
+	The id of the tf frame of the traversability map. This id must be the same as the input elevation submap.
 
 * **`update_rate`** (double, default: 4.0)
 	
