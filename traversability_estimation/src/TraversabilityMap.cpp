@@ -23,6 +23,9 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+// Param IO
+#include <param_io/get_param.hpp>
+
 using namespace std;
 
 namespace traversability_estimation {
@@ -83,12 +86,12 @@ bool TraversabilityMap::readParameters()
     ROS_WARN("Traversability Map: No footprint polygon defined.");
   }
 
-  nodeHandle_.param("map_frame_id", mapFrameId_, string("map"));
-  nodeHandle_.param("footprint/traversability_default", traversabilityDefault_, 0.5);
-  nodeHandle_.param("footprint/verify_roughness_footprint", checkForRoughness_, false);
-  nodeHandle_.param("footprint/check_robot_inclination", checkRobotInclination_, false);
-  nodeHandle_.param("max_gap_width", maxGapWidth_, 0.3);
-  nodeHandle_.param("traversability_map_filters/stepFilter/critical_value", criticalStepHeight_, 0.12);
+  mapFrameId_ = param_io::param<std::string>(nodeHandle_, "map_frame_id", "map");
+  traversabilityDefault_ = param_io::param(nodeHandle_, "footprint/traversability_default", 0.5);
+  checkForRoughness_ = param_io::param(nodeHandle_, "footprint/verify_roughness_footprint", false);
+  checkRobotInclination_ = param_io::param(nodeHandle_, "footprint/check_robot_inclination", false);
+  maxGapWidth_ = param_io::param(nodeHandle_, "max_gap_width", 0.3);
+  criticalStepHeight_ = param_io::param(nodeHandle_, "traversability_map_filters/stepFilter/critical_value", 0.12);
 
   // Configure filter chain
   if (!filter_chain_.configure("traversability_map_filters", nodeHandle_)) {

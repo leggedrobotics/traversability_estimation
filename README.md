@@ -23,6 +23,7 @@ This software is built on the Robotic Operating System ([ROS]), which needs to b
 - [kindr](http://github.com/ethz-asl/kindr) (kinematics and dynamics library for robotics),
 - [Grid Map](https://github.com/ethz-asl/grid_map) (grid map library for mobile robots),
 - [Elevation Map](https://github.com/ethz-asl/elevation_mapping) (elevation mapping with a mobile robot),
+- [Param IO](https://bitbucket.org/leggedrobotics/any_node/src/master/) (Wrapper for the ROS param get and set functions)
 
 ### Building
 
