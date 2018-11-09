@@ -15,6 +15,7 @@
 #include <ros/package.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PolygonStamped.h>
+#include <xmlrpcpp/XmlRpcValue.h>
 
 // kindr
 #include <kindr/Core>
@@ -91,7 +92,17 @@ bool TraversabilityMap::readParameters()
   checkForRoughness_ = param_io::param(nodeHandle_, "footprint/verify_roughness_footprint", false);
   checkRobotInclination_ = param_io::param(nodeHandle_, "footprint/check_robot_inclination", false);
   maxGapWidth_ = param_io::param(nodeHandle_, "max_gap_width", 0.3);
-  criticalStepHeight_ = param_io::param(nodeHandle_, "traversability_map_filters/stepFilter/critical_value", 0.12);
+
+  XmlRpc::XmlRpcValue filterParameter;
+  bool filterParamsAvailable = param_io::getParam(nodeHandle_, "traversability_map_filters", filterParameter);
+  if (filterParamsAvailable) {
+    ROS_ASSERT(filterParameter.getType() == XmlRpc::XmlRpcValue::TypeArray);
+    for (int index = 0; index < filterParameter.size(); index++) {
+      if (filterParameter[index]["name"] == "stepFilter") {
+        criticalStepHeight_ = (double) filterParameter[index]["params"]["critical_value"];
+      }
+    }
+  }
 
   // Configure filter chain
   if (!filter_chain_.configure("traversability_map_filters", nodeHandle_)) {

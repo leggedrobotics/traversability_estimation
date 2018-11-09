@@ -27,6 +27,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   sensor_msgs
   param_io
+  xmlrpcpp
 )
 
 ## System dependencies are found with CMake's conventions
@@ -66,6 +67,7 @@ catkin_package(
     geometry_msgs
     sensor_msgs
     param_io
+    xmlrpcpp
 #  DEPENDS Eigen
 )
 
