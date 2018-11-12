@@ -15,6 +15,7 @@
 #include <ros/package.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PolygonStamped.h>
+#include <xmlrpcpp/XmlRpcValue.h>
 
 // kindr
 #include <kindr/Core>
@@ -22,6 +23,9 @@
 // Eigen
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+
+// Param IO
+#include <param_io/get_param.hpp>
 
 using namespace std;
 
@@ -83,12 +87,22 @@ bool TraversabilityMap::readParameters()
     ROS_WARN("Traversability Map: No footprint polygon defined.");
   }
 
-  nodeHandle_.param("map_frame_id", mapFrameId_, string("map"));
-  nodeHandle_.param("footprint/traversability_default", traversabilityDefault_, 0.5);
-  nodeHandle_.param("footprint/verify_roughness_footprint", checkForRoughness_, false);
-  nodeHandle_.param("footprint/check_robot_inclination", checkRobotInclination_, false);
-  nodeHandle_.param("max_gap_width", maxGapWidth_, 0.3);
-  nodeHandle_.param("traversability_map_filters/stepFilter/critical_value", criticalStepHeight_, 0.12);
+  mapFrameId_ = param_io::param<std::string>(nodeHandle_, "map_frame_id", "map");
+  traversabilityDefault_ = param_io::param(nodeHandle_, "footprint/traversability_default", 0.5);
+  checkForRoughness_ = param_io::param(nodeHandle_, "footprint/verify_roughness_footprint", false);
+  checkRobotInclination_ = param_io::param(nodeHandle_, "footprint/check_robot_inclination", false);
+  maxGapWidth_ = param_io::param(nodeHandle_, "max_gap_width", 0.3);
+
+  XmlRpc::XmlRpcValue filterParameter;
+  bool filterParamsAvailable = param_io::getParam(nodeHandle_, "traversability_map_filters", filterParameter);
+  if (filterParamsAvailable) {
+    ROS_ASSERT(filterParameter.getType() == XmlRpc::XmlRpcValue::TypeArray);
+    for (int index = 0; index < filterParameter.size(); index++) {
+      if (filterParameter[index]["name"] == "stepFilter") {
+        criticalStepHeight_ = (double) filterParameter[index]["params"]["critical_value"];
+      }
+    }
+  }
 
   // Configure filter chain
   if (!filter_chain_.configure("traversability_map_filters", nodeHandle_)) {
@@ -99,6 +113,11 @@ bool TraversabilityMap::readParameters()
 
 bool TraversabilityMap::setElevationMap(const grid_map_msgs::GridMap& msg)
 {
+  if (getMapFrameId() != msg.info.header.frame_id) {
+    ROS_ERROR("Received elevation map has frame_id = '%s', but an elevation map with frame_id = '%s' is expected.",
+              msg.info.header.frame_id.c_str(), getMapFrameId().c_str());
+    return false;
+  }
   grid_map::GridMap elevationMap;
   grid_map::GridMapRosConverter::fromMessage(msg, elevationMap);
   zPosition_ = msg.info.pose.position.z;
@@ -367,7 +386,7 @@ bool TraversabilityMap::checkFootprintPath(
     }
   } else {
     grid_map::Polygon polygon, polygon1, polygon2;
-    polygon1.setFrameId(mapFrameId_);
+    polygon1.setFrameId(getMapFrameId());
     polygon1.setTimestamp(ros::Time::now().toNSec());
     polygon2 = polygon1;
     for (int i = 0; i < arraySize; i++) {
@@ -431,7 +450,7 @@ bool TraversabilityMap::checkFootprintPath(
 
       if (arraySize > 1 && i > 0) {
         polygon = grid_map::Polygon::convexHull(polygon1, polygon2);
-        polygon.setFrameId(mapFrameId_);
+        polygon.setFrameId(getMapFrameId());
         polygon.setTimestamp(ros::Time::now().toNSec());
         if (checkRobotInclination_) {
           if (!checkInclination(start, end))

@@ -189,9 +189,6 @@ class TraversabilityEstimation
   //! Center point of the requested map.
   geometry_msgs::PointStamped submapPoint_;
 
-  //! Id of the frame of the elevation map.
-  std::string mapFrameId_;
-
   //! Id of the frame of the robot.
   std::string robotFrameId_;
 

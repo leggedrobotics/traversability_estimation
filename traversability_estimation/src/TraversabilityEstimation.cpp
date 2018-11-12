@@ -8,6 +8,7 @@
 
 #include "traversability_estimation/TraversabilityEstimation.hpp"
 #include <traversability_msgs/TraversabilityResult.h>
+#include <param_io/get_param.hpp>
 
 // ROS
 #include <ros/package.h>
@@ -60,41 +61,44 @@ TraversabilityEstimation::~TraversabilityEstimation()
 
 bool TraversabilityEstimation::readParameters()
 {
-  nodeHandle_.param("submap_service", submapServiceName_, string("/get_grid_map"));
+  submapServiceName_ = param_io::param<std::string>(nodeHandle_, "submap_service", "/get_grid_map");
 
   double updateRate;
-  nodeHandle_.param("min_update_rate", updateRate, 1.0);
+  updateRate = param_io::param(nodeHandle_, "min_update_rate", 1.0);
   if (updateRate != 0.0) {
     updateDuration_.fromSec(1.0 / updateRate);
   } else {
     updateDuration_.fromSec(0.0);
   }
   // Read parameters for image subscriber.
-  nodeHandle_.param("image_topic", imageTopic_, std::string("/image_elevation"));
-  nodeHandle_.param("resolution", imageResolution_, 0.03);
-  nodeHandle_.param("min_height", imageMinHeight_, 0.0);
-  nodeHandle_.param("max_height", imageMaxHeight_, 1.0);
-  nodeHandle_.param("image_position_x", imagePosition_.x(), 0.0);
-  nodeHandle_.param("image_position_y", imagePosition_.y(), 0.0);
+  imageTopic_ = param_io::param<std::string>(nodeHandle_, "image_topic", "/image_elevation");
+  imageResolution_ = param_io::param(nodeHandle_, "resolution", 0.03);
+  imageMinHeight_ = param_io::param(nodeHandle_, "min_height", 0.0);
+  imageMaxHeight_ = param_io::param(nodeHandle_, "max_height", 1.0);
+  imagePosition_.x() = param_io::param(nodeHandle_, "image_position_x", 0.0);
+  imagePosition_.y() = param_io::param(nodeHandle_, "image_position_y", 0.0);
 
-  nodeHandle_.param("map_frame_id", mapFrameId_, string("map"));
-  nodeHandle_.param("robot_frame_id", robotFrameId_, string("robot"));
-  nodeHandle_.param("robot", robot_, string("robot"));
-  nodeHandle_.param("package", package_, string("traversability_estimation"));
+  robotFrameId_ = param_io::param<std::string>(nodeHandle_, "robot_frame_id", "robot");
+  robot_ = param_io::param<std::string>(nodeHandle_, "robot", "robot");
+  package_ = param_io::param<std::string>(nodeHandle_, "package", "traversability_estimation");
+
   grid_map::Position mapCenter;
-  nodeHandle_.param("map_center_x", mapCenter.x(), 0.0);
-  nodeHandle_.param("map_center_y", mapCenter.y(), 0.0);
+  mapCenter.x() = param_io::param(nodeHandle_, "map_center_x", 0.0);
+  mapCenter.y() = param_io::param(nodeHandle_, "map_center_y", 0.0);
+
   submapPoint_.header.frame_id = robotFrameId_;
   submapPoint_.point.x = mapCenter.x();
-  submapPoint_.point.y = mapCenter.y();
-  submapPoint_.point.z = 0.0;
-  nodeHandle_.param("map_length_x", mapLength_.x(), 5.0);
-  nodeHandle_.param("map_length_y", mapLength_.y(), 5.0);
-  nodeHandle_.param("footprint_yaw", footprintYaw_, M_PI_2);
 
-  nodeHandle_.param("elevation_map/topic", bagTopicName_,  std::string("grid_map"));
-  nodeHandle_.param("elevation_map/load/path_to_bag", pathToLoadBag_, std::string("elevation_map.bag"));
-  nodeHandle_.param("traversability_map/save/path_to_bag", pathToSaveBag_, std::string("traversability_map.bag"));
+  submapPoint_.point.y = mapCenter.y();
+
+  submapPoint_.point.z = 0.0;
+  mapLength_.x() = param_io::param(nodeHandle_, "map_length_x", 5.0);
+  mapLength_.y() = param_io::param(nodeHandle_, "map_length_y", 5.0);
+  footprintYaw_ = param_io::param(nodeHandle_, "footprint_yaw", M_PI_2);
+
+  bagTopicName_ = param_io::param<std::string>(nodeHandle_, "elevation_map/topic", "grid_map");
+  pathToLoadBag_ = param_io::param<std::string>(nodeHandle_, "elevation_map/load/path_to_bag", "elevation_map.bag");
+  pathToSaveBag_ = param_io::param<std::string>(nodeHandle_, "traversability_map/save/path_to_bag", "traversability_map.bag");
 
   return true;
 }
@@ -168,7 +172,7 @@ bool TraversabilityEstimation::updateServiceCallback(grid_map_msgs::GetGridMapIn
   grid_map_msgs::GridMap msg;
   grid_map::GridMap traversabilityMap = traversabilityMap_.getTraversabilityMap();
 
-  response.info.header.frame_id = mapFrameId_;
+  response.info.header.frame_id = traversabilityMap_.getMapFrameId();
   response.info.header.stamp = ros::Time::now();
   response.info.resolution = traversabilityMap.getResolution();
   response.info.length_x = traversabilityMap.getLength()[0];
@@ -239,7 +243,7 @@ bool TraversabilityEstimation::requestElevationMap(grid_map_msgs::GridMap& map)
   geometry_msgs::PointStamped submapPointTransformed;
 
   try {
-    transformListener_.transformPoint(mapFrameId_, submapPoint_,
+    transformListener_.transformPoint(traversabilityMap_.getMapFrameId(), submapPoint_,
                                       submapPointTransformed);
   } catch (tf::TransformException &ex) {
     ROS_ERROR("%s", ex.what());
