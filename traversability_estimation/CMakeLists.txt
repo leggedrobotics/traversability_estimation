@@ -52,7 +52,7 @@ endif()
 catkin_package(
   INCLUDE_DIRS
     include
-  LIBRARIES ${PROJECT_NAME}
+  LIBRARIES ${PROJECT_NAME} ${Eigen_INCLUDE_DIRS}
   CATKIN_DEPENDS
     grid_map_ros
     grid_map_core

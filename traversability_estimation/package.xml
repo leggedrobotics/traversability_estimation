@@ -13,35 +13,23 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>roscpp</build_depend>
-  <build_depend>tf</build_depend>
-  <build_depend>tf_conversions</build_depend>
-  <build_depend>grid_map_ros</build_depend>
-  <build_depend>grid_map_core</build_depend>
-  <build_depend>grid_map_msgs</build_depend>
-  <build_depend>grid_map_filters</build_depend>
-  <build_depend>traversability_msgs</build_depend>
-  <build_depend>traversability_estimation_filters</build_depend>
-  <build_depend>std_msgs</build_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>sensor_msgs</build_depend>
-  <build_depend>param_io</build_depend>
-  <build_depend>xmlrpcpp</build_depend>
+  <depend>roscpp</depend>
+  <depend>tf</depend>
+  <depend>tf_conversions</depend>
+  <depend>grid_map_ros</depend>
+  <depend>grid_map_core</depend>
+  <depend>grid_map_msgs</depend>
+  <depend>grid_map_filters</depend>
+  <depend>traversability_msgs</depend>
+  <depend>traversability_estimation_filters</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>param_io</depend>
+  <depend>xmlrpcpp</depend>
+  <depend>cmake_modules</depend>
+  <depend>kindr</depend>
+  <build_export_depend>eigen</build_export_depend>
 
-  <run_depend>roscpp</run_depend>
-  <run_depend>sensor_msgs</run_depend>
-  <run_depend>tf</run_depend>
-  <run_depend>tf_conversions</run_depend>
-  <run_depend>grid_map_ros</run_depend>
-  <run_depend>grid_map_core</run_depend>
-  <run_depend>grid_map_msgs</run_depend>
-  <run_depend>grid_map_filters</run_depend>
-  <run_depend>traversability_msgs</run_depend>
-  <run_depend>traversability_estimation_filters</run_depend>
-  <run_depend>std_msgs</run_depend>
-  <run_depend>geometry_msgs</run_depend>
-  <run_depend>sensor_msgs</run_depend>
-  <run_depend>param_io</run_depend>
-  <run_depend>xmlrpcpp</run_depend>
 
 </package>
