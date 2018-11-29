@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>traversability_msgs</name>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <description>ROS Message definitions for traversability estimation/checking.</description>
   <maintainer email="pfankhauser@anybotics.com">Peter Fankhauser</maintainer>
   <author email="pfankhauser@anybotics.com">Peter Fankhauser</author>
