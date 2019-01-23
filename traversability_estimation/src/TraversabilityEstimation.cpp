@@ -45,7 +45,7 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
   footprintPathService_ = nodeHandle_.advertiseService("check_footprint_path", &TraversabilityEstimation::checkFootprintPath, this);
   updateParameters_ = nodeHandle_.advertiseService("update_parameters", &TraversabilityEstimation::updateParameter, this);
   traversabilityFootprint_ = nodeHandle_.advertiseService("traversability_footprint", &TraversabilityEstimation::traversabilityFootprint, this);
-  saveToBagService_ = nodeHandle_.advertiseService("save_to_bag", &TraversabilityEstimation::saveToBag, this);
+  saveToBagService_ = nodeHandle_.advertiseService("save_traversability_map_to_bag", &TraversabilityEstimation::saveToBag, this);
   imageSubscriber_ = nodeHandle_.subscribe(imageTopic_,1,&TraversabilityEstimation::imageCallback, this);
 
   elevationMapLayers_.push_back("elevation");
@@ -96,9 +96,10 @@ bool TraversabilityEstimation::readParameters()
   mapLength_.y() = param_io::param(nodeHandle_, "map_length_y", 5.0);
   footprintYaw_ = param_io::param(nodeHandle_, "footprint_yaw", M_PI_2);
 
-  bagTopicName_ = param_io::param<std::string>(nodeHandle_, "elevation_map/topic", "grid_map");
-  pathToLoadBag_ = param_io::param<std::string>(nodeHandle_, "elevation_map/load/path_to_bag", "elevation_map.bag");
-  pathToSaveBag_ = param_io::param<std::string>(nodeHandle_, "traversability_map/save/path_to_bag", "traversability_map.bag");
+  elevationMapBagToLoadTopicName_ = param_io::param<std::string>(nodeHandle_, "elevation_map/load/topic", "grid_map");
+  pathElevationMapBagToLoad_ = param_io::param<std::string>(nodeHandle_, "elevation_map/load/path_to_bag", "elevation_map.bag");
+  pathToSaveTraversabilityMapBag_ = param_io::param<std::string>(nodeHandle_, "traversability_map/save/path_to_bag", "traversability_map.bag");
+  traversabilityMapBagTopicName_ = param_io::param<std::string>(nodeHandle_, "traversability_map/save/topic_name", "traversability_map");
 
   return true;
 }
@@ -108,7 +109,7 @@ bool TraversabilityEstimation::loadElevationMap(std_srvs::Empty::Request&, std_s
   ROS_INFO("TraversabilityEstimation: loadElevationMap");
   grid_map::GridMap map;
   grid_map_msgs::GridMap msg;
-  if (!grid_map::GridMapRosConverter::loadFromBag(pathToLoadBag_, bagTopicName_, map)) {
+  if (!grid_map::GridMapRosConverter::loadFromBag(pathElevationMapBagToLoad_, elevationMapBagToLoadTopicName_, map)) {
     ROS_ERROR("TraversabilityEstimation: Cannot find bag or topic of the elevation map!");
     return false;
   }
@@ -321,7 +322,8 @@ bool TraversabilityEstimation::getTraversabilityMap(
 bool TraversabilityEstimation::saveToBag(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
   ROS_INFO("Save to bag.");
-  return grid_map::GridMapRosConverter::saveToBag(traversabilityMap_.getTraversabilityMap(), pathToSaveBag_, bagTopicName_);
+  return grid_map::GridMapRosConverter::saveToBag(traversabilityMap_.getTraversabilityMap(),
+      pathToSaveTraversabilityMapBag_, traversabilityMapBagTopicName_);
 }
 
 } /* namespace */
