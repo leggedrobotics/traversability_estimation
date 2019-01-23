@@ -133,5 +133,4 @@ bool RoughnessFilter<T>::update(const T& mapIn, T& mapOut)
 
 } /* namespace */
 
-PLUGINLIB_REGISTER_CLASS(RoughnessFilter, filters::RoughnessFilter<grid_map::GridMap>,
-                         filters::FilterBase<grid_map::GridMap>)
+PLUGINLIB_EXPORT_CLASS(filters::RoughnessFilter<grid_map::GridMap>, filters::FilterBase<grid_map::GridMap>)
