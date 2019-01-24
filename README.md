@@ -110,40 +110,40 @@ This is the main Traversability Estimation node. It uses the elevation map and t
 
         rosservice call /traversability_estimation/traversability_footprint
 
-* **`save_to_bag`** ([std_srvs/Empty])
+* **`save_traversability_map_to_bag`** ([std_srvs/Empty])
 
     Save all layers of the current traversability map to a [rosbag] file. Save the traversability map with
 
-        rosservice call /traversability_estimation/save_to_bag
+        rosservice call /traversability_estimation/save_traversability_map_to_bag
 
 #### Parameters
 
 * **`submap_service`** (string, default: "/elevation_mapping/get_grid_map")
 
 	The name of the service to get the elevation submap.
-	
+
 * **`robot_frame_id`** (string, default: "base")
-	
+
 	The id of the robot tf frame.
 
 * **`map_frame_id`** (string, default: "map")
-	
+
 	The id of the tf frame of the traversability map. This id must be the same as the input elevation submap.
 
 * **`update_rate`** (double, default: 4.0)
-	
+
 	The update rate (in \[Hz\]) at which the traversability map is updated.
 
 * **`map_center_x`, `map_center_y`** (double, default: 1.5, 0.0)
-	
+
 	The position of the traversability map (center) in the traversability map frame.
 
 * **`map_length_x`, `map_length_y`** (double, default: 5.0)
-	
+
 	The size (in \[m\]) of the traversability map.
 
 * **`traversability_map_filters:`** (filter_chain)
-	
+
 	Defines the different filters that are used to generate the traversability map.
 
 ### Traversability Estimation Filters
