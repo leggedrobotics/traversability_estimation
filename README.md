@@ -161,3 +161,7 @@ The traversability estimation filters can be applied to an elevation map. Each f
 ## Bugs & Feature Requests
 
 Please report bugs and request features using the [Issue Tracker](https://github.com/ethz-asl/ros_best_practices/issues).
+
+## Build Status
+
+[![Build Status](https://ci.leggedrobotics.com/buildStatus/icon?job=github_leggedrobotics/traversability_estimation/master)](https://ci.leggedrobotics.com/job/github_leggedrobotics/job/traversability_estimation/job/master/)
