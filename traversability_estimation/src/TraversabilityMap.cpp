@@ -26,6 +26,7 @@
 
 // Param IO
 #include <param_io/get_param.hpp>
+#include <traversability_estimation/TraversabilityMap.hpp>
 
 using namespace std;
 
@@ -88,7 +89,8 @@ bool TraversabilityMap::readParameters()
   }
 
   mapFrameId_ = param_io::param<std::string>(nodeHandle_, "map_frame_id", "map");
-  traversabilityDefault_ = param_io::param(nodeHandle_, "footprint/traversability_default", 0.5);
+  traversabilityDefaultReadAtInit_ = param_io::param(nodeHandle_, "footprint/traversability_default", 0.5);
+  traversabilityDefault_ = traversabilityDefaultReadAtInit_;
   checkForRoughness_ = param_io::param(nodeHandle_, "footprint/verify_roughness_footprint", false);
   checkRobotInclination_ = param_io::param(nodeHandle_, "footprint/check_robot_inclination", false);
   maxGapWidth_ = param_io::param(nodeHandle_, "max_gap_width", 0.3);
@@ -787,6 +789,21 @@ void TraversabilityMap::publishFootprintPolygon(const grid_map::Polygon& polygon
 
 std::string TraversabilityMap::getMapFrameId() const {
   return mapFrameId_;
+}
+
+double TraversabilityMap::getDefaultTraversabilityUnknownRegions() const
+{
+  return traversabilityDefault_;
+}
+
+void TraversabilityMap::setDefaultTraversabilityUknownRegions(const double &defaultTraversability)
+{
+  traversabilityDefault_ = defaultTraversability;
+}
+
+void TraversabilityMap::restoreDefaultTraversabilityUknownRegionsReadAtInit()
+{
+  setDefaultTraversabilityUknownRegions(traversabilityDefaultReadAtInit_);
 }
 
 } /* namespace */

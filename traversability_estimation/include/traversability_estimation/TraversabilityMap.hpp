@@ -129,6 +129,23 @@ class TraversabilityMap
    */
   std::string getMapFrameId() const;
 
+  /*!
+   * Gets the default traversability value of unknown regions in the map.
+   * @return default traversability value of unknown regions in the map
+   */
+  double getDefaultTraversabilityUnknownRegions() const;
+
+  /*!
+   * Sets the default traversability value of unknown regions in the map.
+   * @param[in] defaultTraversability new default traversability value of unknown regions in the map
+    */
+  void setDefaultTraversabilityUknownRegions(const double& defaultTraversability);
+
+  /*!
+   * Restores the default traversability value of unknown regions in the map, which was read during initialization .
+    */
+  void restoreDefaultTraversabilityUknownRegionsReadAtInit();
+
  private:
 
   /*!
@@ -226,6 +243,7 @@ class TraversabilityMap
 
   //! Default value for traversability of unknown regions.
   double traversabilityDefault_;
+  double traversabilityDefaultReadAtInit_;
 
   //! Verify footprint for roughness.
   bool checkForRoughness_;
