@@ -136,6 +136,10 @@ This is the main Traversability Estimation node. It uses the elevation map and t
 
 * **`map_center_x`, `map_center_y`** (double, default: 1.5, 0.0)
 
+## Build Status
+
+[![Build Status](https://ci.leggedrobotics.com/buildStatus/icon?job=github_leggedrobotics/traversability_estimation/master)](https://ci.leggedrobotics.com/job/github_leggedrobotics/job/traversability_estimation/job/master/)
+
 	The position of the traversability map (center) in the traversability map frame.
 
 * **`map_length_x`, `map_length_y`** (double, default: 5.0)
