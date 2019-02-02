@@ -90,7 +90,9 @@ bool TraversabilityMap::readParameters()
 
   mapFrameId_ = param_io::param<std::string>(nodeHandle_, "map_frame_id", "map");
   traversabilityDefaultReadAtInit_ = param_io::param(nodeHandle_, "footprint/traversability_default", 0.5);
-  traversabilityDefault_ = traversabilityDefaultReadAtInit_;
+  // Safety check
+  traversabilityDefaultReadAtInit_ = boundTraversabilityValue(traversabilityDefaultReadAtInit_);
+  setDefaultTraversabilityUknownRegions(traversabilityDefaultReadAtInit_);
   checkForRoughness_ = param_io::param(nodeHandle_, "footprint/verify_roughness_footprint", false);
   checkRobotInclination_ = param_io::param(nodeHandle_, "footprint/check_robot_inclination", false);
   maxGapWidth_ = param_io::param(nodeHandle_, "max_gap_width", 0.3);
@@ -798,12 +800,29 @@ double TraversabilityMap::getDefaultTraversabilityUnknownRegions() const
 
 void TraversabilityMap::setDefaultTraversabilityUknownRegions(const double &defaultTraversability)
 {
-  traversabilityDefault_ = defaultTraversability;
+  traversabilityDefault_ = boundTraversabilityValue(defaultTraversability);
 }
 
 void TraversabilityMap::restoreDefaultTraversabilityUknownRegionsReadAtInit()
 {
   setDefaultTraversabilityUknownRegions(traversabilityDefaultReadAtInit_);
+}
+
+double TraversabilityMap::boundTraversabilityValue(const double& traversabilityValue) const
+{
+  if (traversabilityValue > traversabilityMaxValue) {
+    ROS_WARN("Passed traversability value (%f) is higher than max allowed value (%f). It is set equal to the max.",
+             traversabilityValue,
+             traversabilityMaxValue);
+    return traversabilityMaxValue;
+  }
+  if (traversabilityValue < traversabilityMinValue) {
+    ROS_WARN("Passed traversability value (%f) is lower than min allowed value (%f). It is set equal to the min.",
+             traversabilityValue,
+             traversabilityMinValue);
+    return traversabilityMinValue;
+  }
+  return traversabilityValue;
 }
 
 } /* namespace */

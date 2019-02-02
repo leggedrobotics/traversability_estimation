@@ -29,6 +29,10 @@
 
 namespace traversability_estimation {
 
+// Traversability value bounds.
+constexpr double traversabilityMinValue = 0.0;
+constexpr double traversabilityMaxValue = 1.0;
+
 /*!
  * The terrain traversability estimation core. Updates the traversbility map and
  * evaluates the traversability of single footprints on this map.
@@ -217,6 +221,13 @@ class TraversabilityMap
    * Publishes the footprint polygon.
    */
   void publishFootprintPolygon(const grid_map::Polygon& polygon);
+
+  /*!
+   * Bounds the passed traversability value to respect the allowed bounds.
+   * @param traversabilityValue value to bound.
+   * @return bounder value
+   */
+  double boundTraversabilityValue(const double& traversabilityValue) const;
 
   //! ROS node handle.
   ros::NodeHandle& nodeHandle_;
