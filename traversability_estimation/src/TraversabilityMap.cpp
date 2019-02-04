@@ -92,7 +92,7 @@ bool TraversabilityMap::readParameters()
   traversabilityDefaultReadAtInit_ = param_io::param(nodeHandle_, "footprint/traversability_default", 0.5);
   // Safety check
   traversabilityDefaultReadAtInit_ = boundTraversabilityValue(traversabilityDefaultReadAtInit_);
-  setDefaultTraversabilityUknownRegions(traversabilityDefaultReadAtInit_);
+  setDefaultTraversabilityUnknownRegions(traversabilityDefaultReadAtInit_);
   checkForRoughness_ = param_io::param(nodeHandle_, "footprint/verify_roughness_footprint", false);
   checkRobotInclination_ = param_io::param(nodeHandle_, "footprint/check_robot_inclination", false);
   maxGapWidth_ = param_io::param(nodeHandle_, "max_gap_width", 0.3);
@@ -798,14 +798,14 @@ double TraversabilityMap::getDefaultTraversabilityUnknownRegions() const
   return traversabilityDefault_;
 }
 
-void TraversabilityMap::setDefaultTraversabilityUknownRegions(const double &defaultTraversability)
+void TraversabilityMap::setDefaultTraversabilityUnknownRegions(const double &defaultTraversability)
 {
   traversabilityDefault_ = boundTraversabilityValue(defaultTraversability);
 }
 
-void TraversabilityMap::restoreDefaultTraversabilityUknownRegionsReadAtInit()
+void TraversabilityMap::restoreDefaultTraversabilityUnknownRegionsReadAtInit()
 {
-  setDefaultTraversabilityUknownRegions(traversabilityDefaultReadAtInit_);
+  setDefaultTraversabilityUnknownRegions(traversabilityDefaultReadAtInit_);
 }
 
 double TraversabilityMap::boundTraversabilityValue(const double& traversabilityValue) const

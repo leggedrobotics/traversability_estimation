@@ -143,12 +143,12 @@ class TraversabilityMap
    * Sets the default traversability value of unknown regions in the map.
    * @param[in] defaultTraversability new default traversability value of unknown regions in the map
     */
-  void setDefaultTraversabilityUknownRegions(const double& defaultTraversability);
+  void setDefaultTraversabilityUnknownRegions(const double &defaultTraversability);
 
   /*!
    * Restores the default traversability value of unknown regions in the map, which was read during initialization .
     */
-  void restoreDefaultTraversabilityUknownRegionsReadAtInit();
+  void restoreDefaultTraversabilityUnknownRegionsReadAtInit();
 
  private:
 
