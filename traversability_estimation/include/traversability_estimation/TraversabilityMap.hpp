@@ -150,6 +150,15 @@ class TraversabilityMap
     */
   void restoreDefaultTraversabilityUnknownRegionsReadAtInit();
 
+  /*!
+   * Checks if given 2D pose (x,y) belongs to the traversability layer of the current map.
+   * @param x X coordinate of the 2D pose to check.
+   * @param y Y coordinate of the 2D pose to check.
+   * @return true if pose belongs to the traversability layer of the current map,
+   *              i.e. if there is a valid traversability value in that position.
+   */
+  bool is2DPoseInTraversabilityMap(double x, double y) const;
+
  private:
 
   /*!
