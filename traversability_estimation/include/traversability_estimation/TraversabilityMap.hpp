@@ -29,6 +29,10 @@
 
 namespace traversability_estimation {
 
+// Traversability value bounds.
+constexpr double traversabilityMinValue = 0.0;
+constexpr double traversabilityMaxValue = 1.0;
+
 /*!
  * The terrain traversability estimation core. Updates the traversbility map and
  * evaluates the traversability of single footprints on this map.
@@ -129,6 +133,23 @@ class TraversabilityMap
    */
   std::string getMapFrameId() const;
 
+  /*!
+   * Gets the default traversability value of unknown regions in the map.
+   * @return default traversability value of unknown regions in the map
+   */
+  double getDefaultTraversabilityUnknownRegions() const;
+
+  /*!
+   * Sets the default traversability value of unknown regions in the map.
+   * @param[in] defaultTraversability new default traversability value of unknown regions in the map
+    */
+  void setDefaultTraversabilityUnknownRegions(const double &defaultTraversability);
+
+  /*!
+   * Restores the default traversability value of unknown regions in the map, which was read during initialization .
+    */
+  void restoreDefaultTraversabilityUnknownRegionsReadAtInit();
+
  private:
 
   /*!
@@ -201,6 +222,13 @@ class TraversabilityMap
    */
   void publishFootprintPolygon(const grid_map::Polygon& polygon);
 
+  /*!
+   * Bounds the passed traversability value to respect the allowed bounds.
+   * @param traversabilityValue value to bound.
+   * @return bounder value
+   */
+  double boundTraversabilityValue(const double& traversabilityValue) const;
+
   //! ROS node handle.
   ros::NodeHandle& nodeHandle_;
 
@@ -226,6 +254,7 @@ class TraversabilityMap
 
   //! Default value for traversability of unknown regions.
   double traversabilityDefault_;
+  double traversabilityDefaultReadAtInit_;
 
   //! Verify footprint for roughness.
   bool checkForRoughness_;

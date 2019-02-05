@@ -146,6 +146,10 @@ This is the main Traversability Estimation node. It uses the elevation map and t
 
 	Defines the different filters that are used to generate the traversability map.
 
+* **`traversability_default`** (double, default: 0.5)
+
+	Defines the default value for traversability of unknown regions in the traversability map.
+
 ### Traversability Estimation Filters
 
 The traversability estimation filters can be applied to an elevation map. Each filter adds an additional layer to the elevation map and computes a value for every cell of the map.
