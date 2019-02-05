@@ -826,7 +826,7 @@ double TraversabilityMap::boundTraversabilityValue(const double& traversabilityV
   return traversabilityValue;
 }
 
-bool TraversabilityMap::is2DPoseInTraversabilityMap(double x, double y) const
+bool TraversabilityMap::mapHasValidTraversabilityAt(double x, double y) const
 {
   grid_map::Position positionToCheck(x, y);
   grid_map::Index indexToCheck;
