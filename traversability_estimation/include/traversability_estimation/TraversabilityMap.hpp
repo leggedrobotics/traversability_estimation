@@ -150,6 +150,14 @@ class TraversabilityMap
     */
   void restoreDefaultTraversabilityUnknownRegionsReadAtInit();
 
+  /*!
+   * Checks if map has a valid traversability value at the specified cell.
+   * @param x X coordinate of the cell to check.
+   * @param y Y coordinate of the cell to check.
+   * @return true if map has a valid traversability value at the specified cell.
+   */
+  bool mapHasValidTraversabilityAt(double x, double y) const;
+
  private:
 
   /*!

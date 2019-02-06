@@ -10,6 +10,7 @@
 
 // Grid Map
 #include <grid_map_msgs/GetGridMap.h>
+#include <grid_map_core/GridMap.hpp>
 
 // ROS
 #include <ros/package.h>
@@ -823,6 +824,21 @@ double TraversabilityMap::boundTraversabilityValue(const double& traversabilityV
     return traversabilityMinValue;
   }
   return traversabilityValue;
+}
+
+bool TraversabilityMap::mapHasValidTraversabilityAt(double x, double y) const
+{
+  grid_map::Position positionToCheck(x, y);
+  grid_map::Index indexToCheck;
+  auto indexObtained = traversabilityMap_.getIndex(positionToCheck, indexToCheck);
+  if (!indexObtained) {
+    ROS_ERROR("It was not possible to get index of the position (%f, %f) in the current grid_map representation of the traversability map.",
+              x,
+              y);
+    return false;
+  }
+
+  return traversabilityMap_.isValid(indexToCheck, traversabilityType_);
 }
 
 } /* namespace */
