@@ -8,9 +8,9 @@ The Traversability Estimation package has been tested under [ROS] Indigo and Ubu
 
 **Authors: Martin Wermelinger, Peter Fankhauser, Ralf Kaestner  
 Contact: Martin Wermelinger, martiwer@mavt.ethz.ch  
-Affiliation: Autonomous Systems Lab, ETH Zurich**
+Affiliation: Robotic Systems Lab, ETH Zurich**
 
-[![Build Status](https://ci.leggedrobotics.com/buildStatus/icon?job=github_ethz-asl/traversability_estimation/master)](https://ci.leggedrobotics.com/job/github_ethz-asl/job/traversability_estimation/job/master/)
+[![Build Status](https://ci.leggedrobotics.com/buildStatus/icon?job=github_leggedrobotics/traversability_estimation/master)](https://ci.leggedrobotics.com/job/github_leggedrobotics/job/traversability_estimation/job/master/)
 
 ## Installation
 
@@ -165,7 +165,3 @@ The traversability estimation filters can be applied to an elevation map. Each f
 ## Bugs & Feature Requests
 
 Please report bugs and request features using the [Issue Tracker](https://github.com/ethz-asl/ros_best_practices/issues).
-
-## Build Status
-
-[![Build Status](https://ci.leggedrobotics.com/buildStatus/icon?job=github_leggedrobotics/traversability_estimation/master)](https://ci.leggedrobotics.com/job/github_leggedrobotics/job/traversability_estimation/job/master/)
