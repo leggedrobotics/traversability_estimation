@@ -335,7 +335,8 @@ bool TraversabilityEstimation::initializeTraversabilityMapFromGridMapMessage(con
   return initializeTraversabilityMapFromGridMapMessage(gridMap);
 }
 
-bool TraversabilityEstimation::initializeTraversabilityMapFromGridMapMessage(const grid_map::GridMap &gridMap) {
+bool TraversabilityEstimation::initializeTraversabilityMapFromGridMapMessage(const grid_map::GridMap &gridMap)
+{
   if (traversabilityMap_.traversabilityMapInitialized()) {
     ROS_WARN(
         "[TraversabilityEstimation::gridMapToInitTraversabilityMapCallback]: received grid map message cannot be used to initialize"
