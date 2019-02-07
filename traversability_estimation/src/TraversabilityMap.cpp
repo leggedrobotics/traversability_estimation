@@ -50,7 +50,7 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
   ROS_INFO("Traversability Map started.");
 
   readParameters();
-  traversabilityMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>("traversability_map", 1);
+  traversabilityMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>("traversability_map", 1, true);
   footprintPublisher_ = nodeHandle_.advertise<geometry_msgs::PolygonStamped>("footprint_polygon", 1, true);
 
   elevationMapLayers_.push_back("elevation");
