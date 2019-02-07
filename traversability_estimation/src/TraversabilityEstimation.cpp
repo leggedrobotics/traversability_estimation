@@ -105,11 +105,6 @@ bool TraversabilityEstimation::readParameters()
   mapLength_.y() = param_io::param(nodeHandle_, "map_length_y", 5.0);
   footprintYaw_ = param_io::param(nodeHandle_, "footprint_yaw", M_PI_2);
 
-  elevationMapBagToLoadTopicName_ = param_io::param<std::string>(nodeHandle_, "elevation_map/load/topic", "grid_map");
-  pathElevationMapBagToLoad_ = param_io::param<std::string>(nodeHandle_, "elevation_map/load/path_to_bag", "elevation_map.bag");
-  pathToSaveTraversabilityMapBag_ = param_io::param<std::string>(nodeHandle_, "traversability_map/save/path_to_bag", "traversability_map.bag");
-  traversabilityMapBagTopicName_ = param_io::param<std::string>(nodeHandle_, "traversability_map/save/topic_name", "traversability_map");
-
   // Grid map to initialize elevation layer
   acceptGridMapToInitTraversabilityMap_ = param_io::param<bool>(nodeHandle_, "grid_map_to_initialize_traversability_map/enable", false);
   gridMapToInitTraversabilityMapTopic_ =
@@ -118,24 +113,35 @@ bool TraversabilityEstimation::readParameters()
   return true;
 }
 
-bool TraversabilityEstimation::loadElevationMap(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
-{
+bool TraversabilityEstimation::loadElevationMap(grid_map_msgs::ProcessFile::Request& request,
+                                                grid_map_msgs::ProcessFile::Response& response) {
   ROS_INFO("TraversabilityEstimation: loadElevationMap");
-  grid_map::GridMap map;
-  grid_map_msgs::GridMap msg;
-  if (!grid_map::GridMapRosConverter::loadFromBag(pathElevationMapBagToLoad_, elevationMapBagToLoadTopicName_, map)) {
-    ROS_ERROR("TraversabilityEstimation: Cannot find bag or topic of the elevation map!");
-    return false;
+  if (request.file_path.empty() || request.topic_name.empty()) {
+    ROS_WARN("Fields 'file_path' and 'topic_name' in service request must be filled in.");
+    response.success = static_cast<unsigned char>(false);
+    return true;
   }
 
-  map.setTimestamp(ros::Time::now().toNSec());
-  grid_map::GridMapRosConverter::toMessage(map, msg);
-  if (!initializeTraversabilityMapFromGridMapMessage(msg)) {
-    ROS_ERROR(
-        "TraversabilityEstimation: loadElevationMap: it was not possible to load elevation map from bag with path '%s' and topic '%s'.",
-        pathElevationMapBagToLoad_.c_str(),
-        elevationMapBagToLoadTopicName_.c_str());
+  grid_map::GridMap map;
+  grid_map_msgs::GridMap msg;
+  if (!grid_map::GridMapRosConverter::loadFromBag(request.file_path, request.topic_name, map)) {
+    ROS_ERROR("TraversabilityEstimation: Cannot find bag '%s' or topic '%s' of the elevation map!",
+        request.file_path.c_str(), request.topic_name.c_str());
+    response.success = static_cast<unsigned char>(false);
+  } else {
+    map.setTimestamp(ros::Time::now().toNSec());
+    grid_map::GridMapRosConverter::toMessage(map, msg);
+    if (!initializeTraversabilityMapFromGridMapMessage(msg)) {
+      ROS_ERROR(
+          "TraversabilityEstimation: loadElevationMap: it was not possible to load elevation map from bag with path '%s' and topic '%s'.",
+          request.file_path.c_str(),
+          request.topic_name.c_str());
+      response.success = static_cast<unsigned char>(false);
+    } else {
+      response.success = static_cast<unsigned char>(true);
+    }
   }
+
   return true;
 }
 
@@ -321,11 +327,18 @@ bool TraversabilityEstimation::getTraversabilityMap(
   return isSuccess;
 }
 
-bool TraversabilityEstimation::saveToBag(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+bool TraversabilityEstimation::saveToBag(grid_map_msgs::ProcessFile::Request& request, grid_map_msgs::ProcessFile::Response& response)
 {
   ROS_INFO("Save to bag.");
-  return grid_map::GridMapRosConverter::saveToBag(traversabilityMap_.getTraversabilityMap(),
-      pathToSaveTraversabilityMapBag_, traversabilityMapBagTopicName_);
+  if (request.file_path.empty() || request.topic_name.empty()) {
+    ROS_WARN("Fields 'file_path' and 'topic_name' in service request must be filled in.");
+    response.success = static_cast<unsigned char>(false);
+    return true;
+  }
+
+  response.success = static_cast<unsigned char>(grid_map::GridMapRosConverter::saveToBag(traversabilityMap_.getTraversabilityMap(),
+                                                                                         request.file_path, request.topic_name));
+  return true;
 }
 
 bool TraversabilityEstimation::initializeTraversabilityMapFromGridMapMessage(const grid_map_msgs::GridMap& message)
