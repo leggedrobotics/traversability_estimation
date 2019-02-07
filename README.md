@@ -156,7 +156,7 @@ This is the main Traversability Estimation node. It uses the elevation map and t
 
 * **`grid_map_to_initialize_traversability_map/enable`** (bool, default: false)
 
-	Defines if the input topic `~/gird_map` can be accepted to initialize the traversability map.
+	Defines if the input topic `~/grid_map` can be accepted to initialize the traversability map.
 
 * **`grid_map_to_initialize_traversability_map/grid_map_topic_name`** (string, default: grid_map)
 
