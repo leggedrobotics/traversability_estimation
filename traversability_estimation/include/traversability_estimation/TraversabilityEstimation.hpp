@@ -162,18 +162,11 @@ class TraversabilityEstimation
   bool requestElevationMap(grid_map_msgs::GridMap& map);
 
   /*!
-   * Initializes a new traversability map based on the given grid map message. Previous traversability map is overwritten.
-   * @param message grid map message to be used to compute new traversability map.
-   * @return true on success.
-   */
-  bool initializeTraversabilityMapFromGridMapMessage(const grid_map_msgs::GridMap& message);
-
-  /*!
    * Initializes a new traversability map based on the given grid map. Previous traversability map is overwritten.
    * @param gridMap grid map object to be used to compute new traversability map.
    * @return true on success.
    */
-  bool initializeTraversabilityMapFromGridMapMessage(const grid_map::GridMap& gridMap);
+  bool initializeTraversabilityMapFromGridMap(const grid_map::GridMap& gridMap);
 
   //! ROS node handle.
   ros::NodeHandle& nodeHandle_;
