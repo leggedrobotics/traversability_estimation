@@ -20,6 +20,7 @@ namespace traversability_estimation {
 
 TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
     : nodeHandle_(nodeHandle),
+      acceptGridMapToInitTraversabilityMap_(false),
       traversabilityMap_(nodeHandle),
       traversabilityType_("traversability"),
       slopeType_("traversability_slope"),
@@ -47,6 +48,14 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
   traversabilityFootprint_ = nodeHandle_.advertiseService("traversability_footprint", &TraversabilityEstimation::traversabilityFootprint, this);
   saveToBagService_ = nodeHandle_.advertiseService("save_traversability_map_to_bag", &TraversabilityEstimation::saveToBag, this);
   imageSubscriber_ = nodeHandle_.subscribe(imageTopic_,1,&TraversabilityEstimation::imageCallback, this);
+
+  if (acceptGridMapToInitTraversabilityMap_) {
+    gridMapToInitTraversabilityMapSubscriber_ =
+        nodeHandle_.subscribe(gridMapToInitTraversabilityMapTopic_,
+                              1,
+                              &TraversabilityEstimation::gridMapToInitTraversabilityMapCallback,
+                              this);
+  }
 
   elevationMapLayers_.push_back("elevation");
   elevationMapLayers_.push_back("upper_bound");
@@ -101,6 +110,11 @@ bool TraversabilityEstimation::readParameters()
   pathToSaveTraversabilityMapBag_ = param_io::param<std::string>(nodeHandle_, "traversability_map/save/path_to_bag", "traversability_map.bag");
   traversabilityMapBagTopicName_ = param_io::param<std::string>(nodeHandle_, "traversability_map/save/topic_name", "traversability_map");
 
+  // Grid map to initialize elevation layer
+  acceptGridMapToInitTraversabilityMap_ = param_io::param<bool>(nodeHandle_, "grid_map_to_initialize_traversability_map/enable", false);
+  gridMapToInitTraversabilityMapTopic_ =
+      param_io::param<std::string>(nodeHandle_, "grid_map_to_initialize_traversability_map/grid_map_topic_name", "initial_elevation_map");
+
   return true;
 }
 
@@ -108,31 +122,17 @@ bool TraversabilityEstimation::loadElevationMap(std_srvs::Empty::Request&, std_s
 {
   ROS_INFO("TraversabilityEstimation: loadElevationMap");
   grid_map::GridMap map;
-  grid_map_msgs::GridMap msg;
   if (!grid_map::GridMapRosConverter::loadFromBag(pathElevationMapBagToLoad_, elevationMapBagToLoadTopicName_, map)) {
     ROS_ERROR("TraversabilityEstimation: Cannot find bag or topic of the elevation map!");
     return false;
   }
-  for (auto layer : elevationMapLayers_) {
-    if (!map.exists(layer)) {
-      map.add(layer, 0.0);
-      ROS_INFO_STREAM("TraversabilityEstimation: loadElevationMap: Added layer '" << layer << "'.");
-    }
-  }
-  ROS_DEBUG_STREAM("Map frame id: " << map.getFrameId());
-  for (auto layer : map.getLayers()) {
-    ROS_DEBUG_STREAM("Map layers: " << layer);
-  }
-  ROS_DEBUG_STREAM("Map size: " << map.getLength());
-  ROS_DEBUG_STREAM("Map position: " << map.getPosition());
-  ROS_DEBUG_STREAM("Map resolution: " << map.getResolution());
 
   map.setTimestamp(ros::Time::now().toNSec());
-  grid_map::GridMapRosConverter::toMessage(map, msg);
-  traversabilityMap_.setElevationMap(msg);
-  if (!traversabilityMap_.computeTraversability()) {
-    ROS_WARN("TraversabilityEstimation: loadElevationMap: cannot compute traversability.");
-    return false;
+  if (!initializeTraversabilityMapFromGridMap(map)) {
+    ROS_ERROR(
+        "TraversabilityEstimation: loadElevationMap: it was not possible to load elevation map from bag with path '%s' and topic '%s'.",
+        pathElevationMapBagToLoad_.c_str(),
+        elevationMapBagToLoadTopicName_.c_str());
   }
   return true;
 }
@@ -324,6 +324,53 @@ bool TraversabilityEstimation::saveToBag(std_srvs::Empty::Request& request, std_
   ROS_INFO("Save to bag.");
   return grid_map::GridMapRosConverter::saveToBag(traversabilityMap_.getTraversabilityMap(),
       pathToSaveTraversabilityMapBag_, traversabilityMapBagTopicName_);
+}
+
+bool TraversabilityEstimation::initializeTraversabilityMapFromGridMap(const grid_map::GridMap& gridMap)
+{
+  if (traversabilityMap_.traversabilityMapInitialized()) {
+    ROS_WARN(
+        "[TraversabilityEstimation::gridMapToInitTraversabilityMapCallback]: received grid map message cannot be used to initialize"
+        " the traversability map, because current traversability map has been already initialized.");
+    return false;
+  }
+
+  grid_map::GridMap mapWithCheckedLayers = gridMap;
+  for (const auto& layer : elevationMapLayers_) {
+    if (!mapWithCheckedLayers.exists(layer)) {
+      mapWithCheckedLayers.add(layer, 0.0);
+      ROS_INFO_STREAM("[TraversabilityEstimation::initializeTraversabilityMapFromGridMap]: Added layer '" << layer << "'.");
+    }
+  }
+  ROS_DEBUG_STREAM("Map frame id: " << mapWithCheckedLayers.getFrameId());
+  for (const auto& layer : mapWithCheckedLayers.getLayers()) {
+    ROS_DEBUG_STREAM("Map layers: " << layer);
+  }
+  ROS_DEBUG_STREAM("Map size: " << mapWithCheckedLayers.getLength());
+  ROS_DEBUG_STREAM("Map position: " << mapWithCheckedLayers.getPosition());
+  ROS_DEBUG_STREAM("Map resolution: " << mapWithCheckedLayers.getResolution());
+
+  grid_map_msgs::GridMap message;
+  grid_map::GridMapRosConverter::toMessage(mapWithCheckedLayers, message);
+  traversabilityMap_.setElevationMap(message);
+  if (!traversabilityMap_.computeTraversability()) {
+    ROS_WARN("TraversabilityEstimation: initializeTraversabilityMapFromGridMap: cannot compute traversability.");
+    return false;
+  }
+  return true;
+}
+
+void TraversabilityEstimation::gridMapToInitTraversabilityMapCallback(const grid_map_msgs::GridMap& message)
+{
+  grid_map::GridMap gridMap;
+  grid_map::GridMapRosConverter::fromMessage(message, gridMap);
+  if (!initializeTraversabilityMapFromGridMap(gridMap)) {
+      ROS_ERROR("[TraversabilityEstimation::gridMapToInitTraversabilityMapCallback]: "
+                "It was not possible to use received grid map message to initialize traversability map.");
+  } else {
+    ROS_INFO("[TraversabilityEstimation::gridMapToInitTraversabilityMapCallback]: "
+             "Traversability Map initialized using received grid map on topic '%s'.", gridMapToInitTraversabilityMapTopic_.c_str());
+  }
 }
 
 } /* namespace */

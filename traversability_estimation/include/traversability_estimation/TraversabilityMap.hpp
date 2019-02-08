@@ -285,7 +285,7 @@ class TraversabilityMap
   std::vector<std::string> traversabilityMapLayers_;
   bool traversabilityMapInitialized_;
 
-  //! Traversability map.
+  //! Elevation map.
   grid_map::GridMap elevationMap_;
   std::vector<std::string> elevationMapLayers_;
   bool elevationMapInitialized_;

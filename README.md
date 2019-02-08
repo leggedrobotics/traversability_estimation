@@ -66,6 +66,10 @@ This is the main Traversability Estimation node. It uses the elevation map and t
 
     	It is possible to subscribe to an image. The image is converted into a grayscale image and the values are mapped into an elevation map.
 
+* **`~/initial_elevation_map`** ([grid_map_msgs/GridMap])
+
+      It is possible to subscribe to a grid map. The elevation layer of the input grid map is used to compute the traversability map.
+
 
 #### Published Topics
 
@@ -149,6 +153,14 @@ This is the main Traversability Estimation node. It uses the elevation map and t
 * **`traversability_default`** (double, default: 0.5)
 
 	Defines the default value for traversability of unknown regions in the traversability map.
+
+* **`grid_map_to_initialize_traversability_map/enable`** (bool, default: false)
+
+	Defines if the input topic `~/initial_elevation_map` can be accepted to initialize the traversability map.
+
+* **`grid_map_to_initialize_traversability_map/grid_map_topic_name`** (string, default: initial_elevation_map)
+
+	Defines the input topic name for the grid map message to be used to initialize the traversability map.
 
 ### Traversability Estimation Filters
 
