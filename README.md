@@ -80,11 +80,11 @@ This is the main Traversability Estimation node. It uses the elevation map and t
 
 #### Services
 
-* **`load_elevation_map`** ([std_srvs/Empty])
+* **`load_elevation_map`** ([grid_map_msgs/ProcessFile])
 
     Trigger the loading of an elevation map from a [rosbag] file. Trigger the loading of the map with
 
-        rosservice call /traversability_estimation/load_elevation_map
+        rosservice call /traversability_estimation/load_elevation_map "file_path: '/home/user/your_elevation_bag.bag' topic_name: 'elevation_topic_name'"
 
 * **`update_traversability`** ([grid_map_msgs/GetGridMapInfo])
 
@@ -114,11 +114,11 @@ This is the main Traversability Estimation node. It uses the elevation map and t
 
         rosservice call /traversability_estimation/traversability_footprint
 
-* **`save_traversability_map_to_bag`** ([std_srvs/Empty])
+* **`save_traversability_map_to_bag`** ([grid_map_msgs/ProcessFile])
 
     Save all layers of the current traversability map to a [rosbag] file. Save the traversability map with
 
-        rosservice call /traversability_estimation/save_traversability_map_to_bag
+        rosservice call /traversability_estimation/save_traversability_map_to_bag "file_path: '/home/user/your_bag.bag' topic_name: 'traversability_map_topic_name'"
 
 #### Parameters
 

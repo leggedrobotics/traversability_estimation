@@ -14,6 +14,7 @@
 #include <grid_map_ros/grid_map_ros.hpp>
 #include <grid_map_msgs/GetGridMapInfo.h>
 #include <grid_map_msgs/GetGridMap.h>
+#include <grid_map_msgs/ProcessFile.h>
 
 // Traversability estimation
 #include <traversability_msgs/CheckFootprintPath.h>
@@ -57,8 +58,8 @@ class TraversabilityEstimation
    * @param response the ROS service response.
    * @return true if successful.
    */
-  bool loadElevationMap(std_srvs::Empty::Request& request,
-                       std_srvs::Empty::Response& response);
+  bool loadElevationMap(grid_map_msgs::ProcessFile::Request& request,
+                        grid_map_msgs::ProcessFile::Response& response);
 
   /*!
    * ROS service callback function that forces an update of the traversability map,
@@ -118,12 +119,12 @@ class TraversabilityEstimation
                              grid_map_msgs::GetGridMap::Response& response);
 
   /*!
-   * Saves the grid map with all layer to a ROS bag.
+   * Saves the traversability map with all layers to a ROS bag.
    * @param request the ROS service request.
    * @param response the ROS service response.
    * @return true if successful.
    */
-  bool saveToBag(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+  bool saveToBag(grid_map_msgs::ProcessFile::Request& request, grid_map_msgs::ProcessFile::Response& response);
 
   /*!
    * Callback to receive a grid map message that is used to initialize the traversability map, only if it is not already initialized.
@@ -237,14 +238,6 @@ class TraversabilityEstimation
 
   //! Traversability map
   TraversabilityMap traversabilityMap_;
-
-  //! Path and topic to load elevation map.
-  std::string pathElevationMapBagToLoad_;
-  std::string elevationMapBagToLoadTopicName_;
-
-  //! Path and topic to save traversability map.
-  std::string pathToSaveTraversabilityMapBag_;
-  std::string traversabilityMapBagTopicName_;
 
   //! Package name where the parameters are defined.
   std::string package_;

@@ -4,9 +4,5 @@
     <rosparam command="load" file="$(find traversability_estimation)/config/robot.yaml"/>
     <rosparam command="load" file="$(find traversability_estimation)/config/robot_footprint_parameter.yaml"/>
     <rosparam command="load" file="$(find traversability_estimation)/config/robot_filter_parameter.yaml"/>
-    <param name="elevation_map/load/topic" value="grid_map"/>
-    <param name="elevation_map/load/path_to_bag" value="$(find traversability_estimation)/maps/elevation_map.bag"/>
-    <param name="traversability_map/save/path_to_bag" value="$(find traversability_estimation)/maps/traversability_map.bag"/>
-    <param name="traversability_map/save/topic_name" value="traversability_map"/>
   </node>
 </launch>
