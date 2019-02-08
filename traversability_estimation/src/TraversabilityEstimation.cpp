@@ -113,7 +113,7 @@ bool TraversabilityEstimation::readParameters()
   // Grid map to initialize elevation layer
   acceptGridMapToInitTraversabilityMap_ = param_io::param<bool>(nodeHandle_, "grid_map_to_initialize_traversability_map/enable", false);
   gridMapToInitTraversabilityMapTopic_ =
-      param_io::param<std::string>(nodeHandle_, "grid_map_to_initialize_traversability_map/grid_map_topic_name", "elevation_map");
+      param_io::param<std::string>(nodeHandle_, "grid_map_to_initialize_traversability_map/grid_map_topic_name", "initial_elevation_map");
 
   return true;
 }
