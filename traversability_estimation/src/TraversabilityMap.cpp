@@ -394,6 +394,7 @@ bool TraversabilityMap::checkFootprintPath(
     polygon1.setFrameId(getMapFrameId());
     polygon1.setTimestamp(ros::Time::now().toNSec());
     polygon2 = polygon1;
+    bool isTraversableIntermediate = true;
     for (int i = 0; i < arraySize; i++) {
       polygon1 = polygon2;
       start = end;
@@ -457,15 +458,15 @@ bool TraversabilityMap::checkFootprintPath(
         polygon = grid_map::Polygon::convexHull(polygon1, polygon2);
         polygon.setFrameId(getMapFrameId());
         polygon.setTimestamp(ros::Time::now().toNSec());
+        if (publishPolygon) {
+          publishFootprintPolygon(polygon);
+        }
         if (checkRobotInclination_) {
           if (!checkInclination(start, end))
             return true;
         }
         if (!isTraversable(polygon, traversability)) {
-          return true;
-        }
-        if (publishPolygon) {
-          publishFootprintPolygon(polygon);
+          isTraversableIntermediate = false;
         }
         double areaPolygon, areaPrevious;
         if (i > 1) {
@@ -479,9 +480,13 @@ bool TraversabilityMap::checkFootprintPath(
         }
       }
     }
+    if (!isTraversableIntermediate) {
+      return true;
+    }
   }
 
   result.is_safe = true;
+
   ROS_DEBUG_STREAM("Traversability: " << result.traversability);
 
   return true;
@@ -491,20 +496,27 @@ bool TraversabilityMap::isTraversable(grid_map::Polygon& polygon, double& traver
 {
   unsigned int nCells = 0;
   traversability = 0.0;
+  bool isSafe = true;
 
   // Iterate through polygon and check for traversability.
   for (grid_map::PolygonIterator polygonIterator(traversabilityMap_, polygon);
       !polygonIterator.isPastEnd(); ++polygonIterator) {
 
     // Check for slopes
-    if (!checkForSlope(*polygonIterator)) return false;
+    if (!checkForSlope(*polygonIterator)) {
+      isSafe = false;
+    }
 
     // Check for steps
-    if (!checkForStep(*polygonIterator)) return false;
+    if (!checkForStep(*polygonIterator)) {
+      isSafe = false;
+    }
 
     // Check for roughness
     if (checkForRoughness_) {
-      if(!checkForRoughness(*polygonIterator)) return false;
+      if(!checkForRoughness(*polygonIterator)) {
+        isSafe = false;
+      }
     }
 
     nCells++;
@@ -523,7 +535,7 @@ bool TraversabilityMap::isTraversable(grid_map::Polygon& polygon, double& traver
     return true;
   }
   traversability /= nCells;
-  return true;
+  return isSafe;
 }
 
 bool TraversabilityMap::isTraversable(const grid_map::Position& center, const double& radiusMax, double& traversability, const double& radiusMin)
