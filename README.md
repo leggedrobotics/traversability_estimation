@@ -8,9 +8,9 @@ The Traversability Estimation package has been tested under [ROS] Indigo and Ubu
 
 **Authors: Martin Wermelinger, Peter Fankhauser, Ralf Kaestner  
 Contact: Martin Wermelinger, martiwer@mavt.ethz.ch  
-Affiliation: Autonomous Systems Lab, ETH Zurich**
+Affiliation: Robotic Systems Lab, ETH Zurich**
 
-[![Build Status](https://ci.leggedrobotics.com/buildStatus/icon?job=github_ethz-asl/traversability_estimation/master)](https://ci.leggedrobotics.com/job/github_ethz-asl/job/traversability_estimation/job/master/)
+[![Build Status](https://ci.leggedrobotics.com/buildStatus/icon?job=github_leggedrobotics/traversability_estimation/master)](https://ci.leggedrobotics.com/job/github_leggedrobotics/job/traversability_estimation/job/master/)
 
 ## Installation
 
@@ -66,6 +66,10 @@ This is the main Traversability Estimation node. It uses the elevation map and t
 
     	It is possible to subscribe to an image. The image is converted into a grayscale image and the values are mapped into an elevation map.
 
+* **`~/initial_elevation_map`** ([grid_map_msgs/GridMap])
+
+      It is possible to subscribe to a grid map. The elevation layer of the input grid map is used to compute the traversability map.
+
 
 #### Published Topics
 
@@ -76,11 +80,11 @@ This is the main Traversability Estimation node. It uses the elevation map and t
 
 #### Services
 
-* **`load_elevation_map`** ([std_srvs/Empty])
+* **`load_elevation_map`** ([grid_map_msgs/ProcessFile])
 
     Trigger the loading of an elevation map from a [rosbag] file. Trigger the loading of the map with
 
-        rosservice call /traversability_estimation/load_elevation_map
+        rosservice call /traversability_estimation/load_elevation_map "file_path: '/home/user/your_elevation_bag.bag' topic_name: 'elevation_topic_name'"
 
 * **`update_traversability`** ([grid_map_msgs/GetGridMapInfo])
 
@@ -110,41 +114,53 @@ This is the main Traversability Estimation node. It uses the elevation map and t
 
         rosservice call /traversability_estimation/traversability_footprint
 
-* **`save_to_bag`** ([std_srvs/Empty])
+* **`save_traversability_map_to_bag`** ([grid_map_msgs/ProcessFile])
 
     Save all layers of the current traversability map to a [rosbag] file. Save the traversability map with
 
-        rosservice call /traversability_estimation/save_to_bag
+        rosservice call /traversability_estimation/save_traversability_map_to_bag "file_path: '/home/user/your_bag.bag' topic_name: 'traversability_map_topic_name'"
 
 #### Parameters
 
 * **`submap_service`** (string, default: "/elevation_mapping/get_grid_map")
 
 	The name of the service to get the elevation submap.
-	
+
 * **`robot_frame_id`** (string, default: "base")
-	
+
 	The id of the robot tf frame.
 
 * **`map_frame_id`** (string, default: "map")
-	
+
 	The id of the tf frame of the traversability map. This id must be the same as the input elevation submap.
 
 * **`update_rate`** (double, default: 4.0)
-	
+
 	The update rate (in \[Hz\]) at which the traversability map is updated.
 
 * **`map_center_x`, `map_center_y`** (double, default: 1.5, 0.0)
-	
+
 	The position of the traversability map (center) in the traversability map frame.
 
 * **`map_length_x`, `map_length_y`** (double, default: 5.0)
-	
+
 	The size (in \[m\]) of the traversability map.
 
 * **`traversability_map_filters:`** (filter_chain)
-	
+
 	Defines the different filters that are used to generate the traversability map.
+
+* **`traversability_default`** (double, default: 0.5)
+
+	Defines the default value for traversability of unknown regions in the traversability map.
+
+* **`grid_map_to_initialize_traversability_map/enable`** (bool, default: false)
+
+	Defines if the input topic `~/initial_elevation_map` can be accepted to initialize the traversability map.
+
+* **`grid_map_to_initialize_traversability_map/grid_map_topic_name`** (string, default: initial_elevation_map)
+
+	Defines the input topic name for the grid map message to be used to initialize the traversability map.
 
 ### Traversability Estimation Filters
 

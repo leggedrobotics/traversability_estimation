@@ -10,6 +10,7 @@
 
 // Grid Map
 #include <grid_map_msgs/GetGridMap.h>
+#include <grid_map_core/GridMap.hpp>
 
 // ROS
 #include <ros/package.h>
@@ -26,6 +27,7 @@
 
 // Param IO
 #include <param_io/get_param.hpp>
+#include <traversability_estimation/TraversabilityMap.hpp>
 
 using namespace std;
 
@@ -48,7 +50,7 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
   ROS_INFO("Traversability Map started.");
 
   readParameters();
-  traversabilityMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>("traversability_map", 1);
+  traversabilityMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>("traversability_map", 1, true);
   footprintPublisher_ = nodeHandle_.advertise<geometry_msgs::PolygonStamped>("footprint_polygon", 1, true);
 
   elevationMapLayers_.push_back("elevation");
@@ -88,7 +90,10 @@ bool TraversabilityMap::readParameters()
   }
 
   mapFrameId_ = param_io::param<std::string>(nodeHandle_, "map_frame_id", "map");
-  traversabilityDefault_ = param_io::param(nodeHandle_, "footprint/traversability_default", 0.5);
+  traversabilityDefaultReadAtInit_ = param_io::param(nodeHandle_, "footprint/traversability_default", 0.5);
+  // Safety check
+  traversabilityDefaultReadAtInit_ = boundTraversabilityValue(traversabilityDefaultReadAtInit_);
+  setDefaultTraversabilityUnknownRegions(traversabilityDefaultReadAtInit_);
   checkForRoughness_ = param_io::param(nodeHandle_, "footprint/verify_roughness_footprint", false);
   checkRobotInclination_ = param_io::param(nodeHandle_, "footprint/check_robot_inclination", false);
   maxGapWidth_ = param_io::param(nodeHandle_, "max_gap_width", 0.3);
@@ -787,6 +792,53 @@ void TraversabilityMap::publishFootprintPolygon(const grid_map::Polygon& polygon
 
 std::string TraversabilityMap::getMapFrameId() const {
   return mapFrameId_;
+}
+
+double TraversabilityMap::getDefaultTraversabilityUnknownRegions() const
+{
+  return traversabilityDefault_;
+}
+
+void TraversabilityMap::setDefaultTraversabilityUnknownRegions(const double &defaultTraversability)
+{
+  traversabilityDefault_ = boundTraversabilityValue(defaultTraversability);
+}
+
+void TraversabilityMap::restoreDefaultTraversabilityUnknownRegionsReadAtInit()
+{
+  setDefaultTraversabilityUnknownRegions(traversabilityDefaultReadAtInit_);
+}
+
+double TraversabilityMap::boundTraversabilityValue(const double& traversabilityValue) const
+{
+  if (traversabilityValue > traversabilityMaxValue) {
+    ROS_WARN("Passed traversability value (%f) is higher than max allowed value (%f). It is set equal to the max.",
+             traversabilityValue,
+             traversabilityMaxValue);
+    return traversabilityMaxValue;
+  }
+  if (traversabilityValue < traversabilityMinValue) {
+    ROS_WARN("Passed traversability value (%f) is lower than min allowed value (%f). It is set equal to the min.",
+             traversabilityValue,
+             traversabilityMinValue);
+    return traversabilityMinValue;
+  }
+  return traversabilityValue;
+}
+
+bool TraversabilityMap::mapHasValidTraversabilityAt(double x, double y) const
+{
+  grid_map::Position positionToCheck(x, y);
+  grid_map::Index indexToCheck;
+  auto indexObtained = traversabilityMap_.getIndex(positionToCheck, indexToCheck);
+  if (!indexObtained) {
+    ROS_ERROR("It was not possible to get index of the position (%f, %f) in the current grid_map representation of the traversability map.",
+              x,
+              y);
+    return false;
+  }
+
+  return traversabilityMap_.isValid(indexToCheck, traversabilityType_);
 }
 
 } /* namespace */
