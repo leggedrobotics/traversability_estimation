@@ -90,5 +90,4 @@ bool SlopeFilter<T>::update(const T& mapIn, T& mapOut)
 
 } /* namespace */
 
-PLUGINLIB_REGISTER_CLASS(SlopeFilter, filters::SlopeFilter<grid_map::GridMap>,
-                         filters::FilterBase<grid_map::GridMap>)
+PLUGINLIB_EXPORT_CLASS(filters::SlopeFilter<grid_map::GridMap>, filters::FilterBase<grid_map::GridMap>)
