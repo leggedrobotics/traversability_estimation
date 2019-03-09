@@ -27,10 +27,12 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
       stepType_("traversability_step"),
       roughnessType_("traversability_roughness"),
       robotSlopeType_("robot_slope"),
-      getImageCallback_(false)
+      getImageCallback_(false),
+      useRawMap_(false)
 {
   ROS_DEBUG("Traversability estimation node started.");
   readParameters();
+  traversabilityMap_.createLayers(useRawMap_);
   submapClient_ = nodeHandle_.serviceClient<grid_map_msgs::GetGridMap>(submapServiceName_);
 
   if (!updateDuration_.isZero()) {
@@ -70,6 +72,9 @@ TraversabilityEstimation::~TraversabilityEstimation()
 
 bool TraversabilityEstimation::readParameters()
 {
+  // Read boolean to switch between raw and fused map.
+  useRawMap_ = param_io::param<bool>(nodeHandle_, "use_raw_map", false);
+
   submapServiceName_ = param_io::param<std::string>(nodeHandle_, "submap_service", "/get_grid_map");
 
   double updateRate;

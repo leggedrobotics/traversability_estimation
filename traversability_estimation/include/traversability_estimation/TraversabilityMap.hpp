@@ -158,6 +158,13 @@ class TraversabilityMap
    */
   bool mapHasValidTraversabilityAt(double x, double y) const;
 
+  /*!
+   * Create layers of traversabilty map.
+   * @param useRawMap switch between raw and fused map.
+   * @return true if layers are creates.
+   */
+  bool createLayers(bool useRawMap);
+
  private:
 
   /*!

@@ -52,20 +52,26 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
   readParameters();
   traversabilityMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>("traversability_map", 1, true);
   footprintPublisher_ = nodeHandle_.advertise<geometry_msgs::PolygonStamped>("footprint_polygon", 1, true);
-
-  elevationMapLayers_.push_back("elevation");
-  elevationMapLayers_.push_back("upper_bound");
-  elevationMapLayers_.push_back("lower_bound");
-  // TODO: Adapt map layers to traversability filters.
-  traversabilityMapLayers_.push_back(traversabilityType_);
-  traversabilityMapLayers_.push_back(slopeType_);
-  traversabilityMapLayers_.push_back(stepType_);
-  traversabilityMapLayers_.push_back(roughnessType_);
 }
 
 TraversabilityMap::~TraversabilityMap()
 {
   nodeHandle_.shutdown();
+}
+
+bool TraversabilityMap::createLayers(bool useRawMap)
+{
+  elevationMapLayers_.push_back("elevation");
+  if (!useRawMap) {
+    elevationMapLayers_.push_back("upper_bound");
+    elevationMapLayers_.push_back("lower_bound");
+  }
+  // TODO: Adapt map layers to traversability filters.
+  traversabilityMapLayers_.push_back(traversabilityType_);
+  traversabilityMapLayers_.push_back(slopeType_);
+  traversabilityMapLayers_.push_back(stepType_);
+  traversabilityMapLayers_.push_back(roughnessType_);
+  return true;
 }
 
 bool TraversabilityMap::readParameters()
@@ -162,7 +168,12 @@ void TraversabilityMap::publishTraversabilityMap()
     boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
     grid_map::GridMap traversabilityMapCopy = traversabilityMap_;
     scopedLockForTraversabilityMap.unlock();
-    traversabilityMapCopy.add("uncertainty_range", traversabilityMapCopy.get("upper_bound") - traversabilityMapCopy.get("lower_bound"));
+    if (traversabilityMapCopy.exists("upper_bound") && traversabilityMapCopy.exists("lower_bound")) {
+      traversabilityMapCopy.add("uncertainty_range", traversabilityMapCopy.get("upper_bound") - traversabilityMapCopy.get("lower_bound"));
+    } else {
+      traversabilityMapCopy.add("uncertainty_range", 0.0);
+    }
+
     grid_map::GridMapRosConverter::toMessage(traversabilityMapCopy, mapMessage);
     mapMessage.info.pose.position.z = zPosition_;
     traversabilityMapPublisher_.publish(mapMessage);

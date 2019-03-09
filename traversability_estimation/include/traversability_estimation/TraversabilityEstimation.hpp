@@ -241,6 +241,9 @@ class TraversabilityEstimation
 
   //! Package name where the parameters are defined.
   std::string package_;
+
+  //! Use raw or fused map.
+  bool useRawMap_;
 };
 
 } /* namespace */
