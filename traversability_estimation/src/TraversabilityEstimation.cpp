@@ -60,8 +60,16 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
   }
 
   elevationMapLayers_.push_back("elevation");
-  elevationMapLayers_.push_back("upper_bound");
-  elevationMapLayers_.push_back("lower_bound");
+  if (!useRawMap_) {
+    elevationMapLayers_.push_back("upper_bound");
+    elevationMapLayers_.push_back("lower_bound");
+  } else {
+    elevationMapLayers_.push_back("variance");
+    elevationMapLayers_.push_back("horizontal_variance_x");
+    elevationMapLayers_.push_back("horizontal_variance_y");
+    elevationMapLayers_.push_back("horizontal_variance_xy");
+    elevationMapLayers_.push_back("time");
+  }
 }
 
 TraversabilityEstimation::~TraversabilityEstimation()
