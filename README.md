@@ -126,6 +126,10 @@ This is the main Traversability Estimation node. It uses the elevation map and t
 
 	The name of the service to get the elevation submap.
 
+* **`use_raw_map`** (bool, default: false)
+
+	A boolean to update the traversability map either with the raw or fused elevation map.
+
 * **`robot_frame_id`** (string, default: "base")
 
 	The id of the robot tf frame.
