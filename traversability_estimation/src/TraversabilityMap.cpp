@@ -65,6 +65,12 @@ bool TraversabilityMap::createLayers(bool useRawMap)
   if (!useRawMap) {
     elevationMapLayers_.push_back("upper_bound");
     elevationMapLayers_.push_back("lower_bound");
+  } else {
+    elevationMapLayers_.push_back("variance");
+    elevationMapLayers_.push_back("horizontal_variance_x");
+    elevationMapLayers_.push_back("horizontal_variance_y");
+    elevationMapLayers_.push_back("horizontal_variance_xy");
+    elevationMapLayers_.push_back("time");
   }
   // TODO: Adapt map layers to traversability filters.
   traversabilityMapLayers_.push_back(traversabilityType_);
@@ -170,8 +176,6 @@ void TraversabilityMap::publishTraversabilityMap()
     scopedLockForTraversabilityMap.unlock();
     if (traversabilityMapCopy.exists("upper_bound") && traversabilityMapCopy.exists("lower_bound")) {
       traversabilityMapCopy.add("uncertainty_range", traversabilityMapCopy.get("upper_bound") - traversabilityMapCopy.get("lower_bound"));
-    } else {
-      traversabilityMapCopy.add("uncertainty_range", 0.0);
     }
 
     grid_map::GridMapRosConverter::toMessage(traversabilityMapCopy, mapMessage);
