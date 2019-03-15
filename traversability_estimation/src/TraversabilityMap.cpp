@@ -333,14 +333,15 @@ void TraversabilityMap::checkPolygon(
   for (grid_map::PolygonIterator iter(traversabilityMap_, poly_gridmap);
        !iter.isPastEnd();
        ++iter) {
-    const auto cur_trav = traversabilityMap_.at("traversability", *iter);
+    const auto map_trav = traversabilityMap_.at("traversability", *iter);
+    const auto cur_trav = std::isnan(map_trav) ? traversabilityDefault_ : map_trav;
     // Check if traversability is lower than current lowest one.
     if (cur_trav < result.traversability) {
       result.traversability = cur_trav;
       // Check if traversability is lower than threshold.
       if (cur_trav < 0.1) {
         result.is_safe = false;
-        // If we do laze eval return.
+        // If we do lazy eval return.
         if (true) return;
       }
     }
