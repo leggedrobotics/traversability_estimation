@@ -28,6 +28,7 @@
 // Param IO
 #include <param_io/get_param.hpp>
 #include <traversability_estimation/TraversabilityMap.hpp>
+#include <traversability_learner_ros/geometry_interface.h>
 
 using namespace std;
 
@@ -317,6 +318,95 @@ bool TraversabilityMap::traversabilityFootprint(const double& radius, const doub
   return true;
 }
 
+using namespace traversability_learner;
+
+void TraversabilityMap::checkPolygon(
+    const Polygon& polygon,
+    traversability_msgs::TraversabilityResult& result) {
+  // Reset result.
+  result.is_safe = true;
+  result.traversability = std::numeric_limits<double>::max();
+  result.area = boost::geometry::area(polygon);
+
+  // Iterate over polygon.
+  const auto poly_gridmap = polygonBoostToGridMap(polygon);
+  for (grid_map::PolygonIterator iter(traversabilityMap_, poly_gridmap);
+       !iter.isPastEnd();
+       ++iter) {
+    const auto cur_trav = traversabilityMap_.at("traversability", *iter);
+    // Check if traversability is lower than current lowest one.
+    if (cur_trav < result.traversability) {
+      result.traversability = cur_trav;
+      // Check if traversability is lower than threshold.
+      if (cur_trav < 0.1) {
+        result.is_safe = false;
+        // If we do laze eval return.
+        if (true) return;
+      }
+    }
+  }
+}
+
+traversability_learner::Polygon TraversabilityMap::getFootprintPathPolygon(
+    const traversability_msgs::FootprintPath& path) {
+  // Create polygon vector with size of poses.
+  const auto n_poses = path.poses.poses.size();
+  std::vector<traversability_learner::Polygon> pose_polygons(n_poses);
+
+  // If polygon is empty check with circle.
+  if (path.footprint.polygon.points.empty()) {
+    ROS_DEBUG_STREAM("Using circle Polygon.");
+    // Get object to obtain circle circumference points.
+    traversability_learner::CirclePolygonGetter circle_polygon_getter(path.radius, traversabilityMap_.getResolution());
+    // Get circle around all poses.
+    for (size_t i = 0; i < n_poses; ++i) {
+      pose_polygons[i] = circle_polygon_getter.get({path.poses.poses[i].position.x,
+                                                    path.poses.poses[i].position.y});
+    }
+
+  } else {
+    // Use proper Polygon.
+    const auto n_poly_points = path.footprint.polygon.points.size();
+    // Write polygon to Eigen Matrix so we can efficiently rotate.
+    Eigen::MatrixXd polygon_eigen(3, n_poly_points);
+    for (size_t i = 0; i < n_poly_points; ++i) {
+      polygon_eigen(0, i) = path.footprint.polygon.points[i].x;
+      polygon_eigen(1, i) = path.footprint.polygon.points[i].y;
+      polygon_eigen(2, i) = path.footprint.polygon.points[i].z;
+    }
+
+    // Get rotated polygon for every pose.
+    for (size_t i = 0; i < n_poses; ++i) {
+      const auto rot_mat = Eigen::Quaterniond(path.poses.poses[i].orientation.w,
+                                              path.poses.poses[i].orientation.x,
+                                              path.poses.poses[i].orientation.y,
+                                              path.poses.poses[i].orientation.z).toRotationMatrix();
+      // Get current pose as Eigen Vector.
+      const Eigen::Vector3d cur_pose(path.poses.poses[i].position.x,
+                                     path.poses.poses[i].position.y,
+                                     path.poses.poses[i].position.z);
+      // Do rotation and add current pose.
+      const auto polygon_rot = (rot_mat * polygon_eigen).colwise() + cur_pose;
+      traversability_learner::polygonEigenToBoost(polygon_rot, pose_polygons[i]);
+    }
+  }
+
+  // If we have only one pose we can return here.
+  if (n_poses == 1) {
+    return pose_polygons[0];
+  }
+
+  // Get path segment polygons, which are the convex hull of the polygons of two consecutive poses.
+  const auto n_segments = n_poses-1;
+  std::vector<Polygon> segment_polygons(n_segments);
+  for (size_t i = 0; i < n_segments; ++i) {
+    segment_polygons[i] = getPolygonsConvexHull({pose_polygons[i], pose_polygons[i+1]});
+  }
+
+  // Get Union over all path segments, which are intersecting
+  return getIntersectingPolygonUnion(segment_polygons);
+}
+
 bool TraversabilityMap::checkFootprintPath(
     const traversability_msgs::FootprintPath& path,
     traversability_msgs::TraversabilityResult& result,
@@ -334,170 +424,16 @@ bool TraversabilityMap::checkFootprintPath(
     return false;
   }
 
-  double radius = path.radius;
-  double offset = 0.15;
-  result.is_safe = false;
-  result.traversability = 0.0;
-  result.area = 0.0;
-  double traversability = 0.0;
-  double area = 0.0;
-  grid_map::Position start, end;
+  // Get polygon which encapsulates entire path with footprint.
+  const auto path_polygon = getFootprintPathPolygon(path);
 
-  if (path.footprint.polygon.points.size() == 0) {
-    for (int i = 0; i < arraySize; i++) {
-      start = end;
-      end.x() = path.poses.poses[i].position.x;
-      end.y() = path.poses.poses[i].position.y;
-
-      if (arraySize == 1) {
-        if (checkRobotInclination_) {
-          if (!checkInclination(end, end))
-            return true;
-        }
-        if (!isTraversable(end, radius + offset, traversability, radius)) {
-          return true;
-        }
-        if (publishPolygon) {
-          grid_map::Polygon polygon = grid_map::Polygon::fromCircle(end, radius + offset);
-          publishFootprintPolygon(polygon);
-        }
-        result.traversability = traversability;
-      }
-
-      if (arraySize > 1 && i > 0) {
-        if (checkRobotInclination_) {
-          if (!checkInclination(start, end))
-            return true;
-        }
-        double traversabilityTemp, traversabilitySum = 0.0;
-        int nLine = 0;
-        grid_map::Index startIndex, endIndex;
-        traversabilityMap_.getIndex(start, startIndex);
-        traversabilityMap_.getIndex(end, endIndex);
-        int nSkip = 3; // TODO: Remove magic number.
-        for (grid_map::LineIterator lineIterator(traversabilityMap_, endIndex, startIndex); !lineIterator.isPastEnd(); ++lineIterator) {
-          grid_map::Position center;
-          traversabilityMap_.getPosition(*lineIterator, center);
-          if (!isTraversable(center, radius + offset, traversabilityTemp, radius)) {
-            return true;
-          }
-          if (publishPolygon) {
-            grid_map::Polygon polygon = grid_map::Polygon::fromCircle(end, radius + offset);
-            publishFootprintPolygon(polygon);
-          }
-          traversabilitySum += traversabilityTemp;
-          nLine++;
-          for (int j = 0; j < nSkip; j++) {
-            if (!lineIterator.isPastEnd()) ++lineIterator;
-          }
-        }
-        traversability = traversabilitySum / (double) nLine;
-        double lengthSegment, lengthPreviousPath, lengthPath;
-        lengthSegment = (end - start).norm();
-        if (i > 1) {
-          lengthPreviousPath = lengthPath;
-          lengthPath += lengthSegment;
-          result.traversability = (lengthSegment * traversability + lengthPreviousPath * result.traversability) / lengthPath;
-        } else {
-          lengthPath = lengthSegment;
-          result.traversability = traversability;
-        }
-      }
-    }
-  } else {
-    grid_map::Polygon polygon, polygon1, polygon2;
-    polygon1.setFrameId(getMapFrameId());
-    polygon1.setTimestamp(ros::Time::now().toNSec());
-    polygon2 = polygon1;
-    for (int i = 0; i < arraySize; i++) {
-      polygon1 = polygon2;
-      start = end;
-      polygon2.removeVertices();
-      grid_map::Position3 positionToVertex, positionToVertexTransformed;
-      Eigen::Translation<double, 3> toPosition;
-      Eigen::Quaterniond orientation;
-
-      toPosition.x() = path.poses.poses[i].position.x;
-      toPosition.y() = path.poses.poses[i].position.y;
-      toPosition.z() = path.poses.poses[i].position.z;
-      orientation.x() = path.poses.poses[i].orientation.x;
-      orientation.y() = path.poses.poses[i].orientation.y;
-      orientation.z() = path.poses.poses[i].orientation.z;
-      orientation.w() = path.poses.poses[i].orientation.w;
-      end.x() = toPosition.x();
-      end.y() = toPosition.y();
-
-      for (const auto& point : path.footprint.polygon.points) {
-        positionToVertex.x() = point.x;
-        positionToVertex.y() = point.y;
-        positionToVertex.z() = point.z;
-        positionToVertexTransformed = toPosition * orientation
-            * positionToVertex;
-
-        grid_map::Position vertex;
-        vertex.x() = positionToVertexTransformed.x();
-        vertex.y() = positionToVertexTransformed.y();
-        polygon2.addVertex(vertex);
-      }
-
-      if (path.conservative && i > 0) {
-        grid_map::Vector startToEnd = end - start;
-        vector<grid_map::Position> vertices1 = polygon1.getVertices();
-        vector<grid_map::Position> vertices2 = polygon2.getVertices();
-        for (const auto& vertex : vertices1) {
-          polygon2.addVertex(vertex + startToEnd);
-        }
-        for (const auto& vertex : vertices2) {
-          polygon1.addVertex(vertex - startToEnd);
-        }
-      }
-
-      if (arraySize == 1) {
-        polygon = polygon2;
-        if (checkRobotInclination_) {
-          if (!checkInclination(end, end))
-            return true;
-        }
-        if (!isTraversable(polygon, traversability)) {
-          return true;
-        }
-        if (publishPolygon) {
-          publishFootprintPolygon(polygon);
-        }
-        result.traversability = traversability;
-        result.area = polygon.getArea();
-      }
-
-      if (arraySize > 1 && i > 0) {
-        polygon = grid_map::Polygon::convexHull(polygon1, polygon2);
-        polygon.setFrameId(getMapFrameId());
-        polygon.setTimestamp(ros::Time::now().toNSec());
-        if (checkRobotInclination_) {
-          if (!checkInclination(start, end))
-            return true;
-        }
-        if (!isTraversable(polygon, traversability)) {
-          return true;
-        }
-        if (publishPolygon) {
-          publishFootprintPolygon(polygon);
-        }
-        double areaPolygon, areaPrevious;
-        if (i > 1) {
-          areaPrevious = result.area;
-          areaPolygon = polygon.getArea() - polygon1.getArea();
-          result.area += areaPolygon;
-          result.traversability = (areaPolygon * traversability + areaPrevious * result.traversability) / result.area;
-        } else {
-          result.area = polygon.getArea();
-          result.traversability = traversability;
-        }
-      }
-    }
+  // Publish polygon if we want.
+  if (publishPolygon) {
+    publishFootprintPolygon(polygonBoostToGridMap(path_polygon));
   }
 
-  result.is_safe = true;
-  ROS_DEBUG_STREAM("Traversability: " << result.traversability);
+  // Check polygon.
+  checkPolygon(path_polygon, result);
 
   return true;
 }
@@ -802,6 +738,7 @@ void TraversabilityMap::publishFootprintPolygon(const grid_map::Polygon& polygon
   if (footprintPublisher_.getNumSubscribers() < 1) return;
   geometry_msgs::PolygonStamped polygonMsg;
   grid_map::PolygonRosConverter::toMessage(polygon, polygonMsg);
+  polygonMsg.header.frame_id = getMapFrameId();
   footprintPublisher_.publish(polygonMsg);
 }
 

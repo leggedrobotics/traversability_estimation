@@ -29,6 +29,7 @@
   <depend>xmlrpcpp</depend>
   <depend>cmake_modules</depend>
   <depend>kindr</depend>
+  <depend>traversability_learner_ros</depend>
   <build_export_depend>eigen</build_export_depend>
 
 

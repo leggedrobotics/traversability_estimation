@@ -28,6 +28,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   param_io
   xmlrpcpp
+  traversability_learner_ros
 )
 
 ## System dependencies are found with CMake's conventions
@@ -68,6 +69,7 @@ catkin_package(
     sensor_msgs
     param_io
     xmlrpcpp
+    traversability_learner_ros
 #  DEPENDS Eigen
 )
 

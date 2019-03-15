@@ -24,6 +24,8 @@
 #include <vector>
 #include <string>
 
+#include <traversability_learner/geometry.h>
+
 // Boost
 #include <boost/thread/recursive_mutex.hpp>
 
@@ -166,6 +168,13 @@ class TraversabilityMap
   bool createLayers(bool useRawMap);
 
  private:
+
+  traversability_learner::Polygon getFootprintPathPolygon(
+      const traversability_msgs::FootprintPath& path);
+
+  void checkPolygon(
+      const traversability_learner::Polygon& polygon,
+      traversability_msgs::TraversabilityResult& result);
 
   /*!
    * Reads and verifies the ROS parameters.
