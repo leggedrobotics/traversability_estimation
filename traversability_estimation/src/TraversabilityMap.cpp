@@ -382,12 +382,15 @@ traversability_learner::Polygon TraversabilityMap::getFootprintPathPolygon(
                                               path.poses.poses[i].orientation.x,
                                               path.poses.poses[i].orientation.y,
                                               path.poses.poses[i].orientation.z).toRotationMatrix();
+      // Extract yaw only.
+      const auto eul_ang = rot_mat.eulerAngles(0,1,2);
+      const auto yaw_rot = Eigen::AngleAxisd(eul_ang.z(), Eigen::Vector3d::UnitZ()).toRotationMatrix();
       // Get current pose as Eigen Vector.
       const Eigen::Vector3d cur_pose(path.poses.poses[i].position.x,
                                      path.poses.poses[i].position.y,
                                      path.poses.poses[i].position.z);
       // Do rotation and add current pose.
-      const auto polygon_rot = (rot_mat * polygon_eigen).colwise() + cur_pose;
+      const auto polygon_rot = (yaw_rot * polygon_eigen).colwise() + cur_pose;
       traversability_learner::polygonEigenToBoost(polygon_rot, pose_polygons[i]);
     }
   }
