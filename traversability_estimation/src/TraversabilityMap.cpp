@@ -512,14 +512,23 @@ bool TraversabilityMap::isTraversable(grid_map::Polygon& polygon, double& traver
       !polygonIterator.isPastEnd(); ++polygonIterator) {
 
     // Check for slopes
-    if (!checkForSlope(*polygonIterator)) return false;
+    if (!checkForSlope(*polygonIterator)) {
+      ROS_DEBUG("TraversabilityMap::isTraversable: checkForSlope returned false.");
+      return false;
+    }
 
     // Check for steps
-    if (!checkForStep(*polygonIterator)) return false;
+    if (!checkForStep(*polygonIterator)) {
+      ROS_DEBUG("TraversabilityMap::isTraversable: checkForStep returned false.");
+      return false;
+    }
 
     // Check for roughness
     if (checkForRoughness_) {
-      if(!checkForRoughness(*polygonIterator)) return false;
+      if(!checkForRoughness(*polygonIterator)) {
+        ROS_DEBUG("TraversabilityMap::isTraversable: checkForRoughness returned false.");
+        return false;
+      }
     }
 
     nCells++;
