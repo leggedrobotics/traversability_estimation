@@ -235,7 +235,7 @@ class TraversabilityMap
   /*!
    * Publishes the footprint polygon.
    */
-  void publishFootprintPolygon(const grid_map::Polygon& polygon);
+  void publishFootprintPolygon(const grid_map::Polygon& polygon, double zPosition = 0.0);
 
   /*!
    * Bounds the passed traversability value to respect the allowed bounds.
