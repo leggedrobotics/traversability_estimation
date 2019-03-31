@@ -472,15 +472,15 @@ bool TraversabilityMap::checkFootprintPath(
         polygon = grid_map::Polygon::convexHull(polygon1, polygon2);
         polygon.setFrameId(getMapFrameId());
         polygon.setTimestamp(ros::Time::now().toNSec());
+        if (publishPolygon) {
+          publishFootprintPolygon(polygon);
+        }
         if (checkRobotInclination_) {
           if (!checkInclination(start, end))
             return true;
         }
         if (!isTraversable(polygon, traversability)) {
           return true;
-        }
-        if (publishPolygon) {
-          publishFootprintPolygon(polygon);
         }
         double areaPolygon, areaPrevious;
         if (i > 1) {
@@ -811,6 +811,9 @@ void TraversabilityMap::publishFootprintPolygon(const grid_map::Polygon& polygon
   if (footprintPublisher_.getNumSubscribers() < 1) return;
   geometry_msgs::PolygonStamped polygonMsg;
   grid_map::PolygonRosConverter::toMessage(polygon, polygonMsg);
+  for (int i = 0; i < polygonMsg.polygon.points.size(); i++) {
+    polygonMsg.polygon.points.at(i).z = zPosition_;
+  }
   footprintPublisher_.publish(polygonMsg);
 }
 
