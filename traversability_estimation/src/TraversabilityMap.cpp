@@ -334,6 +334,14 @@ bool TraversabilityMap::checkFootprintPath(
     return false;
   }
 
+  double robotHeight = 0.0;
+  if (path.poses.poses.size() != 0) {
+    for (int i = 0; i < path.poses.poses.size(); i++) {
+      robotHeight += path.poses.poses.at(i).position.z;
+    }
+    robotHeight /= path.poses.poses.size();
+  }
+
   double radius = path.radius;
   double offset = 0.15;
   result.is_safe = false;
@@ -472,15 +480,15 @@ bool TraversabilityMap::checkFootprintPath(
         polygon = grid_map::Polygon::convexHull(polygon1, polygon2);
         polygon.setFrameId(getMapFrameId());
         polygon.setTimestamp(ros::Time::now().toNSec());
+        if (publishPolygon) {
+          publishFootprintPolygon(polygon, robotHeight);
+        }
         if (checkRobotInclination_) {
           if (!checkInclination(start, end))
             return true;
         }
         if (!isTraversable(polygon, traversability)) {
           return true;
-        }
-        if (publishPolygon) {
-          publishFootprintPolygon(polygon);
         }
         double areaPolygon, areaPrevious;
         if (i > 1) {
@@ -806,11 +814,14 @@ bool TraversabilityMap::checkForRoughness(const grid_map::Index& index)
   return true;
 }
 
-void TraversabilityMap::publishFootprintPolygon(const grid_map::Polygon& polygon)
+void TraversabilityMap::publishFootprintPolygon(const grid_map::Polygon& polygon, double zPosition)
 {
   if (footprintPublisher_.getNumSubscribers() < 1) return;
   geometry_msgs::PolygonStamped polygonMsg;
   grid_map::PolygonRosConverter::toMessage(polygon, polygonMsg);
+  for (int i = 0; i < polygonMsg.polygon.points.size(); i++) {
+    polygonMsg.polygon.points.at(i).z = zPosition;
+  }
   footprintPublisher_.publish(polygonMsg);
 }
 
