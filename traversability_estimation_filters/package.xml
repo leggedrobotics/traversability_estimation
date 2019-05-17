@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>traversability_estimation_filters</name>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
   <description>library for filtering elevation maps.</description>
   <maintainer email="pfankhauser@anybotics.com">Peter Fankhauser</maintainer>
   <license>MIT</license>
