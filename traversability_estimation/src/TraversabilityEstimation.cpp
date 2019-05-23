@@ -11,8 +11,8 @@
 #include <param_io/get_param.hpp>
 
 // ROS
-#include <ros/package.h>
 #include <geometry_msgs/Pose.h>
+#include <ros/package.h>
 
 using namespace std;
 
@@ -28,35 +28,32 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
       roughnessType_("traversability_roughness"),
       robotSlopeType_("robot_slope"),
       getImageCallback_(false),
-      useRawMap_(false)
-{
+      useRawMap_(false) {
   ROS_DEBUG("Traversability estimation node started.");
   readParameters();
   traversabilityMap_.createLayers(useRawMap_);
   submapClient_ = nodeHandle_.serviceClient<grid_map_msgs::GetGridMap>(submapServiceName_);
 
   if (!updateDuration_.isZero()) {
-    updateTimer_ = nodeHandle_.createTimer(
-        updateDuration_, &TraversabilityEstimation::updateTimerCallback, this);
+    updateTimer_ = nodeHandle_.createTimer(updateDuration_, &TraversabilityEstimation::updateTimerCallback, this);
   } else {
     ROS_WARN("Update rate is zero. No traversability map will be published.");
   }
 
   loadElevationMapService_ = nodeHandle_.advertiseService("load_elevation_map", &TraversabilityEstimation::loadElevationMap, this);
-  updateTraversabilityService_ = nodeHandle_.advertiseService("update_traversability", &TraversabilityEstimation::updateServiceCallback, this);
+  updateTraversabilityService_ =
+      nodeHandle_.advertiseService("update_traversability", &TraversabilityEstimation::updateServiceCallback, this);
   getTraversabilityService_ = nodeHandle_.advertiseService("get_traversability", &TraversabilityEstimation::getTraversabilityMap, this);
   footprintPathService_ = nodeHandle_.advertiseService("check_footprint_path", &TraversabilityEstimation::checkFootprintPath, this);
   updateParameters_ = nodeHandle_.advertiseService("update_parameters", &TraversabilityEstimation::updateParameter, this);
-  traversabilityFootprint_ = nodeHandle_.advertiseService("traversability_footprint", &TraversabilityEstimation::traversabilityFootprint, this);
+  traversabilityFootprint_ =
+      nodeHandle_.advertiseService("traversability_footprint", &TraversabilityEstimation::traversabilityFootprint, this);
   saveToBagService_ = nodeHandle_.advertiseService("save_traversability_map_to_bag", &TraversabilityEstimation::saveToBag, this);
-  imageSubscriber_ = nodeHandle_.subscribe(imageTopic_,1,&TraversabilityEstimation::imageCallback, this);
+  imageSubscriber_ = nodeHandle_.subscribe(imageTopic_, 1, &TraversabilityEstimation::imageCallback, this);
 
   if (acceptGridMapToInitTraversabilityMap_) {
-    gridMapToInitTraversabilityMapSubscriber_ =
-        nodeHandle_.subscribe(gridMapToInitTraversabilityMapTopic_,
-                              1,
-                              &TraversabilityEstimation::gridMapToInitTraversabilityMapCallback,
-                              this);
+    gridMapToInitTraversabilityMapSubscriber_ = nodeHandle_.subscribe(
+        gridMapToInitTraversabilityMapTopic_, 1, &TraversabilityEstimation::gridMapToInitTraversabilityMapCallback, this);
   }
 
   elevationMapLayers_.push_back("elevation");
@@ -72,14 +69,12 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
   }
 }
 
-TraversabilityEstimation::~TraversabilityEstimation()
-{
+TraversabilityEstimation::~TraversabilityEstimation() {
   updateTimer_.stop();
   nodeHandle_.shutdown();
 }
 
-bool TraversabilityEstimation::readParameters()
-{
+bool TraversabilityEstimation::readParameters() {
   // Read boolean to switch between raw and fused map.
   useRawMap_ = param_io::param<bool>(nodeHandle_, "use_raw_map", false);
 
@@ -137,16 +132,15 @@ bool TraversabilityEstimation::loadElevationMap(grid_map_msgs::ProcessFile::Requ
 
   grid_map::GridMap map;
   if (!grid_map::GridMapRosConverter::loadFromBag(request.file_path, request.topic_name, map)) {
-    ROS_ERROR("TraversabilityEstimation: Cannot find bag '%s' or topic '%s' of the elevation map!",
-        request.file_path.c_str(), request.topic_name.c_str());
+    ROS_ERROR("TraversabilityEstimation: Cannot find bag '%s' or topic '%s' of the elevation map!", request.file_path.c_str(),
+              request.topic_name.c_str());
     response.success = static_cast<unsigned char>(false);
   } else {
     map.setTimestamp(ros::Time::now().toNSec());
     if (!initializeTraversabilityMapFromGridMap(map)) {
       ROS_ERROR(
           "TraversabilityEstimation: loadElevationMap: it was not possible to load elevation map from bag with path '%s' and topic '%s'.",
-          request.file_path.c_str(),
-          request.topic_name.c_str());
+          request.file_path.c_str(), request.topic_name.c_str());
       response.success = static_cast<unsigned char>(false);
     } else {
       response.success = static_cast<unsigned char>(true);
@@ -156,12 +150,12 @@ bool TraversabilityEstimation::loadElevationMap(grid_map_msgs::ProcessFile::Requ
   return true;
 }
 
-void TraversabilityEstimation::imageCallback(const sensor_msgs::Image& image)
-{
+void TraversabilityEstimation::imageCallback(const sensor_msgs::Image& image) {
   if (!getImageCallback_) {
     grid_map::GridMapRosConverter::initializeFromImage(image, imageResolution_, imageGridMap_, imagePosition_);
-    ROS_INFO("Initialized map with size %f x %f m (%i x %i cells).", imageGridMap_.getLength().x(), imageGridMap_.getLength().y(), imageGridMap_.getSize()(0), imageGridMap_.getSize()(1));
-    imageGridMap_.add("upper_bound", 0.0); // TODO: Add value for layers.
+    ROS_INFO("Initialized map with size %f x %f m (%i x %i cells).", imageGridMap_.getLength().x(), imageGridMap_.getLength().y(),
+             imageGridMap_.getSize()(0), imageGridMap_.getSize()(1));
+    imageGridMap_.add("upper_bound", 0.0);  // TODO: Add value for layers.
     imageGridMap_.add("lower_bound", 0.0);
     imageGridMap_.add("uncertainty_range", imageGridMap_.get("upper_bound") - imageGridMap_.get("lower_bound"));
     getImageCallback_ = true;
@@ -172,13 +166,10 @@ void TraversabilityEstimation::imageCallback(const sensor_msgs::Image& image)
   traversabilityMap_.setElevationMap(elevationMap);
 }
 
-void TraversabilityEstimation::updateTimerCallback(const ros::TimerEvent& timerEvent)
-{
-  updateTraversability();
-}
+void TraversabilityEstimation::updateTimerCallback(const ros::TimerEvent& timerEvent) { updateTraversability(); }
 
-bool TraversabilityEstimation::updateServiceCallback(grid_map_msgs::GetGridMapInfo::Request&, grid_map_msgs::GetGridMapInfo::Response& response)
-{
+bool TraversabilityEstimation::updateServiceCallback(grid_map_msgs::GetGridMapInfo::Request&,
+                                                     grid_map_msgs::GetGridMapInfo::Response& response) {
   if (updateDuration_.isZero()) {
     if (!updateTraversability()) {
       ROS_ERROR("Traversability Estimation: Cannot update traversability!");
@@ -207,8 +198,7 @@ bool TraversabilityEstimation::updateServiceCallback(grid_map_msgs::GetGridMapIn
   return true;
 }
 
-bool TraversabilityEstimation::updateTraversability()
-{
+bool TraversabilityEstimation::updateTraversability() {
   grid_map_msgs::GridMap elevationMap;
   if (!getImageCallback_) {
     ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
@@ -230,8 +220,7 @@ bool TraversabilityEstimation::updateTraversability()
   return true;
 }
 
-bool TraversabilityEstimation::updateParameter(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
-{
+bool TraversabilityEstimation::updateParameter(std_srvs::Empty::Request&, std_srvs::Empty::Response&) {
   // Load parameters file.
   string path = ros::package::getPath(package_);
   string path_filter_parameter = path + "/config/" + robot_ + "_filter_parameter.yaml";
@@ -239,16 +228,14 @@ bool TraversabilityEstimation::updateParameter(std_srvs::Empty::Request&, std_sr
   // Filter parameters
   string commandString = "rosparam load " + path_filter_parameter + " /traversability_estimation";
   const char* command_filter = commandString.c_str();
-  if (system(command_filter) != 0)
-  {
+  if (system(command_filter) != 0) {
     ROS_ERROR("Can't update parameter.");
     return false;
   }
   // Footprint parameters.
   commandString = "rosparam load " + path_footprint_parameter + " /traversability_estimation";
   const char* command_footprint = commandString.c_str();
-  if (system(command_footprint) != 0)
-  {
+  if (system(command_footprint) != 0) {
     ROS_ERROR("Can't update parameter.");
     return false;
   }
@@ -257,15 +244,13 @@ bool TraversabilityEstimation::updateParameter(std_srvs::Empty::Request&, std_sr
   return true;
 }
 
-bool TraversabilityEstimation::requestElevationMap(grid_map_msgs::GridMap& map)
-{
+bool TraversabilityEstimation::requestElevationMap(grid_map_msgs::GridMap& map) {
   submapPoint_.header.stamp = ros::Time(0);
   geometry_msgs::PointStamped submapPointTransformed;
 
   try {
-    transformListener_.transformPoint(traversabilityMap_.getMapFrameId(), submapPoint_,
-                                      submapPointTransformed);
-  } catch (tf::TransformException &ex) {
+    transformListener_.transformPoint(traversabilityMap_.getMapFrameId(), submapPoint_, submapPointTransformed);
+  } catch (tf::TransformException& ex) {
     ROS_ERROR("%s", ex.what());
     return false;
   }
@@ -277,26 +262,20 @@ bool TraversabilityEstimation::requestElevationMap(grid_map_msgs::GridMap& map)
   submapService.request.length_y = mapLength_.y();
   submapService.request.layers = elevationMapLayers_;
 
-  if (!submapClient_.call(submapService))
-    return false;
+  if (!submapClient_.call(submapService)) return false;
   map = submapService.response.map;
 
   return true;
 }
 
-bool TraversabilityEstimation::traversabilityFootprint(
-    std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
-{
-  if (!traversabilityMap_.traversabilityFootprint(footprintYaw_))
-    return false;
+bool TraversabilityEstimation::traversabilityFootprint(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response) {
+  if (!traversabilityMap_.traversabilityFootprint(footprintYaw_)) return false;
 
   return true;
 }
 
-bool TraversabilityEstimation::checkFootprintPath(
-    traversability_msgs::CheckFootprintPath::Request& request,
-    traversability_msgs::CheckFootprintPath::Response& response)
-{
+bool TraversabilityEstimation::checkFootprintPath(traversability_msgs::CheckFootprintPath::Request& request,
+                                                  traversability_msgs::CheckFootprintPath::Response& response) {
   const int nPaths = request.path.size();
   if (nPaths == 0) {
     ROS_WARN("No footprint path available to check!");
@@ -307,18 +286,15 @@ bool TraversabilityEstimation::checkFootprintPath(
   traversability_msgs::FootprintPath path;
   for (int j = 0; j < nPaths; j++) {
     path = request.path[j];
-    if (!traversabilityMap_.checkFootprintPath(path, result, true))
-      return false;
+    if (!traversabilityMap_.checkFootprintPath(path, result, true)) return false;
     response.result.push_back(result);
   }
 
   return true;
 }
 
-bool TraversabilityEstimation::getTraversabilityMap(
-    grid_map_msgs::GetGridMap::Request& request,
-    grid_map_msgs::GetGridMap::Response& response)
-{
+bool TraversabilityEstimation::getTraversabilityMap(grid_map_msgs::GetGridMap::Request& request,
+                                                    grid_map_msgs::GetGridMap::Response& response) {
   grid_map::Position requestedSubmapPosition(request.position_x, request.position_y);
   grid_map::Length requestedSubmapLength(request.length_x, request.length_y);
   grid_map_msgs::GridMap msg;
@@ -338,8 +314,7 @@ bool TraversabilityEstimation::getTraversabilityMap(
   return isSuccess;
 }
 
-bool TraversabilityEstimation::saveToBag(grid_map_msgs::ProcessFile::Request& request, grid_map_msgs::ProcessFile::Response& response)
-{
+bool TraversabilityEstimation::saveToBag(grid_map_msgs::ProcessFile::Request& request, grid_map_msgs::ProcessFile::Response& response) {
   ROS_INFO("Save to bag.");
   if (request.file_path.empty() || request.topic_name.empty()) {
     ROS_WARN("Fields 'file_path' and 'topic_name' in service request must be filled in.");
@@ -347,13 +322,12 @@ bool TraversabilityEstimation::saveToBag(grid_map_msgs::ProcessFile::Request& re
     return true;
   }
 
-  response.success = static_cast<unsigned char>(grid_map::GridMapRosConverter::saveToBag(traversabilityMap_.getTraversabilityMap(),
-                                                                                         request.file_path, request.topic_name));
+  response.success = static_cast<unsigned char>(
+      grid_map::GridMapRosConverter::saveToBag(traversabilityMap_.getTraversabilityMap(), request.file_path, request.topic_name));
   return true;
 }
 
-bool TraversabilityEstimation::initializeTraversabilityMapFromGridMap(const grid_map::GridMap& gridMap)
-{
+bool TraversabilityEstimation::initializeTraversabilityMapFromGridMap(const grid_map::GridMap& gridMap) {
   if (traversabilityMap_.traversabilityMapInitialized()) {
     ROS_WARN(
         "[TraversabilityEstimation::gridMapToInitTraversabilityMapCallback]: received grid map message cannot be used to initialize"
@@ -386,17 +360,19 @@ bool TraversabilityEstimation::initializeTraversabilityMapFromGridMap(const grid
   return true;
 }
 
-void TraversabilityEstimation::gridMapToInitTraversabilityMapCallback(const grid_map_msgs::GridMap& message)
-{
+void TraversabilityEstimation::gridMapToInitTraversabilityMapCallback(const grid_map_msgs::GridMap& message) {
   grid_map::GridMap gridMap;
   grid_map::GridMapRosConverter::fromMessage(message, gridMap);
   if (!initializeTraversabilityMapFromGridMap(gridMap)) {
-      ROS_ERROR("[TraversabilityEstimation::gridMapToInitTraversabilityMapCallback]: "
-                "It was not possible to use received grid map message to initialize traversability map.");
+    ROS_ERROR(
+        "[TraversabilityEstimation::gridMapToInitTraversabilityMapCallback]: "
+        "It was not possible to use received grid map message to initialize traversability map.");
   } else {
-    ROS_INFO("[TraversabilityEstimation::gridMapToInitTraversabilityMapCallback]: "
-             "Traversability Map initialized using received grid map on topic '%s'.", gridMapToInitTraversabilityMapTopic_.c_str());
+    ROS_INFO(
+        "[TraversabilityEstimation::gridMapToInitTraversabilityMapCallback]: "
+        "Traversability Map initialized using received grid map on topic '%s'.",
+        gridMapToInitTraversabilityMapTopic_.c_str());
   }
 }
 
-} /* namespace */
+}  // namespace traversability_estimation

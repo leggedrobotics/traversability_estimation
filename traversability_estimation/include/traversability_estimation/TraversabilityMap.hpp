@@ -9,20 +9,20 @@
 #pragma once
 
 // Grid Map
-#include <grid_map_ros/grid_map_ros.hpp>
-#include <traversability_msgs/TraversabilityResult.h>
 #include <traversability_msgs/FootprintPath.h>
+#include <traversability_msgs/TraversabilityResult.h>
+#include <grid_map_ros/grid_map_ros.hpp>
 
 // ROS
-#include <ros/ros.h>
-#include <tf/transform_listener.h>
 #include <filters/filter_chain.h>
-#include <std_srvs/Empty.h>
+#include <ros/ros.h>
 #include <sensor_msgs/Image.h>
+#include <std_srvs/Empty.h>
+#include <tf/transform_listener.h>
 
 // STD
-#include <vector>
 #include <string>
+#include <vector>
 
 // Boost
 #include <boost/thread/recursive_mutex.hpp>
@@ -37,9 +37,7 @@ constexpr double traversabilityMaxValue = 1.0;
  * The terrain traversability estimation core. Updates the traversbility map and
  * evaluates the traversability of single footprints on this map.
  */
-class TraversabilityMap
-{
-
+class TraversabilityMap {
  public:
   /*!
    * Constructor.
@@ -65,8 +63,7 @@ class TraversabilityMap
    * @param[out] result the traversability result.
    * @return true if successful.
    */
-  bool checkFootprintPath(const traversability_msgs::FootprintPath& path,
-                          traversability_msgs::TraversabilityResult& result,
+  bool checkFootprintPath(const traversability_msgs::FootprintPath& path, traversability_msgs::TraversabilityResult& result,
                           const bool publishPolygon = false);
 
   /*!
@@ -142,12 +139,12 @@ class TraversabilityMap
   /*!
    * Sets the default traversability value of unknown regions in the map.
    * @param[in] defaultTraversability new default traversability value of unknown regions in the map
-    */
-  void setDefaultTraversabilityUnknownRegions(const double &defaultTraversability);
+   */
+  void setDefaultTraversabilityUnknownRegions(const double& defaultTraversability);
 
   /*!
    * Restores the default traversability value of unknown regions in the map, which was read during initialization .
-    */
+   */
   void restoreDefaultTraversabilityUnknownRegionsReadAtInit();
 
   /*!
@@ -166,7 +163,6 @@ class TraversabilityMap
   bool createLayers(bool useRawMap);
 
  private:
-
   /*!
    * Reads and verifies the ROS parameters.
    * @return true if successful.
@@ -192,8 +188,7 @@ class TraversabilityMap
    * valid radius of the footprint.
    * @return true if the circular footprint is traversable, false otherwise.
    */
-  bool isTraversable(const grid_map::Position& center, const double& radiusMax,
-                     double& traversability, const double& radiusMin = 0);
+  bool isTraversable(const grid_map::Position& center, const double& radiusMax, double& traversability, const double& radiusMin = 0);
 
   /*!
    * Checks if the overall inclination of the robot on a line between two
@@ -202,8 +197,7 @@ class TraversabilityMap
    * @param[in] end last position of the line.
    * @return true if the whole line has a feasible inclination, false otherwise.
    */
-  bool checkInclination(const grid_map::Position& start,
-                        const grid_map::Position& end);
+  bool checkInclination(const grid_map::Position& start, const grid_map::Position& end);
 
   /*!
    * Checks if the map is traversable, only regarding steps, at the position defined
@@ -305,4 +299,4 @@ class TraversabilityMap
   double zPosition_;
 };
 
-} /* namespace */
+}  // namespace traversability_estimation

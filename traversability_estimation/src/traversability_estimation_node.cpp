@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
   traversability_estimation::TraversabilityEstimation traversabilityEstimation(nodeHandle);
 
   // Spin
-  ros::AsyncSpinner spinner(0); // Use n threads
+  ros::AsyncSpinner spinner(0);  // Use n threads
   spinner.start();
   ros::waitForShutdown();
   return 0;
