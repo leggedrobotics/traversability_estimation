@@ -11,6 +11,7 @@
 // Grid Map
 #include <grid_map_msgs/GetGridMap.h>
 #include <grid_map_core/GridMap.hpp>
+#include <grid_map_core/Polygon.hpp>
 
 // ROS
 #include <geometry_msgs/PolygonStamped.h>
@@ -51,6 +52,7 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
   readParameters();
   traversabilityMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>("traversability_map", 1, true);
   footprintPublisher_ = nodeHandle_.advertise<geometry_msgs::PolygonStamped>("footprint_polygon", 1, true);
+  untraversablePolygonPublisher_ = nodeHandle_.advertise<geometry_msgs::PolygonStamped>("untraversable_polygon", 1, true);
 }
 
 TraversabilityMap::~TraversabilityMap() { nodeHandle_.shutdown(); }
@@ -333,6 +335,8 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
   double traversability = 0.0;
   double area = 0.0;
   grid_map::Position start, end;
+  const bool computeUntraversablePolygon = path.compute_untraversable_polygon;
+  grid_map::Polygon untraversablePolygon;
 
   if (path.footprint.polygon.points.size() == 0) {
     for (int i = 0; i < arraySize; i++) {
@@ -342,14 +346,20 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
 
       if (arraySize == 1) {
         if (checkRobotInclination_) {
-          if (!checkInclination(end, end)) return true;
+          if (!checkInclination(end, end)) {
+            return true;
+          }
         }
-        if (!isTraversable(end, radius + offset, traversability, radius)) {
-          return true;
-        }
+        bool pathIsTraversable =
+            isTraversable(end, radius + offset, computeUntraversablePolygon, traversability, untraversablePolygon, radius);
         if (publishPolygon) {
           grid_map::Polygon polygon = grid_map::Polygon::fromCircle(end, radius + offset);
           publishFootprintPolygon(polygon);
+          publishUntraversablePolygon(untraversablePolygon, robotHeight);
+        }
+        if (!pathIsTraversable) {
+          // return such that default values in result - i.e. non traversable - are used.
+          return true;
         }
         result.traversability = traversability;
       }
@@ -367,13 +377,20 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
         for (grid_map::LineIterator lineIterator(traversabilityMap_, endIndex, startIndex); !lineIterator.isPastEnd(); ++lineIterator) {
           grid_map::Position center;
           traversabilityMap_.getPosition(*lineIterator, center);
-          if (!isTraversable(center, radius + offset, traversabilityTemp, radius)) {
-            return true;
-          }
+          bool pathIsTraversable =
+              isTraversable(center, radius + offset, computeUntraversablePolygon, traversabilityTemp, untraversablePolygon, radius);
+
           if (publishPolygon) {
             grid_map::Polygon polygon = grid_map::Polygon::fromCircle(end, radius + offset);
             publishFootprintPolygon(polygon);
+            publishUntraversablePolygon(untraversablePolygon, robotHeight);
           }
+
+          if (!pathIsTraversable) {
+            // return such that default values in result - i.e. non traversable - are used.
+            return true;
+          }
+
           traversabilitySum += traversabilityTemp;
           nLine++;
           for (int j = 0; j < nSkip; j++) {
@@ -445,12 +462,18 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
         if (checkRobotInclination_) {
           if (!checkInclination(end, end)) return true;
         }
-        if (!isTraversable(polygon, traversability)) {
-          return true;
-        }
+        bool pathIsTraversable = isTraversable(polygon, computeUntraversablePolygon, traversability, untraversablePolygon);
+
         if (publishPolygon) {
           publishFootprintPolygon(polygon);
+          publishUntraversablePolygon(untraversablePolygon, robotHeight);
         }
+
+        if (!pathIsTraversable) {
+          // return such that default values in result - i.e. non traversable - are used.
+          return true;
+        }
+
         result.traversability = traversability;
         result.area = polygon.getArea();
       }
@@ -459,15 +482,22 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
         polygon = grid_map::Polygon::convexHull(polygon1, polygon2);
         polygon.setFrameId(getMapFrameId());
         polygon.setTimestamp(ros::Time::now().toNSec());
-        if (publishPolygon) {
-          publishFootprintPolygon(polygon, robotHeight);
-        }
+
         if (checkRobotInclination_) {
           if (!checkInclination(start, end)) return true;
         }
-        if (!isTraversable(polygon, traversability)) {
+        bool pathIsTraversable = isTraversable(polygon, computeUntraversablePolygon, traversability, untraversablePolygon);
+
+        if (publishPolygon) {
+          publishFootprintPolygon(polygon, robotHeight);
+          publishUntraversablePolygon(untraversablePolygon, robotHeight);
+        }
+
+        if (!pathIsTraversable) {
+          // return such that default values in result - i.e. non traversable - are used.
           return true;
         }
+
         double areaPolygon, areaPrevious;
         if (i > 1) {
           areaPrevious = result.area;
@@ -488,52 +518,90 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
   return true;
 }
 
-bool TraversabilityMap::isTraversable(grid_map::Polygon& polygon, double& traversability) {
+bool TraversabilityMap::isTraversable(const grid_map::Polygon& polygon, double& traversability) {
+  const bool computeUntraversablePolygon = false;
+  grid_map::Polygon untraversablePolygon;
+  return isTraversable(polygon, computeUntraversablePolygon, traversability, untraversablePolygon);
+}
+
+bool TraversabilityMap::isTraversable(const grid_map::Polygon& polygon, const bool& computeUntraversablePolygon, double& traversability,
+                                      grid_map::Polygon& untraversablePolygon) {
   unsigned int nCells = 0;
   traversability = 0.0;
-
+  bool pathIsTraversable = true;
+  std::vector<grid_map::Position> untraversablePositions;
   // Iterate through polygon and check for traversability.
   for (grid_map::PolygonIterator polygonIterator(traversabilityMap_, polygon); !polygonIterator.isPastEnd(); ++polygonIterator) {
-    // Check for slopes
-    if (!checkForSlope(*polygonIterator)) {
-      ROS_DEBUG("TraversabilityMap::isTraversable: checkForSlope returned false.");
-      return false;
+    bool currentPositionIsTraversale = true;
+
+    if (checkForSlope(*polygonIterator)) {
+      if (checkForStep(*polygonIterator)) {
+        if (checkForRoughness_) {
+          if (!checkForRoughness(*polygonIterator)) {
+            currentPositionIsTraversale = false;
+          }
+        }
+      } else {
+        currentPositionIsTraversale = false;
+      }
+    } else {
+      currentPositionIsTraversale = false;
     }
 
-    // Check for steps
-    if (!checkForStep(*polygonIterator)) {
-      ROS_DEBUG("TraversabilityMap::isTraversable: checkForStep returned false.");
-      return false;
-    }
-
-    // Check for roughness
-    if (checkForRoughness_) {
-      if (!checkForRoughness(*polygonIterator)) {
-        ROS_DEBUG("TraversabilityMap::isTraversable: checkForRoughness returned false.");
+    if (!currentPositionIsTraversale) {
+      pathIsTraversable =
+          false;  // TODO (marco-tranzatto) maybe here we could have a better way to mark that the path is non-traversable. At the moment if
+                  // one cell is non-traversable, then the whole path is non-traversable, and probably this can be improved ...
+      if (computeUntraversablePolygon) {
+        grid_map::Position positionUntraversableCell;
+        grid_map::Index indexUntraversableCell;
+        traversabilityMap_.getPosition(*polygonIterator, positionUntraversableCell);
+        untraversablePositions.push_back(positionUntraversableCell);
+      } else {
+        // Do not keep on checking, one cell is already non-traversable.
+        // TODO maybe here we could have a better way to mark that the path is non-traversable. At the moment if one cell
+        // is non-traversable, then the whole path is non-traversable, and probably this can be improved ...
         return false;
       }
-    }
-
-    nCells++;
-    if (!traversabilityMap_.isValid(*polygonIterator, traversabilityType_)) {
-      traversability += traversabilityDefault_;
     } else {
-      traversability += traversabilityMap_.at(traversabilityType_, *polygonIterator);
+      nCells++;
+      if (!traversabilityMap_.isValid(*polygonIterator, traversabilityType_)) {
+        traversability += traversabilityDefault_;
+      } else {
+        traversability += traversabilityMap_.at(traversabilityType_, *polygonIterator);
+      }
     }
   }
-  // Handle cases of footprints outside of map.
-  if (nCells == 0) {
-    ROS_DEBUG("TraversabilityMap: isTraversable: No cells within polygon.");
-    traversability = traversabilityDefault_;
-    if (traversabilityDefault_ == 0.0) return false;
-    return true;
+
+  if (computeUntraversablePolygon) {
+    untraversablePolygon = grid_map::Polygon::monotoneChainConvexHullOfPoints(untraversablePositions);
+    untraversablePolygon.setFrameId(getMapFrameId());
+    untraversablePolygon.setTimestamp(ros::Time::now().toNSec());
   }
-  traversability /= nCells;
-  return true;
+
+  if (pathIsTraversable) {
+    // Handle cases of footprints outside of map.
+    if (nCells == 0) {
+      ROS_DEBUG("TraversabilityMap: isTraversable: No cells within polygon.");
+      traversability = traversabilityDefault_;
+      if (traversabilityDefault_ == 0.0) return false;
+      return true;
+    }
+    traversability /= nCells;
+  }
+
+  return pathIsTraversable;
 }
 
 bool TraversabilityMap::isTraversable(const grid_map::Position& center, const double& radiusMax, double& traversability,
                                       const double& radiusMin) {
+  const bool computeUntraversablePolygon = false;
+  grid_map::Polygon untraversablePolygon;
+  return isTraversable(center, radiusMax, computeUntraversablePolygon, traversability, untraversablePolygon, radiusMin);
+}
+
+bool TraversabilityMap::isTraversable(const grid_map::Position& center, const double& radiusMax, const bool& computeUntraversablePolygon,
+                                      double& traversability, grid_map::Polygon& untraversablePolygon, const double& radiusMin) {
   // Handle cases of footprints outside of map.
   if (!traversabilityMap_.isInside(center)) {
     traversability = traversabilityDefault_;
@@ -789,6 +857,16 @@ void TraversabilityMap::publishFootprintPolygon(const grid_map::Polygon& polygon
     polygonMsg.polygon.points.at(i).z = zPosition;
   }
   footprintPublisher_.publish(polygonMsg);
+}
+
+void TraversabilityMap::publishUntraversablePolygon(const grid_map::Polygon& untraversablePolygon, double zPosition) {
+  if (untraversablePolygonPublisher_.getNumSubscribers() < 1) return;
+  geometry_msgs::PolygonStamped polygonMsg;
+  grid_map::PolygonRosConverter::toMessage(untraversablePolygon, polygonMsg);
+  for (auto& polygon_point : polygonMsg.polygon.points) {
+    polygon_point.z = static_cast<float>(zPosition);
+  }
+  untraversablePolygonPublisher_.publish(polygonMsg);
 }
 
 std::string TraversabilityMap::getMapFrameId() const { return mapFrameId_; }

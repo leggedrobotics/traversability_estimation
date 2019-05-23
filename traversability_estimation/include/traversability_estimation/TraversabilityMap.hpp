@@ -170,14 +170,39 @@ class TraversabilityMap {
   bool readParameters();
 
   /*!
-   * Gets the traversability value of the submap defined by the polygon. Is true if the
-   * whole polygon is traversable.
+   * Gets the traversability value of the submap defined by the polygon. Is true if the whole polygon is traversable.
    * @param[in] polygon polygon that defines submap of the traversability map.
-   * @param[out] traversability traversability value of submap defined by the polygon, the traversability
+   * @param[in] computeUntraversablePolygon true if untraversable polygon within submap checked for traversability should be computed.
+   * @param[out] traversability traversability value of submap defined by the polygon, the traversability.
+   * @param[out] untraversablePolygon untraversable polygon within area checked for traversability.
    * is the mean of each cell within the polygon.
    * @return true if the whole polygon is traversable, false otherwise.
    */
-  bool isTraversable(grid_map::Polygon& polygon, double& traversability);
+  bool isTraversable(const grid_map::Polygon& polygon, const bool& computeUntraversablePolygon, double& traversability,
+                     grid_map::Polygon& untraversablePolygon);
+
+  /*!
+   * Gets the traversability value of the submap defined by the polygon. Is true if the whole polygon is traversable.
+   * @param[in] polygon polygon that defines submap of the traversability map.
+   * @param[out] traversability traversability value of submap defined by the polygon, the traversability.
+   * is the mean of each cell within the polygon.
+   * @return true if the whole polygon is traversable, false otherwise.
+   */
+  bool isTraversable(const grid_map::Polygon& polygon, double& traversability);
+
+  /*!
+   * Gets the traversability value of a circular footprint.
+   * @param[in] center the center position of the footprint.
+   * @param[in] radiusMax the maximum radius of the footprint.
+   * @param[in] computeUntraversablePolygon true if untraversable polygon within submap checked for traversability should be computed.
+   * @param[out] traversability traversability value of the footprint.
+   * @param[out] untraversablePolygon untraversable polygon within area checked for traversability.
+   * @param[in] radiusMin if set (not zero), footprint inflation is applied and radiusMin is the minimum
+   * valid radius of the footprint.
+   * @return true if the circular footprint is traversable, false otherwise.
+   */
+  bool isTraversable(const grid_map::Position& center, const double& radiusMax, const bool& computeUntraversablePolygon, double& traversability,
+                     grid_map::Polygon& untraversablePolygon, const double& radiusMin = 0);
 
   /*!
    * Gets the traversability value of a circular footprint.
@@ -232,6 +257,11 @@ class TraversabilityMap {
   void publishFootprintPolygon(const grid_map::Polygon& polygon, double zPosition = 0.0);
 
   /*!
+   * Publishes the untraversable polygon.
+   */
+  void publishUntraversablePolygon(const grid_map::Polygon& untraversablePolygon, double zPosition = 0.0);
+
+  /*!
    * Bounds the passed traversability value to respect the allowed bounds.
    * @param traversabilityValue value to bound.
    * @return bounder value
@@ -252,6 +282,9 @@ class TraversabilityMap {
 
   //! Footprint publisher.
   ros::Publisher footprintPublisher_;
+
+  //! Untraversable polygon publisher
+  ros::Publisher untraversablePolygonPublisher_;
 
   //! Vertices of the footprint polygon in base frame.
   std::vector<geometry_msgs::Point32> footprintPoints_;
