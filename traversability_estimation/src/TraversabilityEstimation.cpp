@@ -31,7 +31,10 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
       useRawMap_(false) {
   ROS_DEBUG("Traversability estimation node started.");
   readParameters();
-  traversabilityMap_.createLayers(useRawMap_);
+  {
+    std::lock_guard<std::mutex> lockTraversabilityMap(mutexTraversabilityMap_);
+    traversabilityMap_.createLayers(useRawMap_);
+  }
   submapClient_ = nodeHandle_.serviceClient<grid_map_msgs::GetGridMap>(submapServiceName_);
 
   if (!updateDuration_.isZero()) {
@@ -163,7 +166,10 @@ void TraversabilityEstimation::imageCallback(const sensor_msgs::Image& image) {
   grid_map::GridMapRosConverter::addLayerFromImage(image, "elevation", imageGridMap_, imageMinHeight_, imageMaxHeight_);
   grid_map_msgs::GridMap elevationMap;
   grid_map::GridMapRosConverter::toMessage(imageGridMap_, elevationMap);
-  traversabilityMap_.setElevationMap(elevationMap);
+  {
+    std::lock_guard<std::mutex> lockTraversabilityMap(mutexTraversabilityMap_);
+    traversabilityMap_.setElevationMap(elevationMap);
+  }
 }
 
 void TraversabilityEstimation::updateTimerCallback(const ros::TimerEvent& timerEvent) { updateTraversability(); }
@@ -176,14 +182,24 @@ bool TraversabilityEstimation::updateServiceCallback(grid_map_msgs::GetGridMapIn
       return false;
     }
   }
-  // Wait until traversability map is computed.
-  while (!traversabilityMap_.traversabilityMapInitialized()) {
-    sleep(1.0);
+  {
+    std::lock_guard<std::mutex> lockTraversabilityMap(mutexTraversabilityMap_);
+    if (!traversabilityMap_.traversabilityMapInitialized()) {
+      ROS_ERROR("Traversability Estimation: Cannot update traversability because traversability mapis not yet initialized.");
+      return false;
+    }
   }
-  grid_map_msgs::GridMap msg;
-  grid_map::GridMap traversabilityMap = traversabilityMap_.getTraversabilityMap();
 
-  response.info.header.frame_id = traversabilityMap_.getMapFrameId();
+  grid_map_msgs::GridMap msg;
+  grid_map::GridMap traversabilityMap;
+  std::string frameIdTraversabilityMap;
+  {
+    std::lock_guard<std::mutex> lockTraversabilityMap(mutexTraversabilityMap_);
+    traversabilityMap = traversabilityMap_.getTraversabilityMap();
+    frameIdTraversabilityMap = traversabilityMap_.getMapFrameId();
+  }
+
+  response.info.header.frame_id = frameIdTraversabilityMap;
   response.info.header.stamp = ros::Time::now();
   response.info.resolution = traversabilityMap.getResolution();
   response.info.length_x = traversabilityMap.getLength()[0];
@@ -207,14 +223,20 @@ bool TraversabilityEstimation::updateTraversability() {
     }
     ROS_DEBUG("Sending request to %s.", submapServiceName_.c_str());
     if (requestElevationMap(elevationMap)) {
+      std::lock_guard<std::mutex> lockTraversabilityMap(mutexTraversabilityMap_);
       traversabilityMap_.setElevationMap(elevationMap);
-      if (!traversabilityMap_.computeTraversability()) return false;
+      if (!traversabilityMap_.computeTraversability()) {
+        return false;
+      }
     } else {
       ROS_WARN("Failed to retrieve elevation grid map.");
       return false;
     }
   } else {
-    if (!traversabilityMap_.computeTraversability()) return false;
+    std::lock_guard<std::mutex> lockTraversabilityMap(mutexTraversabilityMap_);
+    if (!traversabilityMap_.computeTraversability()) {
+      return false;
+    }
   }
 
   return true;
@@ -240,7 +262,10 @@ bool TraversabilityEstimation::updateParameter(std_srvs::Empty::Request&, std_sr
     return false;
   }
 
-  if (!traversabilityMap_.updateFilter()) return false;
+  std::lock_guard<std::mutex> lockTraversabilityMap(mutexTraversabilityMap_);
+  if (!traversabilityMap_.updateFilter()) {
+    return false;
+  }
   return true;
 }
 
@@ -249,6 +274,7 @@ bool TraversabilityEstimation::requestElevationMap(grid_map_msgs::GridMap& map) 
   geometry_msgs::PointStamped submapPointTransformed;
 
   try {
+    std::lock_guard<std::mutex> lockTraversabilityMap(mutexTraversabilityMap_);
     transformListener_.transformPoint(traversabilityMap_.getMapFrameId(), submapPoint_, submapPointTransformed);
   } catch (tf::TransformException& ex) {
     ROS_ERROR("%s", ex.what());
@@ -269,8 +295,10 @@ bool TraversabilityEstimation::requestElevationMap(grid_map_msgs::GridMap& map) 
 }
 
 bool TraversabilityEstimation::traversabilityFootprint(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response) {
-  if (!traversabilityMap_.traversabilityFootprint(footprintYaw_)) return false;
-
+  std::lock_guard<std::mutex> lockTraversabilityMap(mutexTraversabilityMap_);
+  if (!traversabilityMap_.traversabilityFootprint(footprintYaw_)) {
+    return false;
+  }
   return true;
 }
 
@@ -284,9 +312,12 @@ bool TraversabilityEstimation::checkFootprintPath(traversability_msgs::CheckFoot
 
   traversability_msgs::TraversabilityResult result;
   traversability_msgs::FootprintPath path;
+  std::lock_guard<std::mutex> lockTraversabilityMap(mutexTraversabilityMap_);
   for (int j = 0; j < nPaths; j++) {
     path = request.path[j];
-    if (!traversabilityMap_.checkFootprintPath(path, result, true)) return false;
+    if (!traversabilityMap_.checkFootprintPath(path, result, true)) {
+      return false;
+    }
     response.result.push_back(result);
   }
 
@@ -299,7 +330,10 @@ bool TraversabilityEstimation::getTraversabilityMap(grid_map_msgs::GetGridMap::R
   grid_map::Length requestedSubmapLength(request.length_x, request.length_y);
   grid_map_msgs::GridMap msg;
   grid_map::GridMap map, subMap;
-  map = traversabilityMap_.getTraversabilityMap();
+  {
+    std::lock_guard<std::mutex> lockTraversabilityMap(mutexTraversabilityMap_);
+    map = traversabilityMap_.getTraversabilityMap();
+  }
   bool isSuccess;
   subMap = map.getSubmap(requestedSubmapPosition, requestedSubmapLength, isSuccess);
   if (request.layers.empty()) {
@@ -322,12 +356,16 @@ bool TraversabilityEstimation::saveToBag(grid_map_msgs::ProcessFile::Request& re
     return true;
   }
 
-  response.success = static_cast<unsigned char>(
-      grid_map::GridMapRosConverter::saveToBag(traversabilityMap_.getTraversabilityMap(), request.file_path, request.topic_name));
+  {
+    std::lock_guard<std::mutex> lockTraversabilityMap(mutexTraversabilityMap_);
+    response.success = static_cast<unsigned char>(
+        grid_map::GridMapRosConverter::saveToBag(traversabilityMap_.getTraversabilityMap(), request.file_path, request.topic_name));
+  }
   return true;
 }
 
 bool TraversabilityEstimation::initializeTraversabilityMapFromGridMap(const grid_map::GridMap& gridMap) {
+  std::lock_guard<std::mutex> lockTraversabilityMap(mutexTraversabilityMap_);
   if (traversabilityMap_.traversabilityMapInitialized()) {
     ROS_WARN(
         "[TraversabilityEstimation::gridMapToInitTraversabilityMapCallback]: received grid map message cannot be used to initialize"
