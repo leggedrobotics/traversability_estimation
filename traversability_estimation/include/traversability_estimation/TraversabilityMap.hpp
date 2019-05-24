@@ -268,6 +268,13 @@ class TraversabilityMap {
    */
   double boundTraversabilityValue(const double& traversabilityValue) const;
 
+  /*!
+   * Checks if the map is traversable, according to defined filters.
+   * @param[in] index index of the map to check.
+   * @return true if traversable for defined filters.
+   */
+  bool isTraversableForFilters(const grid_map::Index& index);
+
   //! ROS node handle.
   ros::NodeHandle& nodeHandle_;
 

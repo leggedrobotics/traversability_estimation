@@ -8,6 +8,9 @@
 
 #include "traversability_estimation/TraversabilityMap.hpp"
 
+// System
+#include <algorithm>
+
 // Grid Map
 #include <grid_map_msgs/GetGridMap.h>
 #include <grid_map_core/GridMap.hpp>
@@ -338,7 +341,7 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
   const bool computeUntraversablePolygon = path.compute_untraversable_polygon;
   grid_map::Polygon untraversablePolygon;
 
-  if (path.footprint.polygon.points.size() == 0) {
+  //if (path.footprint.polygon.points.size() == 0) {
     for (int i = 0; i < arraySize; i++) {
       start = end;
       end.x() = path.poses.poses[i].position.x;
@@ -350,12 +353,17 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
             return true;
           }
         }
+        printf("***[%d]\n", __LINE__); // debug
         bool pathIsTraversable =
             isTraversable(end, radius + offset, computeUntraversablePolygon, traversability, untraversablePolygon, radius);
         if (publishPolygon) {
           grid_map::Polygon polygon = grid_map::Polygon::fromCircle(end, radius + offset);
+          polygon.setFrameId(getMapFrameId());
+          polygon.setTimestamp(ros::Time::now().toNSec());
           publishFootprintPolygon(polygon);
-          publishUntraversablePolygon(untraversablePolygon, robotHeight);
+          if (computeUntraversablePolygon) {
+            publishUntraversablePolygon(untraversablePolygon, robotHeight);
+          }
         }
         if (!pathIsTraversable) {
           // return such that default values in result - i.e. non traversable - are used.
@@ -377,13 +385,30 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
         for (grid_map::LineIterator lineIterator(traversabilityMap_, endIndex, startIndex); !lineIterator.isPastEnd(); ++lineIterator) {
           grid_map::Position center;
           traversabilityMap_.getPosition(*lineIterator, center);
+          // debug
+          grid_map::Index debugIndex;
+          traversabilityMap_.getIndex(center, debugIndex);
+          auto layers = traversabilityMap_.getLayers();
+          auto coma_fold = [](std::string a, std::string b) {
+            return std::move(a) + ", " + std::move(b);
+          };
+
+          std::string s = std::accumulate(std::next(layers.begin()), layers.end(),
+                                          layers[0], // start with first element
+                                          coma_fold);
+          printf("===== [%d] center index: %d, %d. Layers: %s\n", __LINE__, debugIndex[0], debugIndex[1], s.c_str());
+          // end debug
           bool pathIsTraversable =
               isTraversable(center, radius + offset, computeUntraversablePolygon, traversabilityTemp, untraversablePolygon, radius);
-
+          printf("===== [%d]\n", __LINE__); // debug
           if (publishPolygon) {
             grid_map::Polygon polygon = grid_map::Polygon::fromCircle(end, radius + offset);
+            polygon.setFrameId(getMapFrameId());
+            polygon.setTimestamp(ros::Time::now().toNSec());
             publishFootprintPolygon(polygon);
-            publishUntraversablePolygon(untraversablePolygon, robotHeight);
+            if (computeUntraversablePolygon) {
+              publishUntraversablePolygon(untraversablePolygon, robotHeight);
+            }
           }
 
           if (!pathIsTraversable) {
@@ -410,7 +435,7 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
         }
       }
     }
-  } else {
+  /*} else {
     grid_map::Polygon polygon, polygon1, polygon2;
     polygon1.setFrameId(getMapFrameId());
     polygon1.setTimestamp(ros::Time::now().toNSec());
@@ -466,7 +491,9 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
 
         if (publishPolygon) {
           publishFootprintPolygon(polygon);
-          publishUntraversablePolygon(untraversablePolygon, robotHeight);
+          if (computeUntraversablePolygon) {
+            publishUntraversablePolygon(untraversablePolygon, robotHeight);
+          }
         }
 
         if (!pathIsTraversable) {
@@ -490,7 +517,9 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
 
         if (publishPolygon) {
           publishFootprintPolygon(polygon, robotHeight);
-          publishUntraversablePolygon(untraversablePolygon, robotHeight);
+          if (computeUntraversablePolygon) {
+            publishUntraversablePolygon(untraversablePolygon, robotHeight);
+          }
         }
 
         if (!pathIsTraversable) {
@@ -510,9 +539,9 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
         }
       }
     }
-  }
+  }*/
 
-  result.is_safe = true;
+  result.is_safe = static_cast<unsigned char>(true);
   ROS_DEBUG_STREAM("Traversability: " << result.traversability);
 
   return true;
@@ -532,21 +561,7 @@ bool TraversabilityMap::isTraversable(const grid_map::Polygon& polygon, const bo
   std::vector<grid_map::Position> untraversablePositions;
   // Iterate through polygon and check for traversability.
   for (grid_map::PolygonIterator polygonIterator(traversabilityMap_, polygon); !polygonIterator.isPastEnd(); ++polygonIterator) {
-    bool currentPositionIsTraversale = true;
-
-    if (checkForSlope(*polygonIterator)) {
-      if (checkForStep(*polygonIterator)) {
-        if (checkForRoughness_) {
-          if (!checkForRoughness(*polygonIterator)) {
-            currentPositionIsTraversale = false;
-          }
-        }
-      } else {
-        currentPositionIsTraversale = false;
-      }
-    } else {
-      currentPositionIsTraversale = false;
-    }
+    bool currentPositionIsTraversale = isTraversableForFilters(*polygonIterator);
 
     if (!currentPositionIsTraversale) {
       pathIsTraversable =
@@ -554,11 +569,10 @@ bool TraversabilityMap::isTraversable(const grid_map::Polygon& polygon, const bo
                   // one cell is non-traversable, then the whole path is non-traversable, and probably this can be improved ...
       if (computeUntraversablePolygon) {
         grid_map::Position positionUntraversableCell;
-        grid_map::Index indexUntraversableCell;
         traversabilityMap_.getPosition(*polygonIterator, positionUntraversableCell);
         untraversablePositions.push_back(positionUntraversableCell);
       } else {
-        // Do not keep on checking, one cell is already non-traversable.
+        // Do not keep on checking, one cell is already non-traversable and we do not need to compute untraversable polygon.
         // TODO maybe here we could have a better way to mark that the path is non-traversable. At the moment if one cell
         // is non-traversable, then the whole path is non-traversable, and probably this can be improved ...
         return false;
@@ -573,21 +587,25 @@ bool TraversabilityMap::isTraversable(const grid_map::Polygon& polygon, const bo
     }
   }
 
-  if (computeUntraversablePolygon) {
-    untraversablePolygon = grid_map::Polygon::monotoneChainConvexHullOfPoints(untraversablePositions);
-    untraversablePolygon.setFrameId(getMapFrameId());
-    untraversablePolygon.setTimestamp(ros::Time::now().toNSec());
-  }
-
   if (pathIsTraversable) {
     // Handle cases of footprints outside of map.
     if (nCells == 0) {
       ROS_DEBUG("TraversabilityMap: isTraversable: No cells within polygon.");
       traversability = traversabilityDefault_;
-      if (traversabilityDefault_ == 0.0) return false;
-      return true;
+      pathIsTraversable = traversabilityDefault_ != 0.0;
+    } else {
+      traversability /= nCells;
     }
-    traversability /= nCells;
+  }
+
+  if (computeUntraversablePolygon) {
+    if (pathIsTraversable) {
+      untraversablePolygon = grid_map::Polygon(); // empty untraversable polygon
+    } else {
+      untraversablePolygon = grid_map::Polygon::monotoneChainConvexHullOfPoints(untraversablePositions);
+    }
+    untraversablePolygon.setFrameId(getMapFrameId());
+    untraversablePolygon.setTimestamp(ros::Time::now().toNSec());
   }
 
   return pathIsTraversable;
@@ -602,100 +620,106 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
 
 bool TraversabilityMap::isTraversable(const grid_map::Position& center, const double& radiusMax, const bool& computeUntraversablePolygon,
                                       double& traversability, grid_map::Polygon& untraversablePolygon, const double& radiusMin) {
+  bool circeIsTraversable = true;
+  std::vector<grid_map::Position> untraversablePositions;
+  grid_map::Position positionUntraversableCell;
+  untraversablePolygon = grid_map::Polygon(); // empty untraversable polygon
   // Handle cases of footprints outside of map.
   if (!traversabilityMap_.isInside(center)) {
     traversability = traversabilityDefault_;
-    if (traversabilityDefault_ == 0.0) return false;
-    return true;
-  }
-  // Get index of center position.
-  grid_map::Index indexCenter;
-  traversabilityMap_.getIndex(center, indexCenter);
-  if (traversabilityMap_.isValid(indexCenter, "traversability_footprint")) {
-    traversability = traversabilityMap_.at("traversability_footprint", indexCenter);
-    if (traversability == 0.0) return false;
-    return true;
-  }
-
-  int nCells = 0;
-  traversability = 0.0;
-
-  // Iterate through polygon and check for traversability.
-  for (grid_map::SpiralIterator iterator(traversabilityMap_, center, radiusMax); !iterator.isPastEnd(); ++iterator) {
-    if (radiusMin == 0.0) {
-      // Check for slopes
-      if (!checkForSlope(*iterator)) {
-        traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
-        return false;
+    circeIsTraversable = traversabilityDefault_ != 0.0;
+    if (computeUntraversablePolygon && !circeIsTraversable) {
+      untraversablePolygon = grid_map::Polygon::fromCircle(center, radiusMax);
+    }
+    //printf("[%d]\n", __LINE__); // debug
+  } else {
+    // Footprints inside map.
+    // Get index of center position.
+    grid_map::Index indexCenter;
+    traversabilityMap_.getIndex(center, indexCenter);
+    if (traversabilityMap_.isValid(indexCenter, "traversability_footprint")) {
+      traversability = traversabilityMap_.at("traversability_footprint", indexCenter);
+      circeIsTraversable = traversability != 0.0;
+      if (computeUntraversablePolygon && !circeIsTraversable) {
+        untraversablePolygon = grid_map::Polygon::fromCircle(center, radiusMax);
       }
-
-      // Check for steps
-      if (!checkForStep(*iterator)) {
-        traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
-        return false;
-      }
-
-      // Check for roughness
-      if (checkForRoughness_) {
-        if (!checkForRoughness(*iterator)) {
-          traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
-          return false;
-        }
-      }
+      //printf("[%d]\n", __LINE__); // debug
     } else {
-      // Check for slopes
-      if (!checkForSlope(*iterator)) {
-        double radius = iterator.getCurrentRadius();
-        if (radius <= radiusMin) {
-          traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
-          return false;
-        }
-        double factor = ((radius - radiusMin) / (radiusMax - radiusMin) + 1.0) / 2.0;
-        traversability *= factor / nCells;
-        traversabilityMap_.at("traversability_footprint", indexCenter) = traversability;
-        return true;
-      }
+      //printf("[%d]\n", __LINE__); // debug
+      // Non valid (non finite traversability)
+      int nCells = 0;
+      traversability = 0.0;
 
-      // Check for steps
-      if (!checkForStep(*iterator)) {
-        double radius = iterator.getCurrentRadius();
-        if (radius <= radiusMin) {
-          traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
-          return false;
-        }
-        double factor = ((radius - radiusMin) / (radiusMax - radiusMin) + 1.0) / 2.0;
-        traversability *= factor / nCells;
-        traversabilityMap_.at("traversability_footprint", indexCenter) = traversability;
-        return true;
-      }
+      // Iterate through polygon and check for traversability.
+      double maxUntraversableRadius = 0.0;
+      bool traversableRadiusBiggerMinRadius = false;
+      for (grid_map::SpiralIterator iterator(traversabilityMap_, center, radiusMax); !iterator.isPastEnd() && !traversableRadiusBiggerMinRadius; ++iterator) {
+        const bool currentPositionIsTraversale = isTraversableForFilters(*iterator);
+        if (!currentPositionIsTraversale) {
+          const auto untraversableRadius = iterator.getCurrentRadius();
+          maxUntraversableRadius = std::max(maxUntraversableRadius, untraversableRadius);
 
-      // Check for roughness
-      if (checkForRoughness_) {
-        if (!checkForRoughness(*iterator)) {
-          double radius = iterator.getCurrentRadius();
-          if (radius <= radiusMin) {
+          if (radiusMin == 0.0) {
             traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
+            circeIsTraversable =
+                false;  // TODO (marco-tranzatto) maybe here we could have a better way to mark that the path is non-traversable. At the moment if
+            // one cell is non-traversable, then the whole path is non-traversable, and probably this can be improved ...
+            traversabilityMap_.getPosition(*iterator, positionUntraversableCell);
+            untraversablePositions.push_back(positionUntraversableCell);
+          } else {
+            if (untraversableRadius <= radiusMin) {
+              traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
+              //printf("[%d]\n", __LINE__); // debug
+              circeIsTraversable =
+                  false;  // TODO (marco-tranzatto) maybe here we could have a better way to mark that the path is non-traversable. At the moment if
+              // one cell is non-traversable, then the whole path is non-traversable, and probably this can be improved ...
+              traversabilityMap_.getPosition(*iterator, positionUntraversableCell);
+              untraversablePositions.push_back(positionUntraversableCell);
+            } else if (circeIsTraversable) { // if circeIsTraversable is not changed by any previous loop
+              //printf("[%d]\n", __LINE__); // debug
+              auto factor = ((untraversableRadius - radiusMin) / (radiusMax - radiusMin) + 1.0) / 2.0;
+              traversability *= factor / nCells;
+              traversabilityMap_.at("traversability_footprint", indexCenter) = static_cast<float>(traversability);
+              circeIsTraversable = true;
+              traversableRadiusBiggerMinRadius = true;
+            }
+          }
+
+          if (!computeUntraversablePolygon) {
+            // Do not keep on checking, one cell is already non-traversable.
+            // TODO maybe here we could have a better way to mark that the path is non-traversable. At the moment if one cell
+            // is non-traversable, then the whole path is non-traversable, and probably this can be improved ...
             return false;
           }
-          double factor = ((radius - radiusMin) / (radiusMax - radiusMin) + 1.0) / 2.0;
-          traversability *= factor / nCells;
-          traversabilityMap_.at("traversability_footprint", indexCenter) = traversability;
-          return true;
+        } else {
+          nCells++;
+          if (!traversabilityMap_.isValid(*iterator, traversabilityType_)) {
+            traversability += traversabilityDefault_;
+          } else {
+            traversability += traversabilityMap_.at(traversabilityType_, *iterator);
+          }
         }
       }
-    }
 
-    nCells++;
-    if (!traversabilityMap_.isValid(*iterator, traversabilityType_)) {
-      traversability += traversabilityDefault_;
-    } else {
-      traversability += traversabilityMap_.at(traversabilityType_, *iterator);
+      if (computeUntraversablePolygon && !circeIsTraversable) {
+        untraversablePolygon = grid_map::Polygon::monotoneChainConvexHullOfPoints(untraversablePositions);
+        //printf("[%d] maxUntraversableRadius: %f\n", __LINE__, maxUntraversableRadius); // debug
+      }
+
+      if (circeIsTraversable) {
+        traversability /= nCells;
+        traversabilityMap_.at("traversability_footprint", indexCenter) = static_cast<float>(traversability);
+      }
     }
   }
 
-  traversability /= nCells;
-  traversabilityMap_.at("traversability_footprint", indexCenter) = traversability;
-  return true;
+  if (computeUntraversablePolygon) {
+    untraversablePolygon.setFrameId(getMapFrameId());
+    untraversablePolygon.setTimestamp(ros::Time::now().toNSec());
+    //printf("[%d]\n", __LINE__); // debug
+  }
+
+  return circeIsTraversable;
 }
 
 bool TraversabilityMap::checkInclination(const grid_map::Position& start, const grid_map::Position& end) {
@@ -723,9 +747,39 @@ bool TraversabilityMap::updateFilter() {
   return true;
 }
 
+bool TraversabilityMap::isTraversableForFilters(const grid_map::Index& indexStep) {
+  bool currentPositionIsTraversale = true;
+  if (checkForSlope(indexStep)) {
+    if (checkForStep(indexStep)) {
+      if (checkForRoughness_) {
+        if (!checkForRoughness(indexStep)) {
+          currentPositionIsTraversale = false;
+        }
+      }
+    } else {
+      currentPositionIsTraversale = false;
+    }
+  } else {
+    currentPositionIsTraversale = false;
+  }
+
+  return currentPositionIsTraversale;
+}
+
 bool TraversabilityMap::checkForStep(const grid_map::Index& indexStep) {
+  // debug
+  auto layers = traversabilityMap_.getLayers();
+  std::vector<std::string>::iterator it;
+
+  it = find (layers.begin(), layers.end(), stepType_);
+  if (it == layers.end()) {
+    printf("### [%d] stepType_ not present!!!! \n", __LINE__); // debug
+  }
+  // end debug
   if (traversabilityMap_.at(stepType_, indexStep) == 0.0) {
+    printf("### [%d]\n", __LINE__); // debug
     if (!traversabilityMap_.isValid(indexStep, "step_footprint")) {
+      printf("### [%d]\n", __LINE__); // debug
       double windowRadiusStep = 2.5 * traversabilityMap_.getResolution();  // 0.075;
 
       vector<grid_map::Index> indices;
@@ -739,6 +793,7 @@ bool TraversabilityMap::checkForStep(const grid_map::Index& indexStep) {
           indices.push_back(*circleIterator);
       }
       if (indices.empty()) indices.push_back(indexStep);
+      printf("### [%d]\n", __LINE__); // debug
       for (auto& index : indices) {
         grid_map::Length subMapLength(2.5 * traversabilityMap_.getResolution(), 2.5 * traversabilityMap_.getResolution());
         grid_map::Position subMapPos;
@@ -749,6 +804,7 @@ bool TraversabilityMap::checkForStep(const grid_map::Index& indexStep) {
         if (!isSuccess) {
           ROS_WARN("Traversability map: Check for step window could not retrieve submap.");
           traversabilityMap_.at("step_footprint", indexStep) = 0.0;
+          printf("### [%d]\n", __LINE__); // debug
           return false;
         }
         height = traversabilityMap_.at("elevation", index);
@@ -782,6 +838,7 @@ bool TraversabilityMap::checkForStep(const grid_map::Index& indexStep) {
             }
             if (gapStart && !gapEnd) {
               traversabilityMap_.at("step_footprint", indexStep) = 0.0;
+              printf("### [%d]\n", __LINE__); // debug
               return false;
             }
           }
@@ -789,6 +846,7 @@ bool TraversabilityMap::checkForStep(const grid_map::Index& indexStep) {
       }
       traversabilityMap_.at("step_footprint", indexStep) = 1.0;
     } else if (traversabilityMap_.at("step_footprint", indexStep) == 0.0) {
+      printf("### [%d]\n", __LINE__); // debug
       return false;
     }
   }
@@ -796,6 +854,15 @@ bool TraversabilityMap::checkForStep(const grid_map::Index& indexStep) {
 }
 
 bool TraversabilityMap::checkForSlope(const grid_map::Index& index) {
+  // debug
+  auto layers = traversabilityMap_.getLayers();
+  std::vector<std::string>::iterator it;
+
+  it = find (layers.begin(), layers.end(), slopeType_);
+  if (it == layers.end()) {
+    printf("### [%d] slopeType_ not present!!!! \n", __LINE__); // debug
+  }
+  // end debug
   if (traversabilityMap_.at(slopeType_, index) == 0.0) {
     if (!traversabilityMap_.isValid(index, "slope_footprint")) {
       double windowRadius = 3.0 * traversabilityMap_.getResolution();  // TODO: read this as a parameter?
@@ -823,6 +890,15 @@ bool TraversabilityMap::checkForSlope(const grid_map::Index& index) {
 }
 
 bool TraversabilityMap::checkForRoughness(const grid_map::Index& index) {
+  // debug
+  auto layers = traversabilityMap_.getLayers();
+  std::vector<std::string>::iterator it;
+
+  it = find (layers.begin(), layers.end(), roughnessType_);
+  if (it == layers.end()) {
+    printf("### [%d] roughnessType_ not present!!!! \n", __LINE__); // debug
+  }
+  // end debug
   if (traversabilityMap_.at(roughnessType_, index) == 0.0) {
     if (!traversabilityMap_.isValid(index, "roughness_footprint")) {
       double windowRadius = 3.0 * traversabilityMap_.getResolution();  // TODO: read this as a parameter?
