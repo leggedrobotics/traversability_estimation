@@ -27,6 +27,7 @@
 #include <tf/transform_listener.h>
 
 // STD
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -230,6 +231,9 @@ class TraversabilityEstimation {
 
   //! Traversability map
   TraversabilityMap traversabilityMap_;
+
+  //! Mutex to lock the traversability map.
+  mutable std::mutex mutexTraversabilityMap_;
 
   //! Package name where the parameters are defined.
   std::string package_;
