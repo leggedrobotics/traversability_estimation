@@ -60,6 +60,7 @@ class TraversabilityMap {
   /*!
    * Checks the traversability of a footprint path and returns the traversability.
    * @param[in] path the footprint path that has to be checked.
+   * @param[in] publishPolygon says if checked polygon and untraversable polygon should be computed and published.
    * @param[out] result the traversability result.
    * @return true if successful.
    */
@@ -201,8 +202,8 @@ class TraversabilityMap {
    * valid radius of the footprint.
    * @return true if the circular footprint is traversable, false otherwise.
    */
-  bool isTraversable(const grid_map::Position& center, const double& radiusMax, const bool& computeUntraversablePolygon, double& traversability,
-                     grid_map::Polygon& untraversablePolygon, const double& radiusMin = 0);
+  bool isTraversable(const grid_map::Position& center, const double& radiusMax, const bool& computeUntraversablePolygon,
+                     double& traversability, grid_map::Polygon& untraversablePolygon, const double& radiusMin = 0);
 
   /*!
    * Gets the traversability value of a circular footprint.
@@ -274,6 +275,44 @@ class TraversabilityMap {
    * @return true if traversable for defined filters.
    */
   bool isTraversableForFilters(const grid_map::Index& index);
+
+  /*!
+   * Checks the traversability of a circular footprint path and returns the traversability.
+   * @param[in] path the footprint path that has to be checked.
+   * @param[in] publishPolygon says if checked polygon and untraversable polygon should be computed and published.
+   * @param[out] result the traversability result.
+   * @return true if successful.
+   */
+  bool checkCircularFootprintPath(const traversability_msgs::FootprintPath& path, const bool publishPolygon,
+                                  traversability_msgs::TraversabilityResult& result);
+
+  /*!
+   * Checks the traversability of a polygonal footprint path and returns the traversability.
+   * @param[in] path the footprint path that has to be checked.
+   * @param[in] publishPolygon says if checked polygon and untraversable polygon should be computed and published.
+   * @param[out] result the traversability result.
+   * @return true if successful.
+   */
+  bool checkPolygonalFootprintPath(const traversability_msgs::FootprintPath& path, const bool publishPolygon,
+                                   traversability_msgs::TraversabilityResult& result);
+
+  /*!
+   * Computes mean height from poses.
+   * @param[in] poses vector of poses to compute mean height.
+   * @return mean height of poses.
+   */
+  template <typename Type>
+  double computeMeanHeightFromPoses(const std::vector<Type>& poses) const {
+    auto meanHeight = 0.0;
+    if (poses.size() != 0) {
+      for (int i = 0; i < poses.size(); i++) {
+        meanHeight += poses.at(i).position.z;
+      }
+      meanHeight /= poses.size();
+    }
+
+    return meanHeight;
+  }
 
   //! ROS node handle.
   ros::NodeHandle& nodeHandle_;
