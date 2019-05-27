@@ -371,8 +371,8 @@ class TraversabilityMap {
   bool elevationMapInitialized_;
 
   //! Mutex lock for traversability map.
-  boost::recursive_mutex traversabilityMapMutex_;
-  boost::recursive_mutex elevationMapMutex_;
+  mutable boost::recursive_mutex traversabilityMapMutex_;
+  mutable boost::recursive_mutex elevationMapMutex_;
 
   //! Z-position of the robot pose belonging to this map.
   double zPosition_;

@@ -61,6 +61,7 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
 TraversabilityMap::~TraversabilityMap() { nodeHandle_.shutdown(); }
 
 bool TraversabilityMap::createLayers(bool useRawMap) {
+  boost::recursive_mutex::scoped_lock scopedLockForElevationMap(elevationMapMutex_);
   elevationMapLayers_.push_back("elevation");
   if (!useRawMap) {
     elevationMapLayers_.push_back("upper_bound");
@@ -72,11 +73,14 @@ bool TraversabilityMap::createLayers(bool useRawMap) {
     elevationMapLayers_.push_back("horizontal_variance_xy");
     elevationMapLayers_.push_back("time");
   }
+  scopedLockForElevationMap.unlock();
   // TODO: Adapt map layers to traversability filters.
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   traversabilityMapLayers_.push_back(traversabilityType_);
   traversabilityMapLayers_.push_back(slopeType_);
   traversabilityMapLayers_.push_back(stepType_);
   traversabilityMapLayers_.push_back(roughnessType_);
+  scopedLockForTraversabilityMap.unlock();
   return true;
 }
 
@@ -135,6 +139,7 @@ bool TraversabilityMap::setElevationMap(const grid_map_msgs::GridMap& msg) {
   }
   grid_map::GridMap elevationMap;
   grid_map::GridMapRosConverter::fromMessage(msg, elevationMap);
+  boost::recursive_mutex::scoped_lock scopedLockForElevationMap(elevationMapMutex_);
   zPosition_ = msg.info.pose.position.z;
   for (auto& layer : elevationMapLayers_) {
     if (!elevationMap.exists(layer)) {
@@ -142,7 +147,6 @@ bool TraversabilityMap::setElevationMap(const grid_map_msgs::GridMap& msg) {
       return false;
     }
   }
-  boost::recursive_mutex::scoped_lock scopedLockForElevationMap(elevationMapMutex_);
   elevationMap_ = elevationMap;
   elevationMapInitialized_ = true;
   return true;
@@ -152,13 +156,13 @@ bool TraversabilityMap::setTraversabilityMap(const grid_map_msgs::GridMap& msg) 
   grid_map::GridMap traversabilityMap;
   grid_map::GridMapRosConverter::fromMessage(msg, traversabilityMap);
   zPosition_ = msg.info.pose.position.z;
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   for (auto& layer : traversabilityMapLayers_) {
     if (!traversabilityMap.exists(layer)) {
       ROS_WARN("Traversability Map: Can't set traversability map because there exists no layer %s.", layer.c_str());
       return false;
     }
   }
-  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   traversabilityMap_ = traversabilityMap;
   traversabilityMapInitialized_ = true;
   return true;
@@ -237,6 +241,7 @@ bool TraversabilityMap::traversabilityFootprint(double footprintYaw) {
   // Initialize timer.
   ros::WallTime start = ros::WallTime::now();
 
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   traversabilityMap_.add("traversability_x");
   traversabilityMap_.add("traversability_rot");
 
@@ -290,6 +295,7 @@ bool TraversabilityMap::traversabilityFootprint(double footprintYaw) {
     else
       traversabilityMap_.at("traversability_rot", *iterator) = 0.0;
   }
+  scopedLockForTraversabilityMap.unlock();
 
   publishTraversabilityMap();
 
@@ -300,10 +306,12 @@ bool TraversabilityMap::traversabilityFootprint(double footprintYaw) {
 bool TraversabilityMap::traversabilityFootprint(const double& radius, const double& offset) {
   double traversability;
   grid_map::Position center;
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   for (grid_map::GridMapIterator iterator(traversabilityMap_); !iterator.isPastEnd(); ++iterator) {
     traversabilityMap_.getPosition(*iterator, center);
     isTraversable(center, radius + offset, traversability, radius);
   }
+  scopedLockForTraversabilityMap.unlock();
   publishTraversabilityMap();
   return true;
 }
@@ -386,6 +394,7 @@ bool TraversabilityMap::checkCircularFootprintPath(const traversability_msgs::Fo
       double traversabilityTemp, traversabilitySum = 0.0;
       int nLine = 0;
       grid_map::Index startIndex, endIndex;
+      boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
       traversabilityMap_.getIndex(start, startIndex);
       traversabilityMap_.getIndex(end, endIndex);
       int nSkip = 3;  // TODO: Remove magic number.
@@ -412,6 +421,7 @@ bool TraversabilityMap::checkCircularFootprintPath(const traversability_msgs::Fo
           if (!lineIterator.isPastEnd()) ++lineIterator;
         }
       }
+      scopedLockForTraversabilityMap.unlock();
 
       if (publishPolygon) {
         grid_map::Polygon polygon = grid_map::Polygon::fromCircle(end, radius + offset);
@@ -583,6 +593,7 @@ bool TraversabilityMap::isTraversable(const grid_map::Polygon& polygon, const bo
   bool pathIsTraversable = true;
   std::vector<grid_map::Position> untraversablePositions;
   // Iterate through polygon and check for traversability.
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   for (grid_map::PolygonIterator polygonIterator(traversabilityMap_, polygon); !polygonIterator.isPastEnd(); ++polygonIterator) {
     bool currentPositionIsTraversale = isTraversableForFilters(*polygonIterator);
 
@@ -609,6 +620,7 @@ bool TraversabilityMap::isTraversable(const grid_map::Polygon& polygon, const bo
       }
     }
   }
+  scopedLockForTraversabilityMap.unlock();
 
   if (pathIsTraversable) {
     // Handle cases of footprints outside of map.
@@ -648,6 +660,7 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
   grid_map::Position positionUntraversableCell;
   untraversablePolygon = grid_map::Polygon();  // empty untraversable polygon
   // Handle cases of footprints outside of map.
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   if (!traversabilityMap_.isInside(center)) {
     traversability = traversabilityDefault_;
     circeIsTraversable = traversabilityDefault_ != 0.0;
@@ -731,6 +744,7 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
       }
     }
   }
+  scopedLockForTraversabilityMap.unlock();
 
   if (computeUntraversablePolygon) {
     untraversablePolygon.setFrameId(getMapFrameId());
@@ -741,6 +755,7 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
 }
 
 bool TraversabilityMap::checkInclination(const grid_map::Position& start, const grid_map::Position& end) {
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   if (end == start) {
     if (traversabilityMap_.atPosition(robotSlopeType_, start) == 0.0) return false;
   } else {
@@ -766,6 +781,7 @@ bool TraversabilityMap::updateFilter() {
 }
 
 bool TraversabilityMap::isTraversableForFilters(const grid_map::Index& indexStep) {
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   bool currentPositionIsTraversale = true;
   if (checkForSlope(indexStep)) {
     if (checkForStep(indexStep)) {
@@ -785,6 +801,7 @@ bool TraversabilityMap::isTraversableForFilters(const grid_map::Index& indexStep
 }
 
 bool TraversabilityMap::checkForStep(const grid_map::Index& indexStep) {
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   if (traversabilityMap_.at(stepType_, indexStep) == 0.0) {
     if (!traversabilityMap_.isValid(indexStep, "step_footprint")) {
       double windowRadiusStep = 2.5 * traversabilityMap_.getResolution();  // 0.075;
@@ -857,6 +874,7 @@ bool TraversabilityMap::checkForStep(const grid_map::Index& indexStep) {
 }
 
 bool TraversabilityMap::checkForSlope(const grid_map::Index& index) {
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   if (traversabilityMap_.at(slopeType_, index) == 0.0) {
     if (!traversabilityMap_.isValid(index, "slope_footprint")) {
       double windowRadius = 3.0 * traversabilityMap_.getResolution();  // TODO: read this as a parameter?
@@ -884,6 +902,7 @@ bool TraversabilityMap::checkForSlope(const grid_map::Index& index) {
 }
 
 bool TraversabilityMap::checkForRoughness(const grid_map::Index& index) {
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   if (traversabilityMap_.at(roughnessType_, index) == 0.0) {
     if (!traversabilityMap_.isValid(index, "roughness_footprint")) {
       double windowRadius = 3.0 * traversabilityMap_.getResolution();  // TODO: read this as a parameter?
@@ -959,6 +978,7 @@ double TraversabilityMap::boundTraversabilityValue(const double& traversabilityV
 bool TraversabilityMap::mapHasValidTraversabilityAt(double x, double y) const {
   grid_map::Position positionToCheck(x, y);
   grid_map::Index indexToCheck;
+  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   auto indexObtained = traversabilityMap_.getIndex(positionToCheck, indexToCheck);
   if (!indexObtained) {
     ROS_ERROR("It was not possible to get index of the position (%f, %f) in the current grid_map representation of the traversability map.",
