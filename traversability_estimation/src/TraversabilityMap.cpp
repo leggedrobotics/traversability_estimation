@@ -406,7 +406,7 @@ bool TraversabilityMap::checkCircularFootprintPath(const traversability_msgs::Fo
         pathIsTraversable = pathIsTraversable && isTraversable(center, radius + offset, computeUntraversablePolygon, traversabilityTemp,
                                                                auxiliaryUntraversablePolygon, radius);
 
-        if (publishPolygon && computeUntraversablePolygon) {
+        if (publishPolygon && computeUntraversablePolygon && auxiliaryUntraversablePolygon.nVertices() > 0) {
           untraversablePolygon = grid_map::Polygon::convexHull(untraversablePolygon, auxiliaryUntraversablePolygon);
         }
 
@@ -418,7 +418,9 @@ bool TraversabilityMap::checkCircularFootprintPath(const traversability_msgs::Fo
         traversabilitySum += traversabilityTemp;
         nLine++;
         for (int j = 0; j < nSkip; j++) {
-          if (!lineIterator.isPastEnd()) ++lineIterator;
+          if (!lineIterator.isPastEnd()) {
+            ++lineIterator;
+          }
         }
       }
       scopedLockForTraversabilityMap.unlock();
