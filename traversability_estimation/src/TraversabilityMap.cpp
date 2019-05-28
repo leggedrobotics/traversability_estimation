@@ -606,9 +606,6 @@ bool TraversabilityMap::isTraversable(const grid_map::Polygon& polygon, const bo
         traversabilityMap_.getPosition(*polygonIterator, positionUntraversableCell);
         untraversablePositions.push_back(positionUntraversableCell);
       } else {
-        // Do not keep on checking, one cell is already non-traversable and we do not need to compute untraversable polygon.
-        // TODO maybe here we could have a better way to mark that the path is non-traversable. At the moment if one cell
-        // is non-traversable, then the whole path is non-traversable, and probably this can be improved ...
         return false;
       }
     } else {
