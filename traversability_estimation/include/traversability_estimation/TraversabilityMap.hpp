@@ -60,12 +60,12 @@ class TraversabilityMap {
   /*!
    * Checks the traversability of a footprint path and returns the traversability.
    * @param[in] path the footprint path that has to be checked.
-   * @param[in] publishPolygon says if checked polygon and untraversable polygon should be computed and published.
+   * @param[in] publishPolygons says if checked polygon and untraversable polygon should be computed and published.
    * @param[out] result the traversability result.
    * @return true if successful.
    */
   bool checkFootprintPath(const traversability_msgs::FootprintPath& path, traversability_msgs::TraversabilityResult& result,
-                          const bool publishPolygon = false);
+                          const bool publishPolygons = false);
 
   /*!
    * Computes the traversability of a footprint at each map cell position twice:
@@ -254,11 +254,15 @@ class TraversabilityMap {
 
   /*!
    * Publishes the footprint polygon.
+   * @param[in] polygon footprint polygon checked for traversability.
+   * @param[in] zPosition height of the polygon.
    */
   void publishFootprintPolygon(const grid_map::Polygon& polygon, double zPosition = 0.0);
 
   /*!
    * Publishes the untraversable polygon.
+   * @param[in] untraversablePolygon polygon indicating untraversable parts..
+   * @param[in] zPosition height of the polygon.
    */
   void publishUntraversablePolygon(const grid_map::Polygon& untraversablePolygon, double zPosition = 0.0);
 
@@ -279,21 +283,21 @@ class TraversabilityMap {
   /*!
    * Checks the traversability of a circular footprint path and returns the traversability.
    * @param[in] path the footprint path that has to be checked.
-   * @param[in] publishPolygon says if checked polygon and untraversable polygon should be computed and published.
+   * @param[in] publishPolygons says if checked polygon and untraversable polygon should be computed and published.
    * @param[out] result the traversability result.
    * @return true if successful.
    */
-  bool checkCircularFootprintPath(const traversability_msgs::FootprintPath& path, const bool publishPolygon,
+  bool checkCircularFootprintPath(const traversability_msgs::FootprintPath& path, const bool publishPolygons,
                                   traversability_msgs::TraversabilityResult& result);
 
   /*!
    * Checks the traversability of a polygonal footprint path and returns the traversability.
    * @param[in] path the footprint path that has to be checked.
-   * @param[in] publishPolygon says if checked polygon and untraversable polygon should be computed and published.
+   * @param[in] publishPolygons says if checked polygon and untraversable polygon should be computed and published.
    * @param[out] result the traversability result.
    * @return true if successful.
    */
-  bool checkPolygonalFootprintPath(const traversability_msgs::FootprintPath& path, const bool publishPolygon,
+  bool checkPolygonalFootprintPath(const traversability_msgs::FootprintPath& path, const bool publishPolygons,
                                    traversability_msgs::TraversabilityResult& result);
 
   /*!

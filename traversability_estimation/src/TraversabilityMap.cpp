@@ -317,7 +317,7 @@ bool TraversabilityMap::traversabilityFootprint(const double& radius, const doub
 }
 
 bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintPath& path,
-                                           traversability_msgs::TraversabilityResult& result, const bool publishPolygon) {
+                                           traversability_msgs::TraversabilityResult& result, const bool publishPolygons) {
   bool successfullyCheckedFootprint;
   if (!traversabilityMapInitialized_) {
     ROS_WARN("Traversability Estimation: check Footprint path: Traversability map not yet initialized.");
@@ -333,15 +333,15 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
   }
 
   if (path.footprint.polygon.points.size() == 0) {
-    successfullyCheckedFootprint = checkCircularFootprintPath(path, publishPolygon, result);
+    successfullyCheckedFootprint = checkCircularFootprintPath(path, publishPolygons, result);
   } else {
-    successfullyCheckedFootprint = checkPolygonalFootprintPath(path, publishPolygon, result);
+    successfullyCheckedFootprint = checkPolygonalFootprintPath(path, publishPolygons, result);
   }
 
   return successfullyCheckedFootprint;
 }
 
-bool TraversabilityMap::checkCircularFootprintPath(const traversability_msgs::FootprintPath& path, const bool publishPolygon,
+bool TraversabilityMap::checkCircularFootprintPath(const traversability_msgs::FootprintPath& path, const bool publishPolygons,
                                                    traversability_msgs::TraversabilityResult& result) {
   double radius = path.radius;
   double offset = 0.15;
@@ -369,7 +369,7 @@ bool TraversabilityMap::checkCircularFootprintPath(const traversability_msgs::Fo
       }
       bool pathIsTraversable =
           isTraversable(end, radius + offset, computeUntraversablePolygon, traversability, untraversablePolygon, radius);
-      if (publishPolygon) {
+      if (publishPolygons) {
         grid_map::Polygon polygon = grid_map::Polygon::fromCircle(end, radius + offset);
         polygon.setFrameId(getMapFrameId());
         polygon.setTimestamp(ros::Time::now().toNSec());
@@ -406,11 +406,11 @@ bool TraversabilityMap::checkCircularFootprintPath(const traversability_msgs::Fo
         pathIsTraversable = pathIsTraversable && isTraversable(center, radius + offset, computeUntraversablePolygon, traversabilityTemp,
                                                                auxiliaryUntraversablePolygon, radius);
 
-        if (publishPolygon && computeUntraversablePolygon && auxiliaryUntraversablePolygon.nVertices() > 0) {
+        if (publishPolygons && computeUntraversablePolygon && auxiliaryUntraversablePolygon.nVertices() > 0) {
           untraversablePolygon = grid_map::Polygon::convexHull(untraversablePolygon, auxiliaryUntraversablePolygon);
         }
 
-        if (!pathIsTraversable && !computeUntraversablePolygon && !publishPolygon) {
+        if (!pathIsTraversable && !computeUntraversablePolygon && !publishPolygons) {
           // return such that default values in result - i.e. non traversable - are used.
           return true;
         }
@@ -425,7 +425,7 @@ bool TraversabilityMap::checkCircularFootprintPath(const traversability_msgs::Fo
       }
       scopedLockForTraversabilityMap.unlock();
 
-      if (publishPolygon) {
+      if (publishPolygons) {
         grid_map::Polygon polygon = grid_map::Polygon::fromCircle(end, radius + offset);
         polygon.setFrameId(getMapFrameId());
         polygon.setTimestamp(ros::Time::now().toNSec());
@@ -460,7 +460,7 @@ bool TraversabilityMap::checkCircularFootprintPath(const traversability_msgs::Fo
   return true;
 }
 
-bool TraversabilityMap::checkPolygonalFootprintPath(const traversability_msgs::FootprintPath& path, const bool publishPolygon,
+bool TraversabilityMap::checkPolygonalFootprintPath(const traversability_msgs::FootprintPath& path, const bool publishPolygons,
                                                     traversability_msgs::TraversabilityResult& result) {
   grid_map::Position start, end;
   const auto arraySize = path.poses.poses.size();
@@ -525,7 +525,7 @@ bool TraversabilityMap::checkPolygonalFootprintPath(const traversability_msgs::F
       }
       bool pathIsTraversable = isTraversable(polygon, computeUntraversablePolygon, traversability, untraversablePolygon);
 
-      if (publishPolygon) {
+      if (publishPolygons) {
         publishFootprintPolygon(polygon);
         if (computeUntraversablePolygon) {
           publishUntraversablePolygon(untraversablePolygon, robotHeight);
@@ -553,7 +553,7 @@ bool TraversabilityMap::checkPolygonalFootprintPath(const traversability_msgs::F
       }
       bool pathIsTraversable = isTraversable(polygon, computeUntraversablePolygon, traversability, untraversablePolygon);
 
-      if (publishPolygon) {
+      if (publishPolygons) {
         publishFootprintPolygon(polygon, robotHeight);
         if (computeUntraversablePolygon) {
           publishUntraversablePolygon(untraversablePolygon, robotHeight);
@@ -600,9 +600,7 @@ bool TraversabilityMap::isTraversable(const grid_map::Polygon& polygon, const bo
     bool currentPositionIsTraversale = isTraversableForFilters(*polygonIterator);
 
     if (!currentPositionIsTraversale) {
-      pathIsTraversable =
-          false;  // TODO (marco-tranzatto) maybe here we could have a better way to mark that the path is non-traversable. At the moment if
-                  // one cell is non-traversable, then the whole path is non-traversable, and probably this can be improved ...
+      pathIsTraversable = false;
       if (computeUntraversablePolygon) {
         grid_map::Position positionUntraversableCell;
         traversabilityMap_.getPosition(*polygonIterator, positionUntraversableCell);
@@ -697,18 +695,13 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
 
           if (radiusMin == 0.0) {
             traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
-            circeIsTraversable = false;  // TODO (marco-tranzatto) maybe here we could have a better way to mark that the path is
-                                         // non-traversable. At the moment if
-            // one cell is non-traversable, then the whole path is non-traversable, and probably this can be improved ...
+            circeIsTraversable = false;
             traversabilityMap_.getPosition(*iterator, positionUntraversableCell);
             untraversablePositions.push_back(positionUntraversableCell);
           } else {
             if (untraversableRadius <= radiusMin) {
               traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
-              // printf("[%d]\n", __LINE__); // debug
-              circeIsTraversable = false;  // TODO (marco-tranzatto) maybe here we could have a better way to mark that the path is
-                                           // non-traversable. At the moment if
-              // one cell is non-traversable, then the whole path is non-traversable, and probably this can be improved ...
+              circeIsTraversable = false;
               traversabilityMap_.getPosition(*iterator, positionUntraversableCell);
               untraversablePositions.push_back(positionUntraversableCell);
             } else if (circeIsTraversable) {  // if circeIsTraversable is not changed by any previous loop
@@ -722,8 +715,6 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
 
           if (!computeUntraversablePolygon) {
             // Do not keep on checking, one cell is already non-traversable.
-            // TODO maybe here we could have a better way to mark that the path is non-traversable. At the moment if one cell
-            // is non-traversable, then the whole path is non-traversable, and probably this can be improved ...
             return false;
           }
         } else {
