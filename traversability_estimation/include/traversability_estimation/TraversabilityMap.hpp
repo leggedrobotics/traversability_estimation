@@ -174,9 +174,9 @@ class TraversabilityMap {
    * Gets the traversability value of the submap defined by the polygon. Is true if the whole polygon is traversable.
    * @param[in] polygon polygon that defines submap of the traversability map.
    * @param[in] computeUntraversablePolygon true if untraversable polygon within submap checked for traversability should be computed.
-   * @param[out] traversability traversability value of submap defined by the polygon, the traversability.
+   * @param[out] traversability traversability value of submap defined by the polygon, the traversability is the mean of each cell within
+   *             the polygon.
    * @param[out] untraversablePolygon untraversable polygon within area checked for traversability.
-   * is the mean of each cell within the polygon.
    * @return true if the whole polygon is traversable, false otherwise.
    */
   bool isTraversable(const grid_map::Polygon& polygon, const bool& computeUntraversablePolygon, double& traversability,

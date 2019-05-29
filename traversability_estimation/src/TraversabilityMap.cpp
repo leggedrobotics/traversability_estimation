@@ -652,7 +652,7 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
 
 bool TraversabilityMap::isTraversable(const grid_map::Position& center, const double& radiusMax, const bool& computeUntraversablePolygon,
                                       double& traversability, grid_map::Polygon& untraversablePolygon, const double& radiusMin) {
-  bool circeIsTraversable = true;
+  bool circleIsTraversable = true;
   std::vector<grid_map::Position> untraversablePositions;
   grid_map::Position positionUntraversableCell;
   untraversablePolygon = grid_map::Polygon();  // empty untraversable polygon
@@ -660,8 +660,8 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
   boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   if (!traversabilityMap_.isInside(center)) {
     traversability = traversabilityDefault_;
-    circeIsTraversable = traversabilityDefault_ != 0.0;
-    if (computeUntraversablePolygon && !circeIsTraversable) {
+    circleIsTraversable = traversabilityDefault_ != 0.0;
+    if (computeUntraversablePolygon && !circleIsTraversable) {
       untraversablePolygon = grid_map::Polygon::fromCircle(center, radiusMax);
     }
   } else {
@@ -671,8 +671,8 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
     traversabilityMap_.getIndex(center, indexCenter);
     if (traversabilityMap_.isValid(indexCenter, "traversability_footprint")) {
       traversability = traversabilityMap_.at("traversability_footprint", indexCenter);
-      circeIsTraversable = traversability != 0.0;
-      if (computeUntraversablePolygon && !circeIsTraversable) {
+      circleIsTraversable = traversability != 0.0;
+      if (computeUntraversablePolygon && !circleIsTraversable) {
         untraversablePolygon = grid_map::Polygon::fromCircle(center, radiusMax);
       }
     } else {
@@ -692,20 +692,20 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
 
           if (radiusMin == 0.0) {
             traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
-            circeIsTraversable = false;
+            circleIsTraversable = false;
             traversabilityMap_.getPosition(*iterator, positionUntraversableCell);
             untraversablePositions.push_back(positionUntraversableCell);
           } else {
             if (untraversableRadius <= radiusMin) {
               traversabilityMap_.at("traversability_footprint", indexCenter) = 0.0;
-              circeIsTraversable = false;
+              circleIsTraversable = false;
               traversabilityMap_.getPosition(*iterator, positionUntraversableCell);
               untraversablePositions.push_back(positionUntraversableCell);
-            } else if (circeIsTraversable) {  // if circeIsTraversable is not changed by any previous loop
+            } else if (circleIsTraversable) {  // if circleIsTraversable is not changed by any previous loop
               auto factor = ((untraversableRadius - radiusMin) / (radiusMax - radiusMin) + 1.0) / 2.0;
               traversability *= factor / nCells;
               traversabilityMap_.at("traversability_footprint", indexCenter) = static_cast<float>(traversability);
-              circeIsTraversable = true;
+              circleIsTraversable = true;
               traversableRadiusBiggerMinRadius = true;
             }
           }
@@ -724,11 +724,11 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
         }
       }
 
-      if (computeUntraversablePolygon && !circeIsTraversable) {
+      if (computeUntraversablePolygon && !circleIsTraversable) {
         untraversablePolygon = grid_map::Polygon::monotoneChainConvexHullOfPoints(untraversablePositions);
       }
 
-      if (circeIsTraversable) {
+      if (circleIsTraversable) {
         traversability /= nCells;
         traversabilityMap_.at("traversability_footprint", indexCenter) = static_cast<float>(traversability);
       }
@@ -741,7 +741,7 @@ bool TraversabilityMap::isTraversable(const grid_map::Position& center, const do
     untraversablePolygon.setTimestamp(ros::Time::now().toNSec());
   }
 
-  return circeIsTraversable;
+  return circleIsTraversable;
 }
 
 bool TraversabilityMap::checkInclination(const grid_map::Position& start, const grid_map::Position& end) {
