@@ -60,11 +60,12 @@ class TraversabilityMap {
   /*!
    * Checks the traversability of a footprint path and returns the traversability.
    * @param[in] path the footprint path that has to be checked.
+   * @param[in] publishPolygons says if checked polygon and untraversable polygon should be computed and published.
    * @param[out] result the traversability result.
    * @return true if successful.
    */
   bool checkFootprintPath(const traversability_msgs::FootprintPath& path, traversability_msgs::TraversabilityResult& result,
-                          const bool publishPolygon = false);
+                          const bool publishPolygons = false);
 
   /*!
    * Computes the traversability of a footprint at each map cell position twice:
@@ -170,14 +171,39 @@ class TraversabilityMap {
   bool readParameters();
 
   /*!
-   * Gets the traversability value of the submap defined by the polygon. Is true if the
-   * whole polygon is traversable.
+   * Gets the traversability value of the submap defined by the polygon. Is true if the whole polygon is traversable.
    * @param[in] polygon polygon that defines submap of the traversability map.
-   * @param[out] traversability traversability value of submap defined by the polygon, the traversability
+   * @param[in] computeUntraversablePolygon true if untraversable polygon within submap checked for traversability should be computed.
+   * @param[out] traversability traversability value of submap defined by the polygon, the traversability is the mean of each cell within
+   *             the polygon.
+   * @param[out] untraversablePolygon untraversable polygon within area checked for traversability.
+   * @return true if the whole polygon is traversable, false otherwise.
+   */
+  bool isTraversable(const grid_map::Polygon& polygon, const bool& computeUntraversablePolygon, double& traversability,
+                     grid_map::Polygon& untraversablePolygon);
+
+  /*!
+   * Gets the traversability value of the submap defined by the polygon. Is true if the whole polygon is traversable.
+   * @param[in] polygon polygon that defines submap of the traversability map.
+   * @param[out] traversability traversability value of submap defined by the polygon, the traversability.
    * is the mean of each cell within the polygon.
    * @return true if the whole polygon is traversable, false otherwise.
    */
-  bool isTraversable(grid_map::Polygon& polygon, double& traversability);
+  bool isTraversable(const grid_map::Polygon& polygon, double& traversability);
+
+  /*!
+   * Gets the traversability value of a circular footprint.
+   * @param[in] center the center position of the footprint.
+   * @param[in] radiusMax the maximum radius of the footprint.
+   * @param[in] computeUntraversablePolygon true if untraversable polygon within submap checked for traversability should be computed.
+   * @param[out] traversability traversability value of the footprint.
+   * @param[out] untraversablePolygon untraversable polygon within area checked for traversability.
+   * @param[in] radiusMin if set (not zero), footprint inflation is applied and radiusMin is the minimum
+   * valid radius of the footprint.
+   * @return true if the circular footprint is traversable, false otherwise.
+   */
+  bool isTraversable(const grid_map::Position& center, const double& radiusMax, const bool& computeUntraversablePolygon,
+                     double& traversability, grid_map::Polygon& untraversablePolygon, const double& radiusMin = 0);
 
   /*!
    * Gets the traversability value of a circular footprint.
@@ -228,8 +254,17 @@ class TraversabilityMap {
 
   /*!
    * Publishes the footprint polygon.
+   * @param[in] polygon footprint polygon checked for traversability.
+   * @param[in] zPosition height of the polygon.
    */
   void publishFootprintPolygon(const grid_map::Polygon& polygon, double zPosition = 0.0);
+
+  /*!
+   * Publishes the untraversable polygon.
+   * @param[in] untraversablePolygon polygon indicating untraversable parts..
+   * @param[in] zPosition height of the polygon.
+   */
+  void publishUntraversablePolygon(const grid_map::Polygon& untraversablePolygon, double zPosition = 0.0);
 
   /*!
    * Bounds the passed traversability value to respect the allowed bounds.
@@ -237,6 +272,51 @@ class TraversabilityMap {
    * @return bounder value
    */
   double boundTraversabilityValue(const double& traversabilityValue) const;
+
+  /*!
+   * Checks if the map is traversable, according to defined filters.
+   * @param[in] index index of the map to check.
+   * @return true if traversable for defined filters.
+   */
+  bool isTraversableForFilters(const grid_map::Index& index);
+
+  /*!
+   * Checks the traversability of a circular footprint path and returns the traversability.
+   * @param[in] path the footprint path that has to be checked.
+   * @param[in] publishPolygons says if checked polygon and untraversable polygon should be computed and published.
+   * @param[out] result the traversability result.
+   * @return true if successful.
+   */
+  bool checkCircularFootprintPath(const traversability_msgs::FootprintPath& path, const bool publishPolygons,
+                                  traversability_msgs::TraversabilityResult& result);
+
+  /*!
+   * Checks the traversability of a polygonal footprint path and returns the traversability.
+   * @param[in] path the footprint path that has to be checked.
+   * @param[in] publishPolygons says if checked polygon and untraversable polygon should be computed and published.
+   * @param[out] result the traversability result.
+   * @return true if successful.
+   */
+  bool checkPolygonalFootprintPath(const traversability_msgs::FootprintPath& path, const bool publishPolygons,
+                                   traversability_msgs::TraversabilityResult& result);
+
+  /*!
+   * Computes mean height from poses.
+   * @param[in] poses vector of poses to compute mean height.
+   * @return mean height of poses.
+   */
+  template <typename Type>
+  double computeMeanHeightFromPoses(const std::vector<Type>& poses) const {
+    auto meanHeight = 0.0;
+    if (poses.size() != 0) {
+      for (int i = 0; i < poses.size(); i++) {
+        meanHeight += poses.at(i).position.z;
+      }
+      meanHeight /= poses.size();
+    }
+
+    return meanHeight;
+  }
 
   //! ROS node handle.
   ros::NodeHandle& nodeHandle_;
@@ -252,6 +332,9 @@ class TraversabilityMap {
 
   //! Footprint publisher.
   ros::Publisher footprintPublisher_;
+
+  //! Untraversable polygon publisher
+  ros::Publisher untraversablePolygonPublisher_;
 
   //! Vertices of the footprint polygon in base frame.
   std::vector<geometry_msgs::Point32> footprintPoints_;
@@ -292,8 +375,8 @@ class TraversabilityMap {
   bool elevationMapInitialized_;
 
   //! Mutex lock for traversability map.
-  boost::recursive_mutex traversabilityMapMutex_;
-  boost::recursive_mutex elevationMapMutex_;
+  mutable boost::recursive_mutex traversabilityMapMutex_;
+  mutable boost::recursive_mutex elevationMapMutex_;
 
   //! Z-position of the robot pose belonging to this map.
   double zPosition_;

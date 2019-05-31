@@ -11,3 +11,6 @@ geometry_msgs/PolygonStamped footprint
 
 # Use conservative footprint. Only available if polygon is used.
 bool conservative
+
+# Compute untraversable polygon in the checked area for traversability. If true, computation demand is higher.
+bool compute_untraversable_polygon
