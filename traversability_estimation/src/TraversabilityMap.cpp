@@ -930,7 +930,9 @@ void TraversabilityMap::publishFootprintPolygon(const grid_map::Polygon& polygon
 }
 
 void TraversabilityMap::publishUntraversablePolygon(const grid_map::Polygon& untraversablePolygon, double zPosition) {
-  if (untraversablePolygonPublisher_.getNumSubscribers() < 1) return;
+  if (untraversablePolygonPublisher_.getNumSubscribers() < 1 || untraversablePolygon.nVertices() == 0) {
+    return;
+  }
   geometry_msgs::PolygonStamped polygonMsg;
   grid_map::PolygonRosConverter::toMessage(untraversablePolygon, polygonMsg);
   for (auto& polygon_point : polygonMsg.polygon.points) {
