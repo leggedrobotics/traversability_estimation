@@ -7,6 +7,7 @@
  */
 
 #include "traversability_estimation/TraversabilityEstimation.hpp"
+#include "traversability_estimation/common.h"
 #include <traversability_msgs/TraversabilityResult.h>
 #include <param_io/get_param.hpp>
 
@@ -210,7 +211,7 @@ bool TraversabilityEstimation::updateTraversability() {
       traversabilityMap_.setElevationMap(elevationMap);
       if (!traversabilityMap_.computeTraversability()) return false;
     } else {
-      ROS_WARN("Failed to retrieve elevation grid map.");
+      ROS_WARN_THROTTLE(periodThrottledConsoleMessages, "Failed to retrieve elevation grid map.");
       return false;
     }
   } else {
@@ -278,7 +279,7 @@ bool TraversabilityEstimation::checkFootprintPath(traversability_msgs::CheckFoot
                                                   traversability_msgs::CheckFootprintPath::Response& response) {
   const int nPaths = request.path.size();
   if (nPaths == 0) {
-    ROS_WARN("No footprint path available to check!");
+    ROS_WARN_THROTTLE(periodThrottledConsoleMessages, "No footprint path available to check!");
     return false;
   }
 
