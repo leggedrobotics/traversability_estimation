@@ -7,6 +7,7 @@
  */
 
 #include "traversability_estimation/TraversabilityMap.hpp"
+#include "traversability_estimation/common.h"
 
 // System
 #include <algorithm>
@@ -320,7 +321,7 @@ bool TraversabilityMap::checkFootprintPath(const traversability_msgs::FootprintP
                                            traversability_msgs::TraversabilityResult& result, const bool publishPolygons) {
   bool successfullyCheckedFootprint;
   if (!traversabilityMapInitialized_) {
-    ROS_WARN("Traversability Estimation: check Footprint path: Traversability map not yet initialized.");
+    ROS_WARN_THROTTLE(periodThrottledConsoleMessages, "Traversability Estimation: check Footprint path: Traversability map not yet initialized.");
     result.is_safe = static_cast<unsigned char>(false);
     return true;
   }

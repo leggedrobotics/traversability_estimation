@@ -8,9 +8,11 @@
 
 #pragma once
 
-// Grid Map
+// Traversability
 #include <traversability_msgs/FootprintPath.h>
 #include <traversability_msgs/TraversabilityResult.h>
+
+// Grid Map
 #include <grid_map_ros/grid_map_ros.hpp>
 
 // ROS
