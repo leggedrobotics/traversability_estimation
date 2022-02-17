@@ -20,17 +20,17 @@ This software is built on the Robotic Operating System ([ROS]), which needs to b
 
 - [Robot Operating System (ROS)](http://wiki.ros.org) (middleware for robotics),
 - [Eigen](http://eigen.tuxfamily.org) (linear algebra library),
-- [kindr](http://github.com/ethz-asl/kindr) (kinematics and dynamics library for robotics),
-- [Grid Map](https://github.com/ethz-asl/grid_map) (grid map library for mobile robots),
-- [Elevation Map](https://github.com/ethz-asl/elevation_mapping) (elevation mapping with a mobile robot),
-- [Param IO](https://bitbucket.org/leggedrobotics/any_node/src/master/) (Wrapper for the ROS param get and set functions)
+- [kindr](https://github.com/leggedrobotics/kindr) (kinematics and dynamics library for robotics),
+- [Grid Map](https://github.com/leggedrobotics/grid_map) (grid map library for mobile robots),
+- [Elevation Map](https://github.com/leggedrobotics/elevation_mapping) (elevation mapping with a mobile robot),
+- [Param IO](https://github.com/leggedrobotics/any_node) (Wrapper for the ROS param get and set functions)
 
 ### Building
 
 In order to install, clone the latest version from this repository into your catkin workspace and compile the package using
 
 	cd catkin_ws/src
-	git clone https://github.com/ethz-asl/traversability_estimation.git
+	git clone https://github.com/leggedrobotics/traversability_estimation.git
 	cd ../
 	catkin build traversability_estimation
 
@@ -42,7 +42,7 @@ No unit tests so far.
 
 ## Basic Usage
 
-In order to get the Traversability estimation to run with your robot, you will need to adapt a few parameters in the config-files. It is the easiest if you duplicate the file `robot.yaml`, `robot_footprint.yaml`, and `filter_parameter.yaml` in [`traversability_estimation/config`](https://github.com/ethz-asl/traversability_estimation/tree/master/traversability_estimation/config) and adapt all the parameters you need to change. Then, duplicate the launch-file `traversability_estimation/launch/traversability_estimation.launch` and change the entries to point at your files. You can then launch the traversability map node with
+In order to get the Traversability estimation to run with your robot, you will need to adapt a few parameters in the config-files. It is the easiest if you duplicate the file `robot.yaml`, `robot_footprint.yaml`, and `filter_parameter.yaml` in [`traversability_estimation/config`](https://github.com/leggedrobotics/traversability_estimation/tree/master/traversability_estimation/config) and adapt all the parameters you need to change. Then, duplicate the launch-file `traversability_estimation/launch/traversability_estimation.launch` and change the entries to point at your files. You can then launch the traversability map node with
 
 	roslaunch traversability_estimation traversability_estimation.launch
 
@@ -180,4 +180,4 @@ The traversability estimation filters can be applied to an elevation map. Each f
 
 ## Bugs & Feature Requests
 
-Please report bugs and request features using the [Issue Tracker](https://github.com/ethz-asl/ros_best_practices/issues).
+Please report bugs and request features using the [Issue Tracker](https://github.com/leggedrobotics/traversability_estimation/issues).
