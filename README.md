@@ -174,9 +174,9 @@ The traversability estimation filters can be applied to an elevation map. Each f
 
 * *[Slope Filter:](traversability_estimation_filters/src/SlopeFilter.cpp)* Computes the slope traversability value based on an elevation map.
 
-* *[Roughness Filter:](traversability_estimation_filters/src/RoughnessFilter.cpp)* Computes the step traversability value based on an elevation map.
+* *[Roughness Filter:](traversability_estimation_filters/src/RoughnessFilter.cpp)* Computes the roughness traversability value based on an elevation map.
 
-* *[Step Filter:](traversability_estimation_filters/src/StepFilter.cpp)* Compute the roughness traversability value based on an elevation map.
+* *[Step Filter:](traversability_estimation_filters/src/StepFilter.cpp)* Compute the step traversability value based on an elevation map.
 
 ## Bugs & Feature Requests
 
